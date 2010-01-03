@@ -6,8 +6,11 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import edu.cudenver.bios.powersvc.resource.DefaultResource;
+import edu.cudenver.bios.powersvc.resource.PowerReportResource;
 import edu.cudenver.bios.powersvc.resource.PowerResource;
+import edu.cudenver.bios.powersvc.resource.SampleSizeReportResource;
 import edu.cudenver.bios.powersvc.resource.SampleSizeResource;
+import edu.cudenver.bios.powersvc.resource.EchoResource;
 
 public class PowerApplication extends Application
 {   
@@ -33,10 +36,15 @@ public class PowerApplication extends Application
         router.attach("/power", DefaultResource.class);
 
         /* attributes of power resources */
-        // Power calculation resource
+        // Power calculation resource and report generating resource
         router.attach("/power/model/{modelName}", PowerResource.class);
+        router.attach("/power/model/{modelName}/report", PowerReportResource.class);
         // Sample size resource
         router.attach("/samplesize/model/{modelName}", SampleSizeResource.class);
+        router.attach("/samplesize/model/{modelName}/report", SampleSizeReportResource.class);
+        
+        /* report generating interfaces */
+        router.attach("/echo", EchoResource.class);       
         
         return router;
     }
