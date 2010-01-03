@@ -55,7 +55,12 @@ public class EchoResource extends Resource
         try
         {
             // build the response xml
-            getResponse().setEntity(entity); 
+        	Form form = new Form(entity);
+        	String xml = form.getFirstValue("data");
+        	if (xml != null)
+        		getResponse().setEntity(new StringRepresentation(xml));
+        	else
+        		throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "No data specified");
             
             Form responseHeaders = (Form) getResponse().getAttributes().get("org.restlet.http.headers");  
             if (responseHeaders == null)  
@@ -77,11 +82,11 @@ public class EchoResource extends Resource
             PowerLogger.getInstance().error(iae.getMessage());
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
         }
-//        catch (ResourceException re)
-//        {
-//            PowerLogger.getInstance().error(re.getMessage());
-//            getResponse().setStatus(re.getStatus());
-//        }
+        catch (ResourceException re)
+        {
+            PowerLogger.getInstance().error(re.getMessage());
+            getResponse().setStatus(re.getStatus());
+        }
 
     }
 
