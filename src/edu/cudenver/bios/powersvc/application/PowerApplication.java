@@ -10,7 +10,7 @@ import edu.cudenver.bios.powersvc.resource.PowerReportResource;
 import edu.cudenver.bios.powersvc.resource.PowerResource;
 import edu.cudenver.bios.powersvc.resource.SampleSizeReportResource;
 import edu.cudenver.bios.powersvc.resource.SampleSizeResource;
-import edu.cudenver.bios.powersvc.resource.EchoResource;
+import edu.cudenver.bios.powersvc.resource.SaveAsResource;
 
 public class PowerApplication extends Application
 {   
@@ -44,7 +44,7 @@ public class PowerApplication extends Application
         router.attach("/samplesize/model/{modelName}/report", SampleSizeReportResource.class);
         
         /* report generating interfaces */
-        router.attach("/echo", EchoResource.class);       
+        router.attach("/saveas", SaveAsResource.class);       
         
         return router;
     }
