@@ -14,6 +14,7 @@ import org.restlet.resource.Variant;
 
 import edu.cudenver.bios.powersamplesize.Power;
 import edu.cudenver.bios.powersamplesize.SampleSize;
+import edu.cudenver.bios.powersamplesize.graphics.PowerCurveBuilder;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.domain.SampleSizeInputs;
@@ -78,7 +79,8 @@ public class SampleSizeResource extends Resource
             // create a power curve if requested
             if (inputs.hasCurve())
             {
-                // TODO: make a power curve
+                PowerCurveBuilder builder = new PowerCurveBuilder(powerCalc, calculator);
+                results.setPowerCurve(builder.getPowerCurve(inputs.getParameters()));
             }
 
             // build the response xml
