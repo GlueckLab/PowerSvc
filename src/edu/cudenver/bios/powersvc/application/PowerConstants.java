@@ -15,6 +15,7 @@ public class PowerConstants
     public static final String REQUEST_MODEL = "modelName";
     
     // xml tag names
+    public static final String TAG_ERROR = "error";
     public static final String TAG_POWER = "power";
     public static final String TAG_SAMPLESIZE = "sampleSize";
     public static final String TAG_PARAMS = "params";
@@ -63,4 +64,5 @@ public class PowerConstants
     public static final String MATRIX_TYPE_WITHIN_CONTRAST = "withinSubjectContrast";
     public static final String MATRIX_TYPE_BETWEEN_CONTRAST = "betweenSubjectContrast";
     public static final String MATRIX_TYPE_SIGMA = "sigma";
+    
 }

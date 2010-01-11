@@ -8,26 +8,29 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.DomRepresentation;
 import org.restlet.resource.Representation;
 import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.StringRepresentation;
 import org.restlet.resource.Variant;
-import org.restlet.resource.XmlRepresentation;
-
 import edu.cudenver.bios.powersvc.application.PowerLogger;
+import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 
+/**
+ * Resource which returns form data with an application/download
+ * header to force the Save As dialog in the browser.
+ * (Could not find a browser independent method for this on the
+ * client-side)
+ * 
+ * @author Sarah Kreidler
+ *
+ */
 public class SaveAsResource extends Resource
 {
-    private String modelName = null;
 
     public SaveAsResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
-
-        modelName = (String) request.getAttributes().get("modelName");
-
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
     }
 
@@ -91,11 +94,15 @@ public class SaveAsResource extends Resource
         catch (IllegalArgumentException iae)
         {
             PowerLogger.getInstance().error(iae.getMessage());
+            try { getResponse().setEntity(new ErrorXMLRepresentation(iae.getMessage())); }
+            catch (IOException e) {}
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
         }
         catch (ResourceException re)
         {
             PowerLogger.getInstance().error(re.getMessage());
+            try { getResponse().setEntity(new ErrorXMLRepresentation(re.getMessage())); }
+            catch (IOException e) {}
             getResponse().setStatus(re.getStatus());
         }
 

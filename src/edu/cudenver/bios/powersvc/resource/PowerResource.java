@@ -17,6 +17,7 @@ import edu.cudenver.bios.powersamplesize.graphics.PowerCurveBuilder;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.domain.PowerInputs;
 import edu.cudenver.bios.powersvc.domain.PowerResults;
+import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.PowerXMLRepresentation;
 
 public class PowerResource extends Resource
@@ -88,16 +89,22 @@ public class PowerResource extends Resource
         catch (IOException ioe)
         {
             PowerLogger.getInstance().error(ioe.getMessage());
+            try { getResponse().setEntity(new ErrorXMLRepresentation(ioe.getMessage())); }
+            catch (IOException e) {}
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
         }
         catch (IllegalArgumentException iae)
         {
             PowerLogger.getInstance().error(iae.getMessage());
+            try { getResponse().setEntity(new ErrorXMLRepresentation(iae.getMessage())); }
+            catch (IOException e) {}
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
         }
         catch (ResourceException re)
         {
             PowerLogger.getInstance().error(re.getMessage());
+            try { getResponse().setEntity(new ErrorXMLRepresentation(re.getMessage())); }
+            catch (IOException e) {}
             getResponse().setStatus(re.getStatus());
         }
 
