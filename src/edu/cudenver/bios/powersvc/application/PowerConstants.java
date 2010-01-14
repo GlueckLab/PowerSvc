@@ -29,7 +29,7 @@ public class PowerConstants
     public static final String ATTR_NAME = "name";
     public static final String ATTR_MU0 = "mu0";
     public static final String ATTR_MUA = "muA";
-    public static final String ATTR_SIGMA = "sigma";
+    public static final String ATTR_SIGMA_ERROR = "sigmaError";
     public static final String ATTR_ALPHA = "alpha";
     public static final String ATTR_SAMPLESIZE = "sampleSize";
     public static final String ATTR_CURVE = "curve";
@@ -63,6 +63,6 @@ public class PowerConstants
     public static final String MATRIX_TYPE_THETA = "theta";
     public static final String MATRIX_TYPE_WITHIN_CONTRAST = "withinSubjectContrast";
     public static final String MATRIX_TYPE_BETWEEN_CONTRAST = "betweenSubjectContrast";
-    public static final String MATRIX_TYPE_SIGMA = "sigma";
+    public static final String MATRIX_TYPE_SIGMA_ERROR = "sigmaError";
     
 }

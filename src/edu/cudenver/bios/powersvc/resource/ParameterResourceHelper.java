@@ -74,7 +74,7 @@ public class ParameterResourceHelper
             Node muA = attrs.getNamedItem(PowerConstants.ATTR_MUA);
             if (muA != null) powerParams.setMuA(Double.parseDouble(muA.getNodeValue()));
             
-            Node sigma = attrs.getNamedItem(PowerConstants.ATTR_SIGMA);
+            Node sigma = attrs.getNamedItem(PowerConstants.ATTR_SIGMA_ERROR);
             if (sigma != null) powerParams.setSigma(Double.parseDouble(sigma.getNodeValue()));
             
             Node alpha = attrs.getNamedItem(PowerConstants.ATTR_ALPHA);
@@ -179,8 +179,8 @@ public class ParameterResourceHelper
                             params.setDesign(matrix);
                         else if (PowerConstants.MATRIX_TYPE_THETA.equals(matrixName))
                             params.setTheta(matrix);
-                        else if (PowerConstants.MATRIX_TYPE_SIGMA.equals(matrixName))
-                            params.setSigma(matrix);
+                        else if (PowerConstants.MATRIX_TYPE_SIGMA_ERROR.equals(matrixName))
+                            params.setSigmaError(matrix);
                         else if (PowerConstants.MATRIX_TYPE_WITHIN_CONTRAST.equals(matrixName))
                             params.setWithinSubjectContrast(matrix);
                         else if (PowerConstants.MATRIX_TYPE_BETWEEN_CONTRAST.equals(matrixName))
