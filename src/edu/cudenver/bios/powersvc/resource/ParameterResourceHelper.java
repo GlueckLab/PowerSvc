@@ -17,6 +17,7 @@ import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.SimplePowerSampleSizeParameters;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.PowerMethod;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.TestStatistic;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
@@ -125,6 +126,26 @@ public class ParameterResourceHelper
             Node power = attrs.getNamedItem(PowerConstants.ATTR_POWER);
             if (power != null) params.setPower(Double.parseDouble(power.getNodeValue()));
             
+            /* parse the power method */
+            Node powerMethod = attrs.getNamedItem(PowerConstants.ATTR_POWER_METHOD);
+            if (powerMethod != null)
+            {
+                String powerMethodName = powerMethod.getNodeValue();
+                if (powerMethodName != null)
+                {
+                    if (PowerConstants.POWER_METHOD_QUANTILE.equals(powerMethodName))
+                        params.setPowerMethod(PowerMethod.QUANTILE_POWER);
+                    else if (PowerConstants.POWER_METHOD_UNCONDITIONAL.equals(powerMethodName))
+                        params.setPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
+                    else
+                        params.setPowerMethod(PowerMethod.CONDITIONAL_POWER);
+                }
+            }
+            
+            /* parse the quantile (if using quantile power) */
+            Node quantile = attrs.getNamedItem(PowerConstants.ATTR_QUANTILE);
+            if (quantile != null) params.setQuantile(Double.parseDouble(quantile.getNodeValue()));
+            
             /* parse the test statistic */
             Node stat = attrs.getNamedItem(PowerConstants.ATTR_STATISTIC);
             if (stat != null) 
@@ -179,12 +200,18 @@ public class ParameterResourceHelper
                             params.setDesign(matrix);
                         else if (PowerConstants.MATRIX_TYPE_THETA.equals(matrixName))
                             params.setTheta(matrix);
-                        else if (PowerConstants.MATRIX_TYPE_SIGMA_ERROR.equals(matrixName))
-                            params.setSigmaError(matrix);
                         else if (PowerConstants.MATRIX_TYPE_WITHIN_CONTRAST.equals(matrixName))
                             params.setWithinSubjectContrast(matrix);
                         else if (PowerConstants.MATRIX_TYPE_BETWEEN_CONTRAST.equals(matrixName))
                             params.setBetweenSubjectContrast(matrix);
+                        else if (PowerConstants.MATRIX_TYPE_SIGMA_ERROR.equals(matrixName))
+                            params.setSigmaError(matrix);
+                        else if (PowerConstants.MATRIX_TYPE_SIGMA_GAUSSIAN.equals(matrixName))
+                            params.setSigmaGaussianRandom(matrix);
+                        else if (PowerConstants.MATRIX_TYPE_SIGMA_OUTCOME.equals(matrixName))
+                            params.setSigmaOutcome(matrix);
+                        else if (PowerConstants.MATRIX_TYPE_SIGMA_OUTCOME_GAUSSIAN.equals(matrixName))
+                            params.setSigmaOutcomeGaussianRandom(matrix);
                         else
                             PowerLogger.getInstance().warn("Ignoring Invalid matrix: " + matrixName);                    
                     }
