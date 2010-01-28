@@ -244,6 +244,11 @@ public class ParameterResourceHelper
         RealMatrix matrix = null;
         RowMetaData[] rmd = null;
         ColumnMetaData[] cmd = null;
+        Node seed = null;
+        
+        // parse the random seed value if specified
+        NamedNodeMap attrs = node.getAttributes();
+        if (attrs != null) seed = attrs.getNamedItem(PowerConstants.ATTR_RANDOM_SEED);
         
         // parse the matrix data, row meta data, and column meta data
         NodeList children = node.getChildNodes();
@@ -275,6 +280,7 @@ public class ParameterResourceHelper
         if (matrix != null)
         {
             essence = new EssenceMatrix(matrix);
+            if (seed != null) essence.setRandomSeed(Integer.parseInt(seed.getNodeValue()));
             if (cmd != null) essence.setColumnMetaData(cmd);
             if (rmd != null) essence.setRowMetaData(rmd);
         }        
@@ -352,7 +358,7 @@ public class ParameterResourceHelper
                     if (mean != null) cmd.setMean(Double.parseDouble(mean.getNodeValue()));
                     
                     Node variance = attrs.getNamedItem(PowerConstants.ATTR_VARIANCE);
-                    if (variance != null) cmd.setVariance(Double.parseDouble(variance.getNodeValue()));
+                    if (variance != null) cmd.setVariance(Double.parseDouble(variance.getNodeValue()));                   
                     
                     metaDataList.add(cmd);
                 }

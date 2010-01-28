@@ -48,6 +48,7 @@ public class PowerConstants
     public static final String ATTR_STATISTIC = "statistic";
     public static final String ATTR_POWER_METHOD = "powerMethod";
     public static final String ATTR_QUANTILE = "quantile";
+    public static final String ATTR_RANDOM_SEED = "seed";
     // statistic name constants
     public static final String STATISTIC_HOTELLING_LAWLEY_TRACE = "hlt";
     public static final String STATISTIC_WILKS_LAMBDA = "w";
