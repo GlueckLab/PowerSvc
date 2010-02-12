@@ -158,7 +158,7 @@ public class ParameterResourceHelper
                     else if (PowerConstants.STATISTIC_HOTELLING_LAWLEY_TRACE.equals(statName))
                         params.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
                     else if (PowerConstants.STATISTIC_PILLAU_BARTLETT_TRACE.equals(statName))
-                        params.setTestStatistic(TestStatistic.PILLAU_BARTLETT_TRACE);
+                        params.setTestStatistic(TestStatistic.PILLAI_BARTLETT_TRACE);
                     else if (PowerConstants.STATISTIC_WILKS_LAMBDA.equals(statName))
                         params.setTestStatistic(TestStatistic.WILKS_LAMBDA);
                     else
