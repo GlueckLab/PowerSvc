@@ -51,8 +51,8 @@ public class PowerConstants
     public static final String ATTR_RANDOM_SEED = "seed";
     // statistic name constants
     public static final String STATISTIC_HOTELLING_LAWLEY_TRACE = "hlt";
-    public static final String STATISTIC_WILKS_LAMBDA = "w";
-    public static final String STATISTIC_PILLAU_BARTLETT_TRACE = "pb";
+    public static final String STATISTIC_WILKS_LAMBDA = "wl";
+    public static final String STATISTIC_PILLAU_BARTLETT_TRACE = "pbt";
     public static final String STATISTIC_UNIREP = "unirep";
     
     // types of power approximations
