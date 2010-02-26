@@ -42,7 +42,7 @@ public class PowerConstants
     public static final String ATTR_RATIO = "ratio";
     public static final String ATTR_TYPE = "type";
     public static final String ATTR_MEAN = "mean";
-    public static final String ATTR_VARIANCE = "var";
+    public static final String ATTR_VARIANCE = "variance";
     public static final String ATTR_ROWS = "rows";
     public static final String ATTR_COLUMNS = "columns";
     public static final String ATTR_STATISTIC = "statistic";
