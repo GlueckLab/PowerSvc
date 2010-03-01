@@ -20,7 +20,7 @@ public class PowerApplication extends Application
     {
         super(parentContext);
 
-        PowerLogger.getInstance().info("data feed service starting.");
+        PowerLogger.getInstance().info("Statistical power service starting.");
     }
 
     @Override
