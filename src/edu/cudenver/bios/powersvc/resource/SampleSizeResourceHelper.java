@@ -1,60 +1,51 @@
 package edu.cudenver.bios.powersvc.resource;
 
 import org.apache.commons.math.linear.RealMatrix;
-import org.restlet.data.Status;
 import org.restlet.resource.ResourceException;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import edu.cudenver.bios.matrix.EssenceMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.powersamplesize.SampleSize;
 import edu.cudenver.bios.powersamplesize.SampleSizeGLMM;
 import edu.cudenver.bios.powersamplesize.SampleSizeOneSampleStudentsT;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
-import edu.cudenver.bios.powersvc.domain.SampleSizeInputs;
+import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
+import edu.cudenver.bios.powersvc.domain.PowerSampleSizeDescription;
 
 public class SampleSizeResourceHelper
 {
 
-    public static SampleSizeInputs sampleSizeInputsFromDomNode(String modelName, Node node) 
+    public static PowerSampleSizeDescription sampleSizeFromDomNode(String modelName, Node node) 
     throws ResourceException
     {
-        SampleSizeInputs inputs = new SampleSizeInputs();
-        
-        // get any sample size options from the <sampleSize> tag
-        try
-        {
-            NamedNodeMap attrs = node.getAttributes();
-            if (attrs != null)
-            {
-                /* parse optional arguments (curve=true|false) */
-                Node curve = attrs.getNamedItem(PowerConstants.ATTR_CURVE);
-                if (curve != null) inputs.setCurve(Boolean.parseBoolean(curve.getNodeValue()));
-            }
-        }
-        catch (Exception e)
-        {
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, e.getMessage());
-        }
-        
+        PowerSampleSizeDescription desc = new PowerSampleSizeDescription();
+                
         // parse the parameters - depend on the type of model
         NodeList children = node.getChildNodes();
         if (children != null && children.getLength() > 0)
         {
             for (int i = 0; i < children.getLength(); i++)
             {
-                // parse the appropriate sample size parameters depending on the type of model
-                PowerSampleSizeParameters params = 
-                    ParameterResourceHelper.powerSampleSizeParametersFromDomNode(modelName, children.item(i));
-                if (params != null) inputs.setParameters(params);
+                Node child = children.item(i);
+                if (PowerConstants.TAG_CURVE.equals(child.getNodeName()))
+                {
+                    PowerCurveDescription curveDesc = ParameterResourceHelper.powerCurveFromDomNode(child);
+                    desc.setCurveDescription(curveDesc);
+                }
+                else if (PowerConstants.TAG_PARAMS.equals(child.getNodeName()))
+                {
+                    // parse the appropriate sample size parameters depending on the type of model
+                    PowerSampleSizeParameters params = 
+                        ParameterResourceHelper.powerSampleSizeParametersFromDomNode(modelName, children.item(i));
+                    if (params != null) desc.setParameters(params);
+                }
             }
         }
         
-        return inputs;
+        return desc;
     }
     
     public static SampleSize getCalculatorByModelName(String modelName)

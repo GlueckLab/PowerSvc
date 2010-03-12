@@ -17,7 +17,9 @@ import edu.cudenver.bios.powersamplesize.SampleSize;
 import edu.cudenver.bios.powersamplesize.graphics.PowerCurveBuilder;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.domain.SampleSizeInputs;
+import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
+import edu.cudenver.bios.powersvc.domain.PowerCurveResults;
+import edu.cudenver.bios.powersvc.domain.PowerSampleSizeDescription;
 import edu.cudenver.bios.powersvc.domain.SampleSizeResults;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.SampleSizeXMLRepresentation;
@@ -61,16 +63,14 @@ public class SampleSizeResource extends Resource
         try
         {
             // parse the sample size options and parameters from the entity body
-            SampleSizeInputs inputs = SampleSizeResourceHelper.sampleSizeInputsFromDomNode(modelName, rep.getDocument().getDocumentElement());
-            PowerSampleSizeParameters params = inputs.getParameters();
+            PowerSampleSizeDescription desc = SampleSizeResourceHelper.sampleSizeFromDomNode(modelName, rep.getDocument().getDocumentElement());
+            PowerSampleSizeParameters params = desc.getParameters();
             // create the appropriate sample size calculator for this model
             SampleSize calculator = SampleSizeResourceHelper.getCalculatorByModelName(modelName);
             // create a results object
             SampleSizeResults results = new SampleSizeResults();
             // calculate the sample size
-            int sampleSize = 
-                SampleSizeResourceHelper.adjustSampleSize(calculator.getSampleSize(params),
-                        modelName, params);
+            int sampleSize = calculator.getSampleSize(params);
             results.setSampleSize(sampleSize);
             // calculate the actual power associated with the sample size
             SampleSizeResourceHelper.updateParameters(modelName, params, sampleSize);
@@ -78,10 +78,18 @@ public class SampleSizeResource extends Resource
             results.setActualPower(powerCalc.getCalculatedPower(params));
 
             // create a power curve if requested
-            if (inputs.hasCurve())
+            PowerCurveDescription curveDesc = desc.getCurveDescription();
+            if (curveDesc != null)
             {
                 PowerCurveBuilder builder = new PowerCurveBuilder(powerCalc, calculator);
-                results.setPowerCurve(builder.getPowerCurve(inputs.getParameters()));
+                builder.setTitle(curveDesc.getTitle());
+                builder.setXaxisLabel(curveDesc.getXAxisLabel());
+                builder.setYaxisLabel(curveDesc.getYAxisLabel());
+                PowerCurveResults curveResults = new PowerCurveResults();
+                curveResults.setCurve(builder.getPowerCurve(desc.getParameters()));
+                curveResults.setWidth(curveDesc.getWidth());
+                curveResults.setHeight(curveDesc.getHeight());
+                results.setCurveResults(curveResults);
             }
 
             // build the response xml

@@ -1,7 +1,5 @@
 package edu.cudenver.bios.powersvc.domain;
 
-import org.jfree.chart.JFreeChart;
-
 public class PowerResults
 {
     /****** results ******/
@@ -11,8 +9,9 @@ public class PowerResults
     // simulated power - must set simulated=true for a power simulation 
     // to be run
     double simulatedPower = -1;
-    // power curve
-    JFreeChart powerCurve;
+
+    // graphics results
+    PowerCurveResults curveResults = null;
     
     public double getPower()
     {
@@ -34,13 +33,14 @@ public class PowerResults
         this.simulatedPower = simulatedPower;
     }
 
-    public JFreeChart getPowerCurve()
+    public PowerCurveResults getCurveResults()
     {
-        return powerCurve;
+        return curveResults;
     }
 
-    public void setPowerCurve(JFreeChart powerCurve)
+    public void setCurveResults(PowerCurveResults curveResults)
     {
-        this.powerCurve = powerCurve;
+        this.curveResults = curveResults;
     }
+
 }

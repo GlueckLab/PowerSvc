@@ -8,7 +8,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.xml.sax.InputSource;
 
 import edu.cudenver.bios.powersvc.application.PowerConstants;
-import edu.cudenver.bios.powersvc.domain.PowerInputs;
+import edu.cudenver.bios.powersvc.domain.PowerDescription;
 import edu.cudenver.bios.powersvc.resource.PowerResourceHelper;
 
 import junit.framework.TestCase;
@@ -75,7 +75,7 @@ public class TestParsing extends TestCase
     {
         try
         {
-            PowerInputs inputs = 
+            PowerDescription desc = 
                 PowerResourceHelper.powerFromDomNode(PowerConstants.TEST_GLMM,
                         validGLMMPowerDoc.getDocumentElement());
             System.out.println("Valid GLMM inputs parsed successfully");
@@ -93,7 +93,7 @@ public class TestParsing extends TestCase
     {
         try
         {
-            PowerInputs inputs = 
+            PowerDescription inputs = 
                 PowerResourceHelper.powerFromDomNode(PowerConstants.TEST_GLMM,
                         invalidGLMMPowerDoc.getDocumentElement());
             fail();

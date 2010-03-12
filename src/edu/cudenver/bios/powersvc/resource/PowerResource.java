@@ -15,7 +15,9 @@ import org.restlet.resource.Variant;
 import edu.cudenver.bios.powersamplesize.Power;
 import edu.cudenver.bios.powersamplesize.graphics.PowerCurveBuilder;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.domain.PowerInputs;
+import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
+import edu.cudenver.bios.powersvc.domain.PowerCurveResults;
+import edu.cudenver.bios.powersvc.domain.PowerDescription;
 import edu.cudenver.bios.powersvc.domain.PowerResults;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.PowerXMLRepresentation;
@@ -59,26 +61,34 @@ public class PowerResource extends Resource
         try
         {
             // parse the power options and parameters from the entity body
-            PowerInputs inputs = PowerResourceHelper.powerFromDomNode(modelName, rep.getDocument().getDocumentElement());
+            PowerDescription desc = PowerResourceHelper.powerFromDomNode(modelName, rep.getDocument().getDocumentElement());
 
             // create the appropriate power calculator for this model
             Power calculator = PowerResourceHelper.getCalculatorByModelName(modelName);
             // create a results object
             PowerResults results = new PowerResults();
             // calculate the power
-            results.setPower(calculator.getCalculatedPower(inputs.getParameters()));
+            results.setPower(calculator.getCalculatedPower(desc.getParameters()));
             // if requested, add simulated power
-            if (inputs.isSimulated())
+            if (desc.isSimulated())
             {
-                results.setSimulatedPower(calculator.getSimulatedPower(inputs.getParameters(), 
-                        inputs.getSimulationIterations()));
+                results.setSimulatedPower(calculator.getSimulatedPower(desc.getParameters(), 
+                        desc.getSimulationIterations()));
             }
             
             // create a power curve if requested
-            if (inputs.hasCurve())
+            PowerCurveDescription curveDesc = desc.getCurveDescription();
+            if (curveDesc != null)
             {
                 PowerCurveBuilder builder = new PowerCurveBuilder(calculator, SampleSizeResourceHelper.getCalculatorByModelName(modelName));
-                results.setPowerCurve(builder.getPowerCurve(inputs.getParameters()));
+                builder.setTitle(curveDesc.getTitle());
+                builder.setXaxisLabel(curveDesc.getXAxisLabel());
+                builder.setYaxisLabel(curveDesc.getYAxisLabel());
+                PowerCurveResults curveResults = new PowerCurveResults();
+                curveResults.setCurve(builder.getPowerCurve(desc.getParameters()));
+                curveResults.setWidth(curveDesc.getWidth());
+                curveResults.setHeight(curveDesc.getHeight());
+                results.setCurveResults(curveResults);
             }
             
             // build the response xml

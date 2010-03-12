@@ -17,10 +17,14 @@ import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.SimplePowerSampleSizeParameters;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.MomentApproximationMethod;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.PowerMethod;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.TestStatistic;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCdf;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCorrection;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
+import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
 
 /**
  * Parsing of model parameters from DOM tree.
@@ -165,6 +169,65 @@ public class ParameterResourceHelper
                     {
                         PowerLogger.getInstance().warn("Invalid statistic name '" + statName + "', defaulting to Hotelling-Lawley Trace");
                     }
+                }
+            }
+            
+            Node unirepCorrect = attrs.getNamedItem(PowerConstants.ATTR_UNIREP_CORRECT);
+            if (unirepCorrect != null)
+            {
+                if (PowerConstants.UNIREP_CORRECT_GEISSER_GREENHOUSE.equals(unirepCorrect))
+                    params.setUnivariateCorrection(UnivariateCorrection.GEISSER_GREENHOUSE);
+                else if (PowerConstants.UNIREP_CORRECT_HUYNH_FELDT.equals(unirepCorrect))
+                    params.setUnivariateCorrection(UnivariateCorrection.HUYNH_FELDT);
+                else if (PowerConstants.UNIREP_CORRECT_BOX.equals(unirepCorrect))
+                    params.setUnivariateCorrection(UnivariateCorrection.BOX);
+                else if (PowerConstants.UNIREP_CORRECT_NONE.equals(unirepCorrect))
+                    params.setUnivariateCorrection(UnivariateCorrection.NONE);
+                else
+                {
+                    PowerLogger.getInstance().warn("Invalid unirep correction name '" + unirepCorrect + "', defaulting to uncorrected");
+                }
+            }
+            
+            Node unirepCDF = attrs.getNamedItem(PowerConstants.ATTR_UNIREP_CDF);
+            if (unirepCDF != null)
+            {
+                if (PowerConstants.UNIREP_CDF_MULLER_BARTON_APPROX.equals(unirepCorrect))
+                    params.setUnivariateCdf(UnivariateCdf.MULLER_BARTON_APPROX);
+                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_APPROX.equals(unirepCorrect))
+                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX);
+                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT.equals(unirepCorrect))
+                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_EXACT);
+                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT_APPROX.equals(unirepCorrect))
+                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_EXACT_APPROX);
+                else
+                {
+                    PowerLogger.getInstance().warn("Invalid unirep cdf method '" + unirepCDF + "', defaulting to Muller-Barton approximation");
+                }
+            }
+            
+            Node momentMethod = attrs.getNamedItem(PowerConstants.ATTR_MOMENT_METHOD);
+            if (momentMethod != null)
+            {
+                if (PowerConstants.MOMENT_METHOD_PILLAI_ONE_MOMENT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.PILLAI_ONE_MOMENT);
+                else if (PowerConstants.MOMENT_METHOD_PILLAI_ONE_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT);
+                else if (PowerConstants.MOMENT_METHOD_MCKEON_TWO_MOMENT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.MCKEON_TWO_MOMENT);
+                else if (PowerConstants.MOMENT_METHOD_MCKEON_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT);
+                else if (PowerConstants.MOMENT_METHOD_MULLER_TWO_MOMENT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.MULLER_TWO_MOMENT);
+                else if (PowerConstants.MOMENT_METHOD_MULLER_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT);
+                else if (PowerConstants.MOMENT_METHOD_RAO_TWO_MOMENT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.RAO_TWO_MOMENT);
+                else if (PowerConstants.MOMENT_METHOD_RAO_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+                    params.setMomentMethod(MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT);
+                else
+                {
+                    PowerLogger.getInstance().warn("Invalid moment approximation method '" + momentMethod + "', defaulting to none");
                 }
             }
         }
@@ -442,4 +505,40 @@ public class ParameterResourceHelper
         return matrix;
     }
     
+    public static PowerCurveDescription powerCurveFromDomNode(Node node) throws ResourceException
+    {
+        PowerCurveDescription desc = new PowerCurveDescription();
+
+        // make sure the root node is a power parameters
+        if (!node.getNodeName().equals(PowerConstants.TAG_CURVE))
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid root node '" + node.getNodeName() + "' when parsing curve description");
+
+        // get the parameter attributes
+        NamedNodeMap attrs = node.getAttributes();
+        if (attrs != null)
+        {
+            // parse curve title
+            Node title = attrs.getNamedItem(PowerConstants.ATTR_CURVE_TITLE);
+            if (title != null) desc.setTitle(title.getNodeValue());
+            
+            // parse curve width
+            Node width = attrs.getNamedItem(PowerConstants.ATTR_CURVE_WIDTH);
+            if (width != null) desc.setWidth(Integer.parseInt(width.getNodeValue()));
+            
+            // parse curve height
+            Node height = attrs.getNamedItem(PowerConstants.ATTR_CURVE_HEIGHT);
+            if (height != null) desc.setHeight(Integer.parseInt(height.getNodeValue()));
+            
+            // parse x axis label
+            Node xlab = attrs.getNamedItem(PowerConstants.ATTR_CURVE_XLABEL);
+            if (xlab != null) desc.setXAxisLabel(xlab.getNodeValue());
+            
+            // parse y axis label
+            Node ylab = attrs.getNamedItem(PowerConstants.ATTR_CURVE_YLABEL);
+            if (ylab != null) desc.setYAxisLabel(ylab.getNodeValue());
+            
+        }   
+        
+        return desc;
+    }
 }

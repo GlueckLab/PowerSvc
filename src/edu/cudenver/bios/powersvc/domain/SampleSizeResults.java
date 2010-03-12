@@ -1,7 +1,5 @@
 package edu.cudenver.bios.powersvc.domain;
 
-import org.jfree.chart.JFreeChart;
-
 public class SampleSizeResults
 {
     // estimated sample size 
@@ -10,8 +8,9 @@ public class SampleSizeResults
     // desired power exactly due to rounding errors and limitations with sample
     // size calculations for more complex models
     double actualPower;
-    // power curve
-    JFreeChart powerCurve;
+
+    // graphics results
+    PowerCurveResults curveResults = null;
     
     public int getSampleSize()
     {
@@ -33,15 +32,14 @@ public class SampleSizeResults
         this.actualPower = actualPower;
     }
 
-    public JFreeChart getPowerCurve()
+    public PowerCurveResults getCurveResults()
     {
-        return powerCurve;
+        return curveResults;
     }
 
-    public void setPowerCurve(JFreeChart powerCurve)
+    public void setCurveResults(PowerCurveResults curveResults)
     {
-        this.powerCurve = powerCurve;
+        this.curveResults = curveResults;
     }
-    
     
 }

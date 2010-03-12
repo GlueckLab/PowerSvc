@@ -11,14 +11,15 @@ import edu.cudenver.bios.powersamplesize.PowerGLMM;
 import edu.cudenver.bios.powersamplesize.PowerOneSampleStudentsT;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
-import edu.cudenver.bios.powersvc.domain.PowerInputs;
+import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
+import edu.cudenver.bios.powersvc.domain.PowerDescription;
 
 public class PowerResourceHelper
 {
-    public static PowerInputs powerFromDomNode(String modelName, Node node) 
+    public static PowerDescription powerFromDomNode(String modelName, Node node) 
     throws ResourceException
     {
-        PowerInputs inputs = new PowerInputs();
+        PowerDescription desc = new PowerDescription();
                 
         if (!PowerConstants.TAG_POWER.equals(node.getNodeName()))
             throw new IllegalArgumentException("Invalid root node '" + node.getNodeName() + "' when parsing power object");
@@ -33,14 +34,11 @@ public class PowerResourceHelper
                 
                 // simulated=true|false, if true includes simulation of power
                 Node sim = attrs.getNamedItem(PowerConstants.ATTR_SIMULATED);
-                if (sim != null) inputs.setSimulated(Boolean.parseBoolean(sim.getNodeValue()));
+                if (sim != null) desc.setSimulated(Boolean.parseBoolean(sim.getNodeValue()));
                 // simulation iterations, indicates the number of iterations of a simulation to run
                 Node iter = attrs.getNamedItem(PowerConstants.ATTR_SIMULATION_SIZE);
-                if (iter != null) inputs.setSimulationIterations(Integer.parseInt(iter.getNodeValue()));
-                // curve=true|false, if true a power curve will be generated
-                Node curve = attrs.getNamedItem(PowerConstants.ATTR_CURVE);
-                if (curve != null) inputs.setCurve(Boolean.parseBoolean(curve.getNodeValue()));
-            }
+                if (iter != null) desc.setSimulationIterations(Integer.parseInt(iter.getNodeValue()));
+            }            
         }
         catch (Exception e)
         {
@@ -53,14 +51,23 @@ public class PowerResourceHelper
         {
             for (int i = 0; i < children.getLength(); i++)
             {
-                // parse the appropriate sample size parameters depending on the type of model
-                PowerSampleSizeParameters params = 
-                    ParameterResourceHelper.powerSampleSizeParametersFromDomNode(modelName, children.item(i));
-                if (params != null) inputs.setParameters(params);
+                Node child = children.item(i);
+                if (PowerConstants.TAG_CURVE.equals(child.getNodeName()))
+                {
+                    PowerCurveDescription curveDesc = ParameterResourceHelper.powerCurveFromDomNode(child);
+                    desc.setCurveDescription(curveDesc);
+                }
+                else if (PowerConstants.TAG_PARAMS.equals(child.getNodeName()))
+                {
+                    // parse the appropriate sample size parameters depending on the type of model
+                    PowerSampleSizeParameters params = 
+                        ParameterResourceHelper.powerSampleSizeParametersFromDomNode(modelName, children.item(i));
+                    if (params != null) desc.setParameters(params);
+                }
             }
         }
                 
-        return inputs;
+        return desc;
     }
     
     public static Power getCalculatorByModelName(String modelName)

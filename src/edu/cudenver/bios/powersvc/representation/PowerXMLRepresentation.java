@@ -10,7 +10,7 @@ import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.domain.PowerResults;
 
 public class PowerXMLRepresentation extends DomRepresentation
-{
+{    
     public PowerXMLRepresentation(final PowerResults power) throws IOException
     {
         super(MediaType.APPLICATION_XML);
@@ -28,13 +28,12 @@ public class PowerXMLRepresentation extends DomRepresentation
         PowerElem.setAttribute(PowerConstants.ATTR_CALCULATED, Double.toString(power.getPower()));
         PowerElem.setAttribute(PowerConstants.ATTR_SIMULATED, Double.toString(power.getSimulatedPower()));
         // base64 encoded jpeg of power curve
-        if (power.getPowerCurve() != null)
+        if (power.getCurveResults() != null)
         {
             try
             {
                 // TODO: resizing of image
-                PowerElem.appendChild(PowerCurveRepresentation.createPowerCurveElement(doc, 
-                        power.getPowerCurve(), 500, 300));
+                PowerElem.appendChild(PowerCurveRepresentation.createPowerCurveElement(doc, power.getCurveResults()));
             }
             catch (IOException e)
             {
