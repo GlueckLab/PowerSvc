@@ -27,19 +27,7 @@ public class PowerXMLRepresentation extends DomRepresentation
 
         PowerElem.setAttribute(PowerConstants.ATTR_CALCULATED, Double.toString(power.getPower()));
         PowerElem.setAttribute(PowerConstants.ATTR_SIMULATED, Double.toString(power.getSimulatedPower()));
-        // base64 encoded jpeg of power curve
-        if (power.getCurveResults() != null)
-        {
-            try
-            {
-                // TODO: resizing of image
-                PowerElem.appendChild(PowerCurveRepresentation.createPowerCurveElement(doc, power.getCurveResults()));
-            }
-            catch (IOException e)
-            {
-                PowerLogger.getInstance().error("Failed to write power curve to XML representation");
-            }
-        }
+
         // TODO: if essence matrix specified with random predictor, return full parameters ???
         return PowerElem;
     }

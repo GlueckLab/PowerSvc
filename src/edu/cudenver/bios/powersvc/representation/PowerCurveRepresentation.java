@@ -1,28 +1,39 @@
 package edu.cudenver.bios.powersvc.representation;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
 import org.jfree.chart.ChartUtilities;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.jfree.chart.JFreeChart;
+import org.restlet.data.MediaType;
+import org.restlet.resource.OutputRepresentation;
 
-import edu.cudenver.bios.powersvc.application.PowerConstants;
-import edu.cudenver.bios.powersvc.domain.PowerCurveResults;
+import edu.cudenver.bios.powersvc.application.PowerLogger;
 
-public class PowerCurveRepresentation
+public class PowerCurveRepresentation extends OutputRepresentation
 {
-    public static Element createPowerCurveElement(Document doc, PowerCurveResults results)
-    throws IOException
+    private JFreeChart chart;
+    private int width;
+    private int height;
+    
+    public PowerCurveRepresentation(JFreeChart chart, int width, int height)
     {
-        Element curveElem = doc.createElement(PowerConstants.TAG_CURVE_IMG);
+        super(MediaType.IMAGE_JPEG);
+        this.chart = chart;
+        this.width = width;
+        this.height = height;
+    }
 
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        Base64OutputStream out = new Base64OutputStream(bytes);
-        ChartUtilities.writeChartAsJPEG(out, results.getCurve(), results.getWidth(), results.getHeight());
-        bytes.flush();
-        curveElem.appendChild(doc.createCDATASection(bytes.toString()));
-        return curveElem;
+    public void write(OutputStream os)
+    {
+        try
+        {
+            ChartUtilities.writeChartAsJPEG(os, chart, width, height);
+        }
+        catch (IOException e)
+        {
+            // TODO: best way to handle this error?
+            PowerLogger.getInstance().error("IOException when writing power curve image: " + e.getMessage());
+        }
     }
 }

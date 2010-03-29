@@ -27,19 +27,7 @@ public class SampleSizeXMLRepresentation extends DomRepresentation
 
         SampleSizeElem.setAttribute(PowerConstants.ATTR_SAMPLESIZE, Integer.toString(results.getSampleSize()));
         SampleSizeElem.setAttribute(PowerConstants.ATTR_POWER, Double.toString(results.getActualPower()));
-        // base64 encoded jpeg of power curve
-        if (results.getCurveResults() != null)
-        {
-            try
-            {
-                // TODO: resizing of image
-                SampleSizeElem.appendChild(PowerCurveRepresentation.createPowerCurveElement(doc, results.getCurveResults()));
-            }
-            catch (IOException e)
-            {
-                PowerLogger.getInstance().error("Failed to write power curve to XML representation");
-            }
-        }
+
         return SampleSizeElem;
     }
 }
