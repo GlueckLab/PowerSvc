@@ -6,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.Router;
 
 import edu.cudenver.bios.powersvc.resource.DefaultResource;
+import edu.cudenver.bios.powersvc.resource.PowerCurveResource;
 import edu.cudenver.bios.powersvc.resource.PowerReportResource;
 import edu.cudenver.bios.powersvc.resource.PowerResource;
 import edu.cudenver.bios.powersvc.resource.SampleSizeReportResource;
@@ -41,6 +42,8 @@ public class PowerApplication extends Application
         // Sample size resource
         router.attach("/samplesize/model/{modelName}", SampleSizeResource.class);
         router.attach("/samplesize/model/{modelName}/report", SampleSizeReportResource.class);
+        // Power curve resource
+        router.attach("/curve/model/{modelName}", PowerCurveResource.class);
                 
         return router;
     }
