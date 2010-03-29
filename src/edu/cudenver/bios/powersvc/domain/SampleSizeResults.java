@@ -8,9 +8,6 @@ public class SampleSizeResults
     // desired power exactly due to rounding errors and limitations with sample
     // size calculations for more complex models
     double actualPower;
-
-    // graphics results
-    PowerCurveResults curveResults = null;
     
     public int getSampleSize()
     {
@@ -30,16 +27,6 @@ public class SampleSizeResults
     public void setActualPower(double actualPower)
     {
         this.actualPower = actualPower;
-    }
-
-    public PowerCurveResults getCurveResults()
-    {
-        return curveResults;
-    }
-
-    public void setCurveResults(PowerCurveResults curveResults)
-    {
-        this.curveResults = curveResults;
     }
     
 }

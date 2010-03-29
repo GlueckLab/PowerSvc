@@ -13,10 +13,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
 import edu.cudenver.bios.powersamplesize.Power;
-import edu.cudenver.bios.powersamplesize.graphics.PowerCurveBuilder;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
-import edu.cudenver.bios.powersvc.domain.PowerCurveResults;
 import edu.cudenver.bios.powersvc.domain.PowerDescription;
 import edu.cudenver.bios.powersvc.domain.PowerResults;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
@@ -75,22 +72,7 @@ public class PowerResource extends Resource
                 results.setSimulatedPower(calculator.getSimulatedPower(desc.getParameters(), 
                         desc.getSimulationIterations()));
             }
-            
-            // create a power curve if requested
-            PowerCurveDescription curveDesc = desc.getCurveDescription();
-            if (curveDesc != null)
-            {
-                PowerCurveBuilder builder = new PowerCurveBuilder(calculator, SampleSizeResourceHelper.getCalculatorByModelName(modelName));
-                builder.setTitle(curveDesc.getTitle());
-                builder.setXaxisLabel(curveDesc.getXAxisLabel());
-                builder.setYaxisLabel(curveDesc.getYAxisLabel());
-                PowerCurveResults curveResults = new PowerCurveResults();
-                curveResults.setCurve(builder.getPowerCurve(desc.getParameters()));
-                curveResults.setWidth(curveDesc.getWidth());
-                curveResults.setHeight(curveDesc.getHeight());
-                results.setCurveResults(curveResults);
-            }
-            
+                       
             // build the response xml
             PowerXMLRepresentation response = new PowerXMLRepresentation(results);
             getResponse().setEntity(response); 

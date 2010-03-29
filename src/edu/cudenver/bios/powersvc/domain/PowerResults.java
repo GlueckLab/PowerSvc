@@ -9,9 +9,6 @@ public class PowerResults
     // simulated power - must set simulated=true for a power simulation 
     // to be run
     double simulatedPower = -1;
-
-    // graphics results
-    PowerCurveResults curveResults = null;
     
     public double getPower()
     {
@@ -31,16 +28,6 @@ public class PowerResults
     public void setSimulatedPower(double simulatedPower)
     {
         this.simulatedPower = simulatedPower;
-    }
-
-    public PowerCurveResults getCurveResults()
-    {
-        return curveResults;
-    }
-
-    public void setCurveResults(PowerCurveResults curveResults)
-    {
-        this.curveResults = curveResults;
     }
 
 }

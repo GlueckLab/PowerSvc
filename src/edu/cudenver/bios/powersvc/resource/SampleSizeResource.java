@@ -14,11 +14,8 @@ import org.restlet.resource.Variant;
 
 import edu.cudenver.bios.powersamplesize.Power;
 import edu.cudenver.bios.powersamplesize.SampleSize;
-import edu.cudenver.bios.powersamplesize.graphics.PowerCurveBuilder;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
-import edu.cudenver.bios.powersvc.domain.PowerCurveResults;
 import edu.cudenver.bios.powersvc.domain.PowerSampleSizeDescription;
 import edu.cudenver.bios.powersvc.domain.SampleSizeResults;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
@@ -76,21 +73,6 @@ public class SampleSizeResource extends Resource
             SampleSizeResourceHelper.updateParameters(modelName, params, sampleSize);
             Power powerCalc = PowerResourceHelper.getCalculatorByModelName(modelName);
             results.setActualPower(powerCalc.getCalculatedPower(params));
-
-            // create a power curve if requested
-            PowerCurveDescription curveDesc = desc.getCurveDescription();
-            if (curveDesc != null)
-            {
-                PowerCurveBuilder builder = new PowerCurveBuilder(powerCalc, calculator);
-                builder.setTitle(curveDesc.getTitle());
-                builder.setXaxisLabel(curveDesc.getXAxisLabel());
-                builder.setYaxisLabel(curveDesc.getYAxisLabel());
-                PowerCurveResults curveResults = new PowerCurveResults();
-                curveResults.setCurve(builder.getPowerCurve(desc.getParameters()));
-                curveResults.setWidth(curveDesc.getWidth());
-                curveResults.setHeight(curveDesc.getHeight());
-                results.setCurveResults(curveResults);
-            }
 
             // build the response xml
             SampleSizeXMLRepresentation response = new SampleSizeXMLRepresentation(results);

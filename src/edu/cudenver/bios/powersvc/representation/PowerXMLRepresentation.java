@@ -6,7 +6,6 @@ import org.restlet.resource.DomRepresentation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
-import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.domain.PowerResults;
 
 public class PowerXMLRepresentation extends DomRepresentation
