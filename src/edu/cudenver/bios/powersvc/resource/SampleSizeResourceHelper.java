@@ -20,7 +20,7 @@ import edu.cudenver.bios.powersvc.domain.PowerSampleSizeDescription;
 public class SampleSizeResourceHelper
 {
 
-    public static PowerSampleSizeDescription sampleSizeFromDomNode(String modelName, Node node) 
+    public static PowerSampleSizeDescription sampleSizeFromDomNode(Node node) 
     throws ResourceException
     {
         PowerSampleSizeDescription desc = new PowerSampleSizeDescription();
@@ -50,7 +50,7 @@ public class SampleSizeResourceHelper
                 {
                     // parse the appropriate sample size parameters depending on the type of model
                     PowerSampleSizeParameters params = 
-                        ParameterResourceHelper.powerSampleSizeParametersFromDomNode(modelName, children.item(i));
+                        ParameterResourceHelper.powerSampleSizeParametersFromDomNode(desc.getModelName(), children.item(i));
                     if (params != null) desc.setParameters(params);
                 }
             }

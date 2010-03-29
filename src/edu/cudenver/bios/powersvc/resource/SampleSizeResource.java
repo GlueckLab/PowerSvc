@@ -23,14 +23,9 @@ import edu.cudenver.bios.powersvc.representation.SampleSizeXMLRepresentation;
 
 public class SampleSizeResource extends Resource
 {
-    private String modelName = null;
-
     public SampleSizeResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
-
-        modelName = (String) request.getAttributes().get("modelName");
-
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
     }
 
@@ -60,18 +55,18 @@ public class SampleSizeResource extends Resource
         try
         {
             // parse the sample size options and parameters from the entity body
-            PowerSampleSizeDescription desc = SampleSizeResourceHelper.sampleSizeFromDomNode(modelName, rep.getDocument().getDocumentElement());
+            PowerSampleSizeDescription desc = SampleSizeResourceHelper.sampleSizeFromDomNode(rep.getDocument().getDocumentElement());
             PowerSampleSizeParameters params = desc.getParameters();
             // create the appropriate sample size calculator for this model
-            SampleSize calculator = SampleSizeResourceHelper.getCalculatorByModelName(modelName);
+            SampleSize calculator = SampleSizeResourceHelper.getCalculatorByModelName(desc.getModelName());
             // create a results object
             SampleSizeResults results = new SampleSizeResults();
             // calculate the sample size
             int sampleSize = calculator.getSampleSize(params);
             results.setSampleSize(sampleSize);
             // calculate the actual power associated with the sample size
-            SampleSizeResourceHelper.updateParameters(modelName, params, sampleSize);
-            Power powerCalc = PowerResourceHelper.getCalculatorByModelName(modelName);
+            SampleSizeResourceHelper.updateParameters(desc.getModelName(), params, sampleSize);
+            Power powerCalc = PowerResourceHelper.getCalculatorByModelName(desc.getModelName());
             results.setActualPower(powerCalc.getCalculatedPower(params));
 
             // build the response xml
