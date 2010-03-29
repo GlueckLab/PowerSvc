@@ -32,18 +32,15 @@ public class PowerApplication extends Application
         // Defines only one default route, self-identifies server
         router.attachDefault(DefaultResource.class);
 
-        /* just self-identify server if no test specified */
-        router.attach("/power", DefaultResource.class);
-
         /* attributes of power resources */
         // Power calculation resource and report generating resource
-        router.attach("/power/model/{modelName}", PowerResource.class);
-        router.attach("/power/model/{modelName}/report", PowerReportResource.class);
+        router.attach("/power", PowerResource.class);
+        router.attach("/power/report", PowerReportResource.class);
         // Sample size resource
-        router.attach("/samplesize/model/{modelName}", SampleSizeResource.class);
-        router.attach("/samplesize/model/{modelName}/report", SampleSizeReportResource.class);
+        router.attach("/samplesize", SampleSizeResource.class);
+        router.attach("/samplesize/report", SampleSizeReportResource.class);
         // Power curve resource
-        router.attach("/curve/model/{modelName}", PowerCurveResource.class);
+        router.attach("/curve", PowerCurveResource.class);
                 
         return router;
     }

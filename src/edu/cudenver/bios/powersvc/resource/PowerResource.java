@@ -21,14 +21,9 @@ import edu.cudenver.bios.powersvc.representation.PowerXMLRepresentation;
 
 public class PowerResource extends Resource
 {
-    private String modelName = null;
-
     public PowerResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
-
-        modelName = (String) request.getAttributes().get("modelName");
-
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
     }
 
@@ -58,10 +53,10 @@ public class PowerResource extends Resource
         try
         {
             // parse the power options and parameters from the entity body
-            PowerDescription desc = PowerResourceHelper.powerFromDomNode(modelName, rep.getDocument().getDocumentElement());
+            PowerDescription desc = PowerResourceHelper.powerFromDomNode(rep.getDocument().getDocumentElement());
 
             // create the appropriate power calculator for this model
-            Power calculator = PowerResourceHelper.getCalculatorByModelName(modelName);
+            Power calculator = PowerResourceHelper.getCalculatorByModelName(desc.getModelName());
             // create a results object
             PowerResults results = new PowerResults();
             // calculate the power

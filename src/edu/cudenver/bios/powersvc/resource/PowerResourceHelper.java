@@ -16,7 +16,7 @@ import edu.cudenver.bios.powersvc.domain.PowerDescription;
 
 public class PowerResourceHelper
 {
-    public static PowerDescription powerFromDomNode(String modelName, Node node) 
+    public static PowerDescription powerFromDomNode(Node node) 
     throws ResourceException
     {
         PowerDescription desc = new PowerDescription();
@@ -28,17 +28,22 @@ public class PowerResourceHelper
         try
         {
             NamedNodeMap attrs = node.getAttributes();
-            if (attrs != null)
-            {
-                /* parse optional arguments */
-                
-                // simulated=true|false, if true includes simulation of power
-                Node sim = attrs.getNamedItem(PowerConstants.ATTR_SIMULATED);
-                if (sim != null) desc.setSimulated(Boolean.parseBoolean(sim.getNodeValue()));
-                // simulation iterations, indicates the number of iterations of a simulation to run
-                Node iter = attrs.getNamedItem(PowerConstants.ATTR_SIMULATION_SIZE);
-                if (iter != null) desc.setSimulationIterations(Integer.parseInt(iter.getNodeValue()));
-            }            
+            if (attrs == null) throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Missing model name when parsing power object");
+
+            // make sure a model name is specified as an attribute
+            Node modelNameNode = attrs.getNamedItem(PowerConstants.ATTR_MODEL);
+            if (modelNameNode != null && !modelNameNode.getNodeValue().isEmpty()) 
+                desc.setModelName(modelNameNode.getNodeValue());
+            else
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Missing model name when parsing power object");
+
+            /* parse optional arguments */
+            // simulated=true|false, if true includes simulation of power
+            Node sim = attrs.getNamedItem(PowerConstants.ATTR_SIMULATED);
+            if (sim != null) desc.setSimulated(Boolean.parseBoolean(sim.getNodeValue()));
+            // simulation iterations, indicates the number of iterations of a simulation to run
+            Node iter = attrs.getNamedItem(PowerConstants.ATTR_SIMULATION_SIZE);
+            if (iter != null) desc.setSimulationIterations(Integer.parseInt(iter.getNodeValue()));       
         }
         catch (Exception e)
         {
@@ -61,7 +66,7 @@ public class PowerResourceHelper
                 {
                     // parse the appropriate sample size parameters depending on the type of model
                     PowerSampleSizeParameters params = 
-                        ParameterResourceHelper.powerSampleSizeParametersFromDomNode(modelName, children.item(i));
+                        ParameterResourceHelper.powerSampleSizeParametersFromDomNode(desc.getModelName(), children.item(i));
                     if (params != null) desc.setParameters(params);
                 }
             }

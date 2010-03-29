@@ -32,14 +32,9 @@ import edu.cudenver.bios.powersvc.representation.PowerCurveRepresentation;
 
 public class PowerCurveResource extends Resource
 {
-    private String modelName = null;
-
     public PowerCurveResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
-
-        modelName = (String) request.getAttributes().get("modelName");
-
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
     }
 
@@ -77,16 +72,15 @@ public class PowerCurveResource extends Resource
             Document curveRequestDoc = docBuilder.parse(new InputSource(new StringReader(curveRequest.getValue())));
             // parse the power options and parameters from the entity body
             PowerDescription desc = 
-                PowerResourceHelper.powerFromDomNode(modelName, 
-                        curveRequestDoc.getDocumentElement());
+                PowerResourceHelper.powerFromDomNode(curveRequestDoc.getDocumentElement());
             
             // create a power curve 
             PowerCurveDescription curveDesc = desc.getCurveDescription();
             if (curveDesc == null) throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid curve description");
 
             PowerCurveBuilder builder =
-                new PowerCurveBuilder(PowerResourceHelper.getCalculatorByModelName(modelName), 
-                        SampleSizeResourceHelper.getCalculatorByModelName(modelName));
+                new PowerCurveBuilder(PowerResourceHelper.getCalculatorByModelName(desc.getModelName()), 
+                        SampleSizeResourceHelper.getCalculatorByModelName(desc.getModelName()));
             builder.setTitle(curveDesc.getTitle());
             builder.setXaxisLabel(curveDesc.getXAxisLabel());
             builder.setYaxisLabel(curveDesc.getYAxisLabel());

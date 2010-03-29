@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 public class TestParsing extends TestCase
 {
     private Document validGLMMPowerDoc = null;
-    private static final String validGLMMPower = "<power><params alpha='0.05'>" +
+    private static final String validGLMMPower = "<power modelName='glmm'><params alpha='0.05'>" +
     "<matrix name='beta' rows='3' columns='2'><r><c>1</c><c>0</c></r>" +
     "<r><c>0</c><c>1</c></r><r><c>2</c><c>1</c></r></matrix>" +
     "<matrix name='sigma' rows='3' columns='2'></matrix>" +
@@ -76,8 +76,7 @@ public class TestParsing extends TestCase
         try
         {
             PowerDescription desc = 
-                PowerResourceHelper.powerFromDomNode(PowerConstants.TEST_GLMM,
-                        validGLMMPowerDoc.getDocumentElement());
+                PowerResourceHelper.powerFromDomNode(validGLMMPowerDoc.getDocumentElement());
             System.out.println("Valid GLMM inputs parsed successfully");
             assertTrue(true);
         }
@@ -94,8 +93,7 @@ public class TestParsing extends TestCase
         try
         {
             PowerDescription inputs = 
-                PowerResourceHelper.powerFromDomNode(PowerConstants.TEST_GLMM,
-                        invalidGLMMPowerDoc.getDocumentElement());
+                PowerResourceHelper.powerFromDomNode(invalidGLMMPowerDoc.getDocumentElement());
             fail();
         }
         catch(Exception e)

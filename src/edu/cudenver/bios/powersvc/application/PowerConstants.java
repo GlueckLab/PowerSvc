@@ -12,7 +12,6 @@ public class PowerConstants
     
     // URI and query parameters
     public static final String REQUEST_ITERATIONS = "iterations";
-    public static final String REQUEST_MODEL = "modelName";
     
     // xml tag names
     public static final String TAG_CURVE = "curve";
@@ -27,6 +26,7 @@ public class PowerConstants
     public static final String TAG_COLUMN = "c";
     public static final String TAG_ROW_META_DATA = "rowMetaData";
     public static final String TAG_COLUMN_META_DATA = "columnMetaData";
+    public static final String ATTR_MODEL = "modelName";
     public static final String ATTR_NAME = "name";
     public static final String ATTR_MU0 = "mu0";
     public static final String ATTR_MUA = "muA";

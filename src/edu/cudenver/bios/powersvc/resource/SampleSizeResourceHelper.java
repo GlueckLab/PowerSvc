@@ -1,7 +1,9 @@
 package edu.cudenver.bios.powersvc.resource;
 
 import org.apache.commons.math.linear.RealMatrix;
+import org.restlet.data.Status;
 import org.restlet.resource.ResourceException;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -23,6 +25,15 @@ public class SampleSizeResourceHelper
     {
         PowerSampleSizeDescription desc = new PowerSampleSizeDescription();
                 
+        // make sure a model name is specified as an attribute
+        NamedNodeMap attrs = node.getAttributes();
+        if (attrs == null) throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Missing model name when parsing sample size object");
+        Node modelNameNode = attrs.getNamedItem(PowerConstants.ATTR_MODEL);
+        if (modelNameNode != null && !modelNameNode.getNodeValue().isEmpty()) 
+            desc.setModelName(modelNameNode.getNodeValue());
+        else
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Missing model name when parsing sample size object");
+
         // parse the parameters - depend on the type of model
         NodeList children = node.getChildNodes();
         if (children != null && children.getLength() > 0)
