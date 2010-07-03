@@ -1,6 +1,29 @@
+/*
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.powersvc.resource;
 
 import java.io.IOException;
+import java.util.List;
+
 import org.restlet.Context;
 import org.restlet.data.MediaType;
 import org.restlet.data.Request;
@@ -12,39 +35,67 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.Variant;
 
-import edu.cudenver.bios.powersamplesize.Power;
+import edu.cudenver.bios.power.GLMMPowerCalculator;
+import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.domain.PowerDescription;
-import edu.cudenver.bios.powersvc.domain.PowerResults;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
-import edu.cudenver.bios.powersvc.representation.PowerXMLRepresentation;
+import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
+/**
+ * Resource for handling requests for power calculations.
+ * See the PowerApplication class for URI mappings
+ */
 public class PowerResource extends Resource
 {
+	/**
+	 * Create a new resource to handle power requests.  Data
+	 * is returned as XML.
+	 * 
+	 * @param context restlet context
+	 * @param request http request object
+	 * @param response http response object
+	 */
     public PowerResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
     }
 
+    /**
+     * Disallow GET requests
+     */
     @Override
     public boolean allowGet()
     {
         return false;
     }
 
+    /**
+     * Disallow PUT requests
+     */
     @Override
     public boolean allowPut()
     {
         return false;
     }
 
+    /**
+     * Allow POST requests to create a detectable difference list
+     */
     @Override
     public boolean allowPost() 
     {
         return  true;
     }
 
+    /**
+     * Process a POST request to perform a set of power
+     * calculations.  Please see REST API documentation for details on
+     * the entity body format.
+     * 
+     * @param entity HTTP entity body for the request
+     */
     @Override 
     public void acceptRepresentation(Representation entity)
     {
@@ -52,24 +103,16 @@ public class PowerResource extends Resource
 
         try
         {
-            // parse the power options and parameters from the entity body
-            PowerDescription desc = PowerResourceHelper.powerFromDomNode(rep.getDocument().getDocumentElement());
+            // parse the power parameters from the entity body
+            GLMMPowerParameters params = ParameterResourceHelper.glmmPowerParametersFromDomNode(rep.getDocument().getDocumentElement());
 
             // create the appropriate power calculator for this model
-            Power calculator = PowerResourceHelper.getCalculatorByModelName(desc.getModelName());
-            // create a results object
-            PowerResults results = new PowerResults();
-            // calculate the power
-            results.setPower(calculator.getCalculatedPower(desc.getParameters()));
-            // if requested, add simulated power
-            if (desc.isSimulated())
-            {
-                results.setSimulatedPower(calculator.getSimulatedPower(desc.getParameters(), 
-                        desc.getSimulationIterations()));
-            }
-                       
+            GLMMPowerCalculator calculator = new GLMMPowerCalculator();
+            // calculate the detecable difference results
+            List<Power> results = calculator.getPower(params);
+           
             // build the response xml
-            PowerXMLRepresentation response = new PowerXMLRepresentation(results);
+            GLMMPowerListXMLRepresentation response = new GLMMPowerListXMLRepresentation(results);
             getResponse().setEntity(response); 
             getResponse().setStatus(Status.SUCCESS_CREATED);
         }
@@ -94,7 +137,6 @@ public class PowerResource extends Resource
             catch (IOException e) {}
             getResponse().setStatus(re.getStatus());
         }
-
     }
 
 }

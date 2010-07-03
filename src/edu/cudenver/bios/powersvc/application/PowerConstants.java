@@ -6,74 +6,60 @@ public class PowerConstants
     public static final int MAX_SIMULATION_SIZE = 100000;
     public static final int DEFAULT_SIMULATION_SIZE = 10000;
     
-    // valid model names
-    public static final String TEST_ONE_SAMPLE_STUDENT_T = "onesamplestudentt";
-    public static final String TEST_GLMM = "glmm";
-    
     // URI and query parameters
     public static final String REQUEST_ITERATIONS = "iterations";
     
     // xml tag names
-    public static final String TAG_CURVE = "curve";
-    public static final String TAG_CURVE_IMG = "curveImg";
     public static final String TAG_ERROR = "error";
-    public static final String TAG_POWER = "power";
-    public static final String TAG_SAMPLESIZE = "sampleSize";
-    public static final String TAG_PARAMS = "params";
+    public static final String TAG_GLMM_POWER = "glmmPower";
+    public static final String TAG_GLMM_POWER_PARAMETERS = "glmmPowerParameters";
     public static final String TAG_ESSENCE_MATRIX = "essenceMatrix";
     public static final String TAG_MATRIX = "matrix";
     public static final String TAG_ROW = "r";
     public static final String TAG_COLUMN = "c";
     public static final String TAG_ROW_META_DATA = "rowMetaData";
     public static final String TAG_COLUMN_META_DATA = "columnMetaData";
-    public static final String ATTR_MODEL = "modelName";
+    public static final String TAG_TEST_LIST = "testList";
+    public static final String TAG_ALPHA_LIST = "alphaList";
+    public static final String TAG_POWER_LIST = "powerList";
+    public static final String TAG_SAMPLE_SIZE_LIST = "sampleSizeList";
+    public static final String TAG_BETA_SCALE_LIST = "betaScaleList";
+    public static final String TAG_SIGMA_SCALE_LIST = "sigmaScaleList";
+    public static final String TAG_POWER_METHOD_LIST = "powerMethodList";
+    public static final String TAG_QUANTILE_LIST = "quantileList";
+    public static final String ATTR_COUNT = "count";
     public static final String ATTR_NAME = "name";
-    public static final String ATTR_MU0 = "mu0";
-    public static final String ATTR_MUA = "muA";
-    public static final String ATTR_SIGMA_ERROR = "sigmaError";
-    public static final String ATTR_ALPHA = "alpha";
-    public static final String ATTR_SAMPLESIZE = "sampleSize";
-    public static final String ATTR_CURVE_WIDTH = "width";
-    public static final String ATTR_CURVE_HEIGHT = "height";
-    public static final String ATTR_CURVE_TITLE = "title";
-    public static final String ATTR_CURVE_XLABEL = "xlabel";
-    public static final String ATTR_CURVE_YLABEL = "ylabel";
-    public static final String ATTR_CALCULATED = "calculated";
-    public static final String ATTR_SIMULATED = "simulated";
-    public static final String ATTR_SIMULATION_SIZE = "simulationSize";
-    public static final String ATTR_ONE_TAILED = "oneTailed";
     public static final String ATTR_POWER = "power";
-    public static final String ATTR_REPETITIONS = "reps";
     public static final String ATTR_RATIO = "ratio";
     public static final String ATTR_TYPE = "type";
     public static final String ATTR_MEAN = "mean";
     public static final String ATTR_VARIANCE = "variance";
     public static final String ATTR_ROWS = "rows";
     public static final String ATTR_COLUMNS = "columns";
-    public static final String ATTR_STATISTIC = "statistic";
-    public static final String ATTR_POWER_METHOD = "powerMethod";
-    public static final String ATTR_QUANTILE = "quantile";
     public static final String ATTR_RANDOM_SEED = "seed";
-    public static final String ATTR_UNIREP_CORRECT = "unirepCorrection";
     public static final String ATTR_UNIREP_CDF = "unirepCdf";
     public static final String ATTR_MOMENT_METHOD = "momentMethod";
+    public static final String ATTR_NOMINAL_POWER = "nominalPower";
+    public static final String ATTR_ACTUAL_POWER = "actualPower";
+    public static final String ATTR_BETA_SCALE = "betaScale";
+    public static final String ATTR_SIGMA_SCALE = "sigmaScale";
+    public static final String ATTR_ALPHA = "alpha";
+    public static final String ATTR_SAMPLE_SIZE = "sampleSize";
+    public static final String ATTR_TEST = "test";
     
     // statistic name constants
-    public static final String STATISTIC_HOTELLING_LAWLEY_TRACE = "hlt";
-    public static final String STATISTIC_WILKS_LAMBDA = "wl";
-    public static final String STATISTIC_PILLAU_BARTLETT_TRACE = "pbt";
-    public static final String STATISTIC_UNIREP = "unirep";
+    public static final String TEST_HOTELLING_LAWLEY_TRACE = "hlt";
+    public static final String TEST_PILLAI_BARTLETT_TRACE = "pbt";
+    public static final String TEST_WILKS_LAMBDA = "wl";
+    public static final String TEST_UNIREP = "unirep";
+    public static final String TEST_UNIREP_BOX = "unirepBox";
+    public static final String TEST_UNIREP_GG = "unirepGG";
+    public static final String TEST_UNIREP_HF = "unirepHF";
     
     // types of power approximations
     public static final String POWER_METHOD_CONDITIONAL = "conditional";
     public static final String POWER_METHOD_UNCONDITIONAL = "unconditional";
     public static final String POWER_METHOD_QUANTILE = "quantile";
-    
-    // univariate approach to repeated measures correction options
-    public static final String UNIREP_CORRECT_GEISSER_GREENHOUSE = "gg";
-    public static final String UNIREP_CORRECT_HUYNH_FELDT = "hf";
-    public static final String UNIREP_CORRECT_BOX = "box";
-    public static final String UNIREP_CORRECT_NONE = "none";
     
     // univariate approach to repeated measures  cdf methods
     public static final String UNIREP_CDF_MULLER_BARTON_APPROX = "mba";

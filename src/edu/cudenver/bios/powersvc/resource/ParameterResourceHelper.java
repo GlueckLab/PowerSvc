@@ -1,3 +1,24 @@
+/*
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.powersvc.resource;
 
 import java.util.ArrayList;
@@ -14,6 +35,7 @@ import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.EssenceMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.SimplePowerSampleSizeParameters;
@@ -27,212 +49,27 @@ import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.domain.PowerCurveDescription;
 
 /**
- * Parsing of model parameters from DOM tree.
- * 
- * @author kreidles
- *
+ * Helper class for parsing GLMM parameters from a DOM tree.
  */
 public class ParameterResourceHelper
 {
-    
-    public static PowerSampleSizeParameters powerSampleSizeParametersFromDomNode(String modelName, Node node)
+	/**
+	 * Parse a GLMMPowerParameters object from its XML representation
+	 * 
+	 * @param node root of the XML DOM tree
+	 * @return GLMMPowerParameters object
+	 * @throws ResourceException
+	 */
+    public static GLMMPowerParameters glmmPowerParametersFromDomNode(Node node)
     throws ResourceException
     {
-        if (PowerConstants.TEST_ONE_SAMPLE_STUDENT_T.equals(modelName))
-        {
-            return ParameterResourceHelper.simpleParamsFromDomNode(node);
-        } 
-        else if (PowerConstants.TEST_GLMM.equals(modelName))
-        {
-            return ParameterResourceHelper.linearModelParamsFromDomNode(node);
-        }
-        else
-        {
-            PowerLogger.getInstance().warn("Invalid model name found while parsing parameters: " + modelName);
-            return null;
-        }
-    }
-    
-    /**
-     * Parse simple inputs for power/sample size calculations from a DOM tree
-     * 
-     * @param node
-     * @return SimplePowerSampleSizeParameters object
-     * @throws ResourceException
-     */
-    public static SimplePowerSampleSizeParameters simpleParamsFromDomNode(Node node) throws ResourceException
-    {
-        SimplePowerSampleSizeParameters powerParams = new SimplePowerSampleSizeParameters();
-        
-        // make sure the root node is a power parameters
-        if (!PowerConstants.TAG_PARAMS.equals(node.getNodeName()))
+    	GLMMPowerParameters params = new GLMMPowerParameters();
+
+        // make sure the root node is a "glmmPowerParameters" tag
+        if (!node.getNodeName().equals(PowerConstants.TAG_GLMM_POWER_PARAMETERS))
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid root node '" + node.getNodeName() + "' when parsing parameter object");
 
-        // get the parameter attributes
-        NamedNodeMap attrs = node.getAttributes();
-        if (attrs != null)
-        {
-            /* parse required parameters: mu0, muA, sigma, alpha, sample size */
-            Node mu0 = attrs.getNamedItem(PowerConstants.ATTR_MU0);
-            if (mu0 != null) powerParams.setMu0(Double.parseDouble(mu0.getNodeValue()));
-
-            Node muA = attrs.getNamedItem(PowerConstants.ATTR_MUA);
-            if (muA != null) powerParams.setMuA(Double.parseDouble(muA.getNodeValue()));
-            
-            Node sigma = attrs.getNamedItem(PowerConstants.ATTR_SIGMA_ERROR);
-            if (sigma != null) powerParams.setSigma(Double.parseDouble(sigma.getNodeValue()));
-            
-            Node alpha = attrs.getNamedItem(PowerConstants.ATTR_ALPHA);
-            if (alpha != null) powerParams.setAlpha(Double.parseDouble(alpha.getNodeValue()));
-            
-            Node sampleSize = attrs.getNamedItem(PowerConstants.ATTR_SAMPLESIZE);
-            if (sampleSize != null) powerParams.setSampleSize(Integer.parseInt(sampleSize.getNodeValue()));
-
-            Node power = attrs.getNamedItem(PowerConstants.ATTR_POWER);
-            if (power != null) powerParams.setPower(Double.parseDouble(power.getNodeValue()));
-            
-            // parse optional parameters: oneTailed, simulate, simulationSize
-            Node oneTailed = attrs.getNamedItem(PowerConstants.ATTR_ONE_TAILED);
-            if (oneTailed != null) powerParams.setOneTailed(Boolean.parseBoolean(oneTailed.getNodeValue()));
-        }
-
-        return powerParams;
-    }
-    
-    /**
-     * Get linear model parameters from a DOM tree
-     * 
-     * @param node
-     * @return
-     * @throws ResourceException
-     */
-    public static LinearModelPowerSampleSizeParameters linearModelParamsFromDomNode(Node node) throws ResourceException
-    {
-        LinearModelPowerSampleSizeParameters params = new LinearModelPowerSampleSizeParameters();
-
-        // make sure the root node is a power parameters
-        if (!node.getNodeName().equals(PowerConstants.TAG_PARAMS))
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid root node '" + node.getNodeName() + "' when parsing parameter object");
-
-        // get the parameter attributes
-        NamedNodeMap attrs = node.getAttributes();
-        if (attrs != null)
-        {
-            /* parse required attributes: alpha */
-            Node alpha = attrs.getNamedItem(PowerConstants.ATTR_ALPHA);
-            if (alpha != null) params.setAlpha(Double.parseDouble(alpha.getNodeValue()));
-            
-            // TODO: extract this from design or essence matrix.  It's silly to specify
-            Node sampleSize = attrs.getNamedItem(PowerConstants.ATTR_SAMPLESIZE);
-            if (sampleSize != null) params.setSampleSize(Integer.parseInt(sampleSize.getNodeValue()));
-            
-            // parse desired power
-            Node power = attrs.getNamedItem(PowerConstants.ATTR_POWER);
-            if (power != null) params.setPower(Double.parseDouble(power.getNodeValue()));
-            
-            /* parse the power method */
-            Node powerMethod = attrs.getNamedItem(PowerConstants.ATTR_POWER_METHOD);
-            if (powerMethod != null)
-            {
-                String powerMethodName = powerMethod.getNodeValue();
-                if (powerMethodName != null)
-                {
-                    if (PowerConstants.POWER_METHOD_QUANTILE.equals(powerMethodName))
-                        params.setPowerMethod(PowerMethod.QUANTILE_POWER);
-                    else if (PowerConstants.POWER_METHOD_UNCONDITIONAL.equals(powerMethodName))
-                        params.setPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
-                    else
-                        params.setPowerMethod(PowerMethod.CONDITIONAL_POWER);
-                }
-            }
-            
-            /* parse the quantile (if using quantile power) */
-            Node quantile = attrs.getNamedItem(PowerConstants.ATTR_QUANTILE);
-            if (quantile != null) params.setQuantile(Double.parseDouble(quantile.getNodeValue()));
-            
-            /* parse the test statistic */
-            Node stat = attrs.getNamedItem(PowerConstants.ATTR_STATISTIC);
-            if (stat != null) 
-            {
-                String statName = stat.getNodeValue();
-                if (statName != null)
-                {
-                    if (PowerConstants.STATISTIC_UNIREP.equals(statName))
-                        params.setTestStatistic(TestStatistic.UNIREP);
-                    else if (PowerConstants.STATISTIC_HOTELLING_LAWLEY_TRACE.equals(statName))
-                        params.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
-                    else if (PowerConstants.STATISTIC_PILLAU_BARTLETT_TRACE.equals(statName))
-                        params.setTestStatistic(TestStatistic.PILLAI_BARTLETT_TRACE);
-                    else if (PowerConstants.STATISTIC_WILKS_LAMBDA.equals(statName))
-                        params.setTestStatistic(TestStatistic.WILKS_LAMBDA);
-                    else
-                    {
-                        PowerLogger.getInstance().warn("Invalid statistic name '" + statName + "', defaulting to Hotelling-Lawley Trace");
-                    }
-                }
-            }
-            
-            Node unirepCorrect = attrs.getNamedItem(PowerConstants.ATTR_UNIREP_CORRECT);
-            if (unirepCorrect != null)
-            {
-                if (PowerConstants.UNIREP_CORRECT_GEISSER_GREENHOUSE.equals(unirepCorrect))
-                    params.setUnivariateCorrection(UnivariateCorrection.GEISSER_GREENHOUSE);
-                else if (PowerConstants.UNIREP_CORRECT_HUYNH_FELDT.equals(unirepCorrect))
-                    params.setUnivariateCorrection(UnivariateCorrection.HUYNH_FELDT);
-                else if (PowerConstants.UNIREP_CORRECT_BOX.equals(unirepCorrect))
-                    params.setUnivariateCorrection(UnivariateCorrection.BOX);
-                else if (PowerConstants.UNIREP_CORRECT_NONE.equals(unirepCorrect))
-                    params.setUnivariateCorrection(UnivariateCorrection.NONE);
-                else
-                {
-                    PowerLogger.getInstance().warn("Invalid unirep correction name '" + unirepCorrect + "', defaulting to uncorrected");
-                }
-            }
-            
-            Node unirepCDF = attrs.getNamedItem(PowerConstants.ATTR_UNIREP_CDF);
-            if (unirepCDF != null)
-            {
-                if (PowerConstants.UNIREP_CDF_MULLER_BARTON_APPROX.equals(unirepCorrect))
-                    params.setUnivariateCdf(UnivariateCdf.MULLER_BARTON_APPROX);
-                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_APPROX.equals(unirepCorrect))
-                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX);
-                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT.equals(unirepCorrect))
-                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_EXACT);
-                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT_APPROX.equals(unirepCorrect))
-                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_EXACT_APPROX);
-                else
-                {
-                    PowerLogger.getInstance().warn("Invalid unirep cdf method '" + unirepCDF + "', defaulting to Muller-Barton approximation");
-                }
-            }
-            
-            Node momentMethod = attrs.getNamedItem(PowerConstants.ATTR_MOMENT_METHOD);
-            if (momentMethod != null)
-            {
-                if (PowerConstants.MOMENT_METHOD_PILLAI_ONE_MOMENT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.PILLAI_ONE_MOMENT);
-                else if (PowerConstants.MOMENT_METHOD_PILLAI_ONE_MOMENT_OMEGA_MULT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT);
-                else if (PowerConstants.MOMENT_METHOD_MCKEON_TWO_MOMENT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.MCKEON_TWO_MOMENT);
-                else if (PowerConstants.MOMENT_METHOD_MCKEON_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT);
-                else if (PowerConstants.MOMENT_METHOD_MULLER_TWO_MOMENT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.MULLER_TWO_MOMENT);
-                else if (PowerConstants.MOMENT_METHOD_MULLER_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT);
-                else if (PowerConstants.MOMENT_METHOD_RAO_TWO_MOMENT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.RAO_TWO_MOMENT);
-                else if (PowerConstants.MOMENT_METHOD_RAO_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
-                    params.setMomentMethod(MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT);
-                else
-                {
-                    PowerLogger.getInstance().warn("Invalid moment approximation method '" + momentMethod + "', defaulting to none");
-                }
-            }
-        }
-
-        // parse the matrix inputs: beta, design, theta, sigma, C-contrast, U-contrast
+        /* process the child elements.  Includes matrix and list inputs */
         NodeList children = node.getChildNodes();
         if (children != null && children.getLength() > 0)
         {
@@ -284,14 +121,431 @@ public class ParameterResourceHelper
                     }
 
                 }
+                else if (PowerConstants.TAG_TEST_LIST.equals(child.getNodeName()))
+                {
+                	parseTestList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_ALPHA_LIST.equals(child.getNodeName()))
+                {
+                	parseAlphaList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_POWER_LIST.equals(child.getNodeName()))
+                {
+                	parsePowerList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_SAMPLE_SIZE_LIST.equals(child.getNodeName()))
+                {
+                	parseSampleSizeList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_BETA_SCALE_LIST.equals(child.getNodeName()))
+                {
+                	parseBetaScaleList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_SIGMA_SCALE_LIST.equals(child.getNodeName()))
+                {
+                	parseSigmaScaleList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_POWER_METHOD_LIST.equals(child.getNodeName()))
+                {
+                	parsePowerMethodList(params, child.getChildNodes());
+                }
+                else if (PowerConstants.TAG_QUANTILE_LIST.equals(child.getNodeName()))
+                {
+                	parseQuantileList(params, child.getChildNodes());
+                }
                 else 
                 {
                     PowerLogger.getInstance().warn("Ignoring unknown tag while parsing parameters: " + child.getNodeName());
                 }
             }
         }
-        return params;
-    }  
+ 
+        return params;    	
+    }
+    
+    /**
+     *  Parse the list of statistical tests to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parseTestList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+       			Node textNode = children.item(i).getFirstChild();
+    			if (textNode != null)
+    			{
+    				String text = textNode.getNodeValue();
+    				if (PowerConstants.TEST_HOTELLING_LAWLEY_TRACE.equals(text))
+    				{
+    	    			params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
+    				}
+    				else if (PowerConstants.TEST_PILLAI_BARTLETT_TRACE.equals(text))
+    				{
+    					params.addTest(GLMMPowerParameters.Test.PILLAI_BARTLETT_TRACE);
+    				}
+    				else if (PowerConstants.TEST_WILKS_LAMBDA.equals(text))
+    				{
+    					params.addTest(GLMMPowerParameters.Test.WILKS_LAMBDA);
+    				}
+    				else if (PowerConstants.TEST_UNIREP.equals(text))
+    				{
+    					params.addTest(GLMMPowerParameters.Test.UNIREP);
+    				}
+    				else if (PowerConstants.TEST_UNIREP_BOX.equals(text))
+    				{
+    					params.addTest(GLMMPowerParameters.Test.UNIREP_BOX);
+    				}
+    				else if (PowerConstants.TEST_UNIREP_GG.equals(text))
+    				{
+    					params.addTest(GLMMPowerParameters.Test.UNIREP_GEISSER_GREENHOUSE);
+    				}
+    				else if (PowerConstants.TEST_UNIREP_HF.equals(text))
+    				{
+    					params.addTest(GLMMPowerParameters.Test.UNIREP_HUYNH_FELDT);
+    				}
+    			}
+    		}
+    	}
+    }
+
+    /**
+     *  Parse the list of alpha values to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parseAlphaList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			params.addAlpha(Double.parseDouble(textNode.getNodeValue()));
+    		}
+    	}
+    }
+    
+    /**
+     *  Parse the list of powers to be included with this calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parsePowerList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			params.addPower(Double.parseDouble(textNode.getNodeValue()));
+    		}
+    	}
+    }
+    
+    /**
+     *  Parse the list of per group sample sizes to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parseSampleSizeList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			params.addSampleSize(Integer.parseInt(textNode.getNodeValue()));
+    		}
+    	}
+    }
+    
+    /**
+     *  Parse the list of beta matrix scale factors to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parseBetaScaleList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			params.addBetaScale(Double.parseDouble(textNode.getNodeValue()));
+    		}
+    	}
+    }
+    
+    /**
+     *  Parse the list of sigma scale factors to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parseSigmaScaleList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			params.addSigmaScale(Double.parseDouble(textNode.getNodeValue()));
+    		}
+    	}
+    }
+    
+    /**
+     *  Parse the list of power methods to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parsePowerMethodList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			if (textNode != null)
+    			{
+    				String text = textNode.getNodeValue();
+    				if (PowerConstants.POWER_METHOD_QUANTILE.equals(text))
+    				{
+    	    			params.addPowerMethod(GLMMPowerParameters.PowerMethod.QUANTILE_POWER);
+    				}
+    				else if (PowerConstants.POWER_METHOD_UNCONDITIONAL.equals(text))
+    				{
+    					params.addPowerMethod(GLMMPowerParameters.PowerMethod.UNCONDITIONAL_POWER);
+    				}
+    				else if (PowerConstants.POWER_METHOD_CONDITIONAL.equals(text))
+    				{
+    					params.addPowerMethod(GLMMPowerParameters.PowerMethod.CONDITIONAL_POWER);
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    /**
+     *  Parse the list of quantiles to be included with this power calculation
+     *  
+     * @param params parameter object being built
+     * @param children children of the testList tag
+     */
+    public static void parseQuantileList(GLMMPowerParameters params, NodeList children)
+    {
+    	if (children != null && params != null)
+    	{
+    		for(int i = 0; i < children.getLength(); i++)
+    		{
+    			Node textNode = children.item(i).getFirstChild();
+    			params.addQuantile(Double.parseDouble(textNode.getNodeValue()));
+    		}
+    	}
+    }
+    
+//    /**
+//     * Get linear model parameters from a DOM tree
+//     * 
+//     * @param node
+//     * @return
+//     * @throws ResourceException
+//     */
+//    public static LinearModelPowerSampleSizeParameters linearModelParamsFromDomNode(Node node) throws ResourceException
+//    {
+//        LinearModelPowerSampleSizeParameters params = new LinearModelPowerSampleSizeParameters();
+//
+//        // make sure the root node is a power parameters
+//        if (!node.getNodeName().equals(PowerConstants.TAG_PARAMS))
+//            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid root node '" + node.getNodeName() + "' when parsing parameter object");
+//
+//        // get the parameter attributes
+//        NamedNodeMap attrs = node.getAttributes();
+//        if (attrs != null)
+//        {
+//            /* parse required attributes: alpha */
+//            Node alpha = attrs.getNamedItem(PowerConstants.ATTR_ALPHA);
+//            if (alpha != null) params.setAlpha(Double.parseDouble(alpha.getNodeValue()));
+//            
+//            // TODO: extract this from design or essence matrix.  It's silly to specify
+//            Node sampleSize = attrs.getNamedItem(PowerConstants.ATTR_SAMPLESIZE);
+//            if (sampleSize != null) params.setSampleSize(Integer.parseInt(sampleSize.getNodeValue()));
+//            
+//            // parse desired power
+//            Node power = attrs.getNamedItem(PowerConstants.ATTR_POWER);
+//            if (power != null) params.setPower(Double.parseDouble(power.getNodeValue()));
+//            
+//            /* parse the power method */
+//            Node powerMethod = attrs.getNamedItem(PowerConstants.ATTR_POWER_METHOD);
+//            if (powerMethod != null)
+//            {
+//                String powerMethodName = powerMethod.getNodeValue();
+//                if (powerMethodName != null)
+//                {
+//                    if (PowerConstants.POWER_METHOD_QUANTILE.equals(powerMethodName))
+//                        params.setPowerMethod(PowerMethod.QUANTILE_POWER);
+//                    else if (PowerConstants.POWER_METHOD_UNCONDITIONAL.equals(powerMethodName))
+//                        params.setPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
+//                    else
+//                        params.setPowerMethod(PowerMethod.CONDITIONAL_POWER);
+//                }
+//            }
+//            
+//            /* parse the quantile (if using quantile power) */
+//            Node quantile = attrs.getNamedItem(PowerConstants.ATTR_QUANTILE);
+//            if (quantile != null) params.setQuantile(Double.parseDouble(quantile.getNodeValue()));
+//            
+//            /* parse the test statistic */
+//            Node stat = attrs.getNamedItem(PowerConstants.ATTR_STATISTIC);
+//            if (stat != null) 
+//            {
+//                String statName = stat.getNodeValue();
+//                if (statName != null)
+//                {
+//                    if (PowerConstants.STATISTIC_UNIREP.equals(statName))
+//                        params.setTestStatistic(TestStatistic.UNIREP);
+//                    else if (PowerConstants.STATISTIC_HOTELLING_LAWLEY_TRACE.equals(statName))
+//                        params.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
+//                    else if (PowerConstants.STATISTIC_PILLAU_BARTLETT_TRACE.equals(statName))
+//                        params.setTestStatistic(TestStatistic.PILLAI_BARTLETT_TRACE);
+//                    else if (PowerConstants.STATISTIC_WILKS_LAMBDA.equals(statName))
+//                        params.setTestStatistic(TestStatistic.WILKS_LAMBDA);
+//                    else
+//                    {
+//                        PowerLogger.getInstance().warn("Invalid statistic name '" + statName + "', defaulting to Hotelling-Lawley Trace");
+//                    }
+//                }
+//            }
+//            
+//            Node unirepCorrect = attrs.getNamedItem(PowerConstants.ATTR_UNIREP_CORRECT);
+//            if (unirepCorrect != null)
+//            {
+//                if (PowerConstants.UNIREP_CORRECT_GEISSER_GREENHOUSE.equals(unirepCorrect))
+//                    params.setUnivariateCorrection(UnivariateCorrection.GEISSER_GREENHOUSE);
+//                else if (PowerConstants.UNIREP_CORRECT_HUYNH_FELDT.equals(unirepCorrect))
+//                    params.setUnivariateCorrection(UnivariateCorrection.HUYNH_FELDT);
+//                else if (PowerConstants.UNIREP_CORRECT_BOX.equals(unirepCorrect))
+//                    params.setUnivariateCorrection(UnivariateCorrection.BOX);
+//                else if (PowerConstants.UNIREP_CORRECT_NONE.equals(unirepCorrect))
+//                    params.setUnivariateCorrection(UnivariateCorrection.NONE);
+//                else
+//                {
+//                    PowerLogger.getInstance().warn("Invalid unirep correction name '" + unirepCorrect + "', defaulting to uncorrected");
+//                }
+//            }
+//            
+//            Node unirepCDF = attrs.getNamedItem(PowerConstants.ATTR_UNIREP_CDF);
+//            if (unirepCDF != null)
+//            {
+//                if (PowerConstants.UNIREP_CDF_MULLER_BARTON_APPROX.equals(unirepCorrect))
+//                    params.setUnivariateCdf(UnivariateCdf.MULLER_BARTON_APPROX);
+//                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_APPROX.equals(unirepCorrect))
+//                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX);
+//                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT.equals(unirepCorrect))
+//                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_EXACT);
+//                else if (PowerConstants.UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT_APPROX.equals(unirepCorrect))
+//                    params.setUnivariateCdf(UnivariateCdf.MULLER_EDWARDS_TAYLOR_EXACT_APPROX);
+//                else
+//                {
+//                    PowerLogger.getInstance().warn("Invalid unirep cdf method '" + unirepCDF + "', defaulting to Muller-Barton approximation");
+//                }
+//            }
+//            
+//            Node momentMethod = attrs.getNamedItem(PowerConstants.ATTR_MOMENT_METHOD);
+//            if (momentMethod != null)
+//            {
+//                if (PowerConstants.MOMENT_METHOD_PILLAI_ONE_MOMENT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.PILLAI_ONE_MOMENT);
+//                else if (PowerConstants.MOMENT_METHOD_PILLAI_ONE_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT);
+//                else if (PowerConstants.MOMENT_METHOD_MCKEON_TWO_MOMENT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.MCKEON_TWO_MOMENT);
+//                else if (PowerConstants.MOMENT_METHOD_MCKEON_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT);
+//                else if (PowerConstants.MOMENT_METHOD_MULLER_TWO_MOMENT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.MULLER_TWO_MOMENT);
+//                else if (PowerConstants.MOMENT_METHOD_MULLER_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT);
+//                else if (PowerConstants.MOMENT_METHOD_RAO_TWO_MOMENT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.RAO_TWO_MOMENT);
+//                else if (PowerConstants.MOMENT_METHOD_RAO_TWO_MOMENT_OMEGA_MULT.equals(unirepCorrect))
+//                    params.setMomentMethod(MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT);
+//                else
+//                {
+//                    PowerLogger.getInstance().warn("Invalid moment approximation method '" + momentMethod + "', defaulting to none");
+//                }
+//            }
+//        }
+//
+//        // parse the matrix inputs: beta, design, theta, sigma, C-contrast, U-contrast
+//        NodeList children = node.getChildNodes();
+//        if (children != null && children.getLength() > 0)
+//        {
+//            for (int i = 0; i < children.getLength(); i++)
+//            {
+//                Node child = children.item(i);
+//                if (PowerConstants.TAG_ESSENCE_MATRIX.equals(child.getNodeName()))
+//                {
+//                    EssenceMatrix essence = essenceMatrixFromDomNode(child);
+//                    params.setDesignEssence(essence);
+//                }
+//                else if (PowerConstants.TAG_MATRIX.equals(child.getNodeName()))
+//                {
+//                    // get the name of this matrix
+//                    String matrixName = null;
+//                    NamedNodeMap matrixAttrs = child.getAttributes();
+//                    Node name = matrixAttrs.getNamedItem(PowerConstants.ATTR_NAME);
+//                    if (name != null) matrixName = name.getNodeValue();
+//                    
+//                    // if we have a valid name, parse and save the matrix to the linear model parameters
+//                    if (matrixName != null && !matrixName.isEmpty())
+//                    {
+//                        RealMatrix matrix = matrixFromDomNode(child);
+//
+//                        if (PowerConstants.MATRIX_TYPE_BETA.equals(matrixName))
+//                            params.setBeta(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_DESIGN.equals(matrixName))
+//                            params.setDesign(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_THETA.equals(matrixName))
+//                            params.setTheta(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_WITHIN_CONTRAST.equals(matrixName))
+//                            params.setWithinSubjectContrast(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_BETWEEN_CONTRAST.equals(matrixName))
+//                            params.setBetweenSubjectContrast(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_SIGMA_ERROR.equals(matrixName))
+//                            params.setSigmaError(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_SIGMA_GAUSSIAN.equals(matrixName))
+//                            params.setSigmaGaussianRandom(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_SIGMA_OUTCOME.equals(matrixName))
+//                            params.setSigmaOutcome(matrix);
+//                        else if (PowerConstants.MATRIX_TYPE_SIGMA_OUTCOME_GAUSSIAN.equals(matrixName))
+//                            params.setSigmaOutcomeGaussianRandom(matrix);
+//                        else
+//                            PowerLogger.getInstance().warn("Ignoring Invalid matrix: " + matrixName);                    
+//                    }
+//                    else
+//                    {
+//                        PowerLogger.getInstance().warn("Ignoring unnamed matrix");
+//                    }
+//
+//                }
+//                else 
+//                {
+//                    PowerLogger.getInstance().warn("Ignoring unknown tag while parsing parameters: " + child.getNodeName());
+//                }
+//            }
+//        }
+//        return params;
+//    }  
     
     /**
      * Parse an essence matrix from a DOM tree
@@ -370,8 +624,6 @@ public class ParameterResourceHelper
                 if (PowerConstants.TAG_ROW.equals(child.getNodeName()))
                 {
                     NamedNodeMap attrs = child.getAttributes();
-                    Node reps = attrs.getNamedItem(PowerConstants.ATTR_REPETITIONS);
-                    if (reps != null) rmd.setRepetitions(Integer.parseInt(reps.getNodeValue()));
                     
                     Node ratio = attrs.getNamedItem(PowerConstants.ATTR_RATIO);
                     if (ratio != null) rmd.setRatio(Integer.parseInt(ratio.getNodeValue()));
@@ -505,40 +757,5 @@ public class ParameterResourceHelper
         return matrix;
     }
     
-    public static PowerCurveDescription powerCurveFromDomNode(Node node) throws ResourceException
-    {
-        PowerCurveDescription desc = new PowerCurveDescription();
 
-        // make sure the root node is a power parameters
-        if (!node.getNodeName().equals(PowerConstants.TAG_CURVE))
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid root node '" + node.getNodeName() + "' when parsing curve description");
-
-        // get the parameter attributes
-        NamedNodeMap attrs = node.getAttributes();
-        if (attrs != null)
-        {
-            // parse curve title
-            Node title = attrs.getNamedItem(PowerConstants.ATTR_CURVE_TITLE);
-            if (title != null) desc.setTitle(title.getNodeValue());
-            
-            // parse curve width
-            Node width = attrs.getNamedItem(PowerConstants.ATTR_CURVE_WIDTH);
-            if (width != null) desc.setWidth(Integer.parseInt(width.getNodeValue()));
-            
-            // parse curve height
-            Node height = attrs.getNamedItem(PowerConstants.ATTR_CURVE_HEIGHT);
-            if (height != null) desc.setHeight(Integer.parseInt(height.getNodeValue()));
-            
-            // parse x axis label
-            Node xlab = attrs.getNamedItem(PowerConstants.ATTR_CURVE_XLABEL);
-            if (xlab != null) desc.setXAxisLabel(xlab.getNodeValue());
-            
-            // parse y axis label
-            Node ylab = attrs.getNamedItem(PowerConstants.ATTR_CURVE_YLABEL);
-            if (ylab != null) desc.setYAxisLabel(ylab.getNodeValue());
-            
-        }   
-        
-        return desc;
-    }
 }

@@ -43,23 +43,27 @@ import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
 /**
- * Resource for handling requests for sample size calculations.
+ * Resource for handling requests for power simulations.
  * See the PowerApplication class for URI mappings
  */
-public class SampleSizeResource extends Resource
+public class SimulationResource extends Resource
 {
+	private static final int DEFAULT_ITERATIONS = 10000;
+	
 	/**
-	 * Create a new resource to handle sample size requests.  Data
+	 * Create a new resource to handle power simulation requests.  Data
 	 * is returned as XML.
 	 * 
 	 * @param context restlet context
 	 * @param request http request object
 	 * @param response http response object
 	 */
-    public SampleSizeResource(Context context, Request request, Response response) 
+    public SimulationResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
+        
+        
     }
 
     /**
@@ -81,7 +85,7 @@ public class SampleSizeResource extends Resource
     }
 
     /**
-     * Allow POST requests to create a sample size list
+     * Allow POST requests to create a simulated power list
      */
     @Override
     public boolean allowPost() 
@@ -90,8 +94,8 @@ public class SampleSizeResource extends Resource
     }
 
     /**
-     * Process a POST request to perform a set of sample size
-     * calculations.  Please see REST API documentation for details on
+     * Process a POST request to perform a set of power
+     * simulations.  Please see REST API documentation for details on
      * the entity body format.
      * 
      * @param entity HTTP entity body for the request
@@ -108,8 +112,8 @@ public class SampleSizeResource extends Resource
 
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
-            // calculate the detecable difference results
-            List<Power> results = calculator.getSampleSize(params);
+            // get the simulated power results
+            List<Power> results = calculator.getSimulatedPower(params, DEFAULT_ITERATIONS);
            
             // build the response xml
             GLMMPowerListXMLRepresentation response = new GLMMPowerListXMLRepresentation(results);

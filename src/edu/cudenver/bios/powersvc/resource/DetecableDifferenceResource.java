@@ -43,20 +43,20 @@ import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
 /**
- * Resource for handling requests for sample size calculations.
+ * Resource for handling requests for detectable difference calculations.
  * See the PowerApplication class for URI mappings
  */
-public class SampleSizeResource extends Resource
+public class DetecableDifferenceResource extends Resource
 {
 	/**
-	 * Create a new resource to handle sample size requests.  Data
+	 * Create a new resource to handle detectable difference requests.  Data
 	 * is returned as XML.
 	 * 
 	 * @param context restlet context
 	 * @param request http request object
 	 * @param response http response object
 	 */
-    public SampleSizeResource(Context context, Request request, Response response) 
+    public DetecableDifferenceResource(Context context, Request request, Response response) 
     {
         super(context, request, response);
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
@@ -81,7 +81,7 @@ public class SampleSizeResource extends Resource
     }
 
     /**
-     * Allow POST requests to create a sample size list
+     * Allow POST requests to create a detectable difference list
      */
     @Override
     public boolean allowPost() 
@@ -90,7 +90,7 @@ public class SampleSizeResource extends Resource
     }
 
     /**
-     * Process a POST request to perform a set of sample size
+     * Process a POST request to perform a set of detectable difference
      * calculations.  Please see REST API documentation for details on
      * the entity body format.
      * 
@@ -109,7 +109,7 @@ public class SampleSizeResource extends Resource
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // calculate the detecable difference results
-            List<Power> results = calculator.getSampleSize(params);
+            List<Power> results = calculator.getDetectableDifference(params);
            
             // build the response xml
             GLMMPowerListXMLRepresentation response = new GLMMPowerListXMLRepresentation(results);
@@ -138,5 +138,4 @@ public class SampleSizeResource extends Resource
             getResponse().setStatus(re.getStatus());
         }
     }
-
 }
