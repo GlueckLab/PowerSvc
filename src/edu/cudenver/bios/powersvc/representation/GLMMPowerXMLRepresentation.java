@@ -52,9 +52,7 @@ public class GLMMPowerXMLRepresentation extends DomRepresentation
     }
     
     /**
-     * Create a DOM element from a GLMM power object.  Attributes include the 
-     * statistical test performed, the nominal power, actual power, total sample size,
-     * beta scale and sigma scale factors.
+     * Create a DOM element from a GLMM power object.  
      * 
      * @param doc the DOM document
      * @param power the GLMM power object

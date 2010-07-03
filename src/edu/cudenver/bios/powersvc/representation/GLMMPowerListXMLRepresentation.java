@@ -39,6 +39,13 @@ import edu.cudenver.bios.powersvc.application.PowerConstants;
 public class GLMMPowerListXMLRepresentation extends DomRepresentation
 {
 
+	/**
+	 * Create a Representation object from a list of GLMM power results.
+	 * The restlet framework will write this information as the response body 
+	 * 
+	 * @param glmmPowers list of glmm power objects
+	 * @throws IOException
+	 */
     public GLMMPowerListXMLRepresentation(List<Power> glmmPowers) throws IOException 
     {
         super(MediaType.APPLICATION_XML);
@@ -49,7 +56,14 @@ public class GLMMPowerListXMLRepresentation extends DomRepresentation
         doc.normalizeDocument();
     }
     
-    public static Element createGLMMPowerListElement(Document doc, List<Power> powers) 
+    /**
+     * Create the GLMM power list DOM element
+     * 
+     * @param doc DOM document object
+     * @param powers list of GLMM powers
+     * @return
+     */
+    private Element createGLMMPowerListElement(Document doc, List<Power> powers) 
     {
         // build extraction rule list
         Element powerListElem = doc.createElement(PowerConstants.TAG_POWER_LIST);
@@ -63,6 +77,4 @@ public class GLMMPowerListXMLRepresentation extends DomRepresentation
         return powerListElem;
     }
 
-	
-	
 }

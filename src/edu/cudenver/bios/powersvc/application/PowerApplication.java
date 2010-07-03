@@ -1,6 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
- * the general linear model.
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
  * 
  * Copyright (C) 2010 Regents of the University of Colorado.  
  *

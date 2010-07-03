@@ -1,5 +1,29 @@
+/*
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.powersvc.application;
 
+/**
+ * Convenience class for power service constants
+ */
 public class PowerConstants
 {
     // maximum allowed simulation size
@@ -9,7 +33,7 @@ public class PowerConstants
     // URI and query parameters
     public static final String REQUEST_ITERATIONS = "iterations";
     
-    // xml tag names
+    // XML tag names
     public static final String TAG_ERROR = "error";
     public static final String TAG_GLMM_POWER = "glmmPower";
     public static final String TAG_GLMM_POWER_PARAMETERS = "glmmPowerParameters";
@@ -27,6 +51,8 @@ public class PowerConstants
     public static final String TAG_SIGMA_SCALE_LIST = "sigmaScaleList";
     public static final String TAG_POWER_METHOD_LIST = "powerMethodList";
     public static final String TAG_QUANTILE_LIST = "quantileList";
+    
+    // XML attribute names
     public static final String ATTR_COUNT = "count";
     public static final String ATTR_NAME = "name";
     public static final String ATTR_POWER = "power";
@@ -47,7 +73,7 @@ public class PowerConstants
     public static final String ATTR_SAMPLE_SIZE = "sampleSize";
     public static final String ATTR_TEST = "test";
     
-    // statistic name constants
+    // statistical test name constants
     public static final String TEST_HOTELLING_LAWLEY_TRACE = "hlt";
     public static final String TEST_PILLAI_BARTLETT_TRACE = "pbt";
     public static final String TEST_WILKS_LAMBDA = "wl";
@@ -61,7 +87,7 @@ public class PowerConstants
     public static final String POWER_METHOD_UNCONDITIONAL = "unconditional";
     public static final String POWER_METHOD_QUANTILE = "quantile";
     
-    // univariate approach to repeated measures  cdf methods
+    // univariate approach to repeated measures cdf methods
     public static final String UNIREP_CDF_MULLER_BARTON_APPROX = "mba";
     public static final String UNIREP_CDF_MULLER_EDWARDS_TAYLOR_APPROX = "meta";
     public static final String UNIREP_CDF_MULLER_EDWARDS_TAYLOR_EXACT = "mete";

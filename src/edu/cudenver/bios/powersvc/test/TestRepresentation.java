@@ -1,3 +1,24 @@
+/*
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.powersvc.test;
 
 import java.io.StringReader;
@@ -17,6 +38,9 @@ import edu.cudenver.bios.powersvc.resource.ParameterResourceHelper;
 
 import junit.framework.TestCase;
 
+/**
+ * Unit test for building the outgoing representation of power results
+ */
 public class TestRepresentation extends TestCase
 {
 	private ArrayList<Power> powerList = new ArrayList<Power>();
@@ -30,6 +54,9 @@ public class TestRepresentation extends TestCase
 	"<glmmPower actualPower=\"0.8\" alpha=\"0.05\" betaScale=\"3.0\" "+
 	"nominalPower=\"0.8\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"pbt\"/></powerList>";
 	
+	/**
+	 * Create some power results
+	 */
     public void setUp()
     {
     	powerList.add(new GLMMPower(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE,0.05,
@@ -40,6 +67,9 @@ public class TestRepresentation extends TestCase
     			0.8, 0.8, 10, 3, 5));
     }
 
+    /**
+     * Test that the representation matches the expected XML string above.
+     */
     public void testGLMMPowerListXMLRepresentation()
     {
         try

@@ -1,3 +1,24 @@
+/*
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.powersvc.test;
 
 import java.io.StringReader;
@@ -15,6 +36,9 @@ import edu.cudenver.bios.powersvc.resource.ParameterResourceHelper;
 
 import junit.framework.TestCase;
 
+/**
+ * Unit test for parsing of incoming entity body
+ */
 public class TestParsing extends TestCase
 {
     private Document validGLMMPowerDoc = null;
@@ -61,6 +85,9 @@ public class TestParsing extends TestCase
     "<r><c>1</c><c>0</c></r><r><c>0</c><c>1</c></r></matrix>" +
     "</glmmPowerParameters>";
 
+    /**
+     * Convert the above strings into DOM documents
+     */
     public void setUp()
     {
         try
@@ -77,6 +104,9 @@ public class TestParsing extends TestCase
         }
     }
 
+    /**
+     * Test parsing of a valid GLMM parameter set
+     */
     public void testValidPowerGLMM()
     {
         try
@@ -94,6 +124,9 @@ public class TestParsing extends TestCase
         }
     }
 
+    /**
+     *  Test parsing of an invalid GLMM parameter set (i.e. should throw an exception)
+     */
     public void testInvalidPowerGLMM()
     {
         try

@@ -38,6 +38,7 @@ import org.restlet.resource.Variant;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
@@ -48,12 +49,17 @@ import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
  */
 public class SimulationResource extends Resource
 {
+	private static final int MAX_ITERATIONS = 1000000;
 	private static final int DEFAULT_ITERATIONS = 10000;
+	private int iterations = DEFAULT_ITERATIONS;
 	
 	/**
 	 * Create a new resource to handle power simulation requests.  Data
-	 * is returned as XML.
-	 * 
+	 * is returned as XML.  This resource takes a single query parameter
+	 * "iterations" which specifies the number of simulation iterations to
+	 * run.  If the value is less than 0 or greater than 1 million, it will be
+	 * reset to the default number of iterations.
+	 *  
 	 * @param context restlet context
 	 * @param request http request object
 	 * @param response http response object
@@ -63,7 +69,15 @@ public class SimulationResource extends Resource
         super(context, request, response);
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
         
-        
+        String iterationParam = getQuery().getFirstValue(PowerConstants.REQUEST_ITERATIONS);
+        if (iterationParam != null && !iterationParam.isEmpty())
+        {
+        	iterations = Integer.parseInt(iterationParam);
+        	if (iterations < 0 || iterations > MAX_ITERATIONS) 
+        	{
+        		iterations = DEFAULT_ITERATIONS;
+        	}
+        }
     }
 
     /**
@@ -113,7 +127,7 @@ public class SimulationResource extends Resource
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // get the simulated power results
-            List<Power> results = calculator.getSimulatedPower(params, DEFAULT_ITERATIONS);
+            List<Power> results = calculator.getSimulatedPower(params, iterations);
            
             // build the response xml
             GLMMPowerListXMLRepresentation response = new GLMMPowerListXMLRepresentation(results);

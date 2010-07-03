@@ -81,7 +81,7 @@ public class PowerResource extends Resource
     }
 
     /**
-     * Allow POST requests to create a detectable difference list
+     * Allow POST requests to create a power list
      */
     @Override
     public boolean allowPost() 
