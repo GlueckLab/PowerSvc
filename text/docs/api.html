@@ -1,0 +1,710 @@
+<head>
+<title>GLIMMPSE: Power Service REST API</title>
+ <STYLE type="text/css">
+  H1 {
+    border-width: 1; border: solid; 
+    text-align: center; 
+    background: #005C84;
+    color: white;
+   ;}
+ 
+ div.toc {
+ }
+ 
+ div.toc1 {
+ 	text-indent: 40px;
+ }
+ 
+ div.toc2 {
+ 	text-indent: 60px;
+ }
+ 
+ td.borderRight {
+ 	border-right: 1px solid #000;
+ 	text-align: center;
+ }
+ </STYLE>
+</head>
+<body>
+<h1>GLIMMPSE: Power Service REST API</h1>
+
+<h2>Introduction</h2>
+
+The Glimmpse software system provides a web based user interface to estimate power and sample size
+for the general linear multivariate model (GLMM) with or without a baseline covariate.  The Glimmpse system
+consists of four main components:
+<ul>
+<li>Glimmpse.com user interface - a Javascript/GWT front-end user interface</li>
+<li><b>Power Service</b> - RESTful Java web service which processes power/sample size requests</li>
+<li>File Service - RESTful Java web service providing upload/save functionality for study design information</li>
+<li>JavaStatistics library - low level library containing routines for computing GLMM power</li>
+</ul>
+This document describes the REST API for the Power Service.  It assumes basic familiarity with 
+<a href="http://www.w3.org/Protocols/">HTTP</a>, 
+<a href="http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm">REST</a>, and the GLMM.  
+For additional background on GLMM power calculations when controlling for a baseline covariate, please see 
+<a href="http://www.ncbi.nlm.nih.gov/pubmed/12898543">Glueck &amp; Muller 2003</a>
+
+<h3>Table of Contents</h3>
+<div class="toc">
+<div class="toc1"><a href="#powersvc">1. The Power Service</a></div>
+<div class="toc1"><a href="#params">2. Parameters for the General Linear Multivariate Model</a></div>
+<div class="toc2"><a href="#paramsMatrixInputs">2.1 Matrix Inputs</a></div>
+<div class="toc2"><a href="#paramsLists">2.2 List Inputs</a></div>
+<div class="toc1"><a href="#power">3. Calculating Power</a></div>
+<div class="toc1"><a href="#samplesize">4. Calculating Sample Size</a></div>
+<div class="toc1"><a href="#difference">5. Calculating Detectable Difference</a></div>
+<div class="toc1"><a href="#examples">6. Examples</a></div>
+<div class="toc2"><a href="#examplesTTest">6.1 One-Sample T-Test</a></div>
+<div class="toc2"><a href="#examplesANOVA">6.2 One-Way ANOVA</a></div>
+<div class="toc2"><a href="#examplesLinear">6.3 Model Comparing of Linear Trends Between Males and Females</a></div>
+</div>
+
+<h2><a name="powersvc">1. The Power Service</a></h2>
+<p>
+The Power Service component of the Glimmpse system is a RESTful web service 
+which processes requests for power and sample size for the GLMM.  The system
+supports GLMM study designs with either all fixed predictors or fixed predictors
+with a single baseline covariate (assumed to be normally distributed).  The REST API
+allows users to specify the matrices required for GLMM power calculations, and request
+power, sample size, or minimum detectable difference.  Users may request a list of results
+which can then be displayed in tables or as power curves.
+</p>
+<p>
+The system is implemented using the <a href="http://www.restlet.org/">Restlet Framework</a>.
+Requests to the power service are received via an AJAX call from the Glimmpse user interface,
+and data is encoded as XML.  For version 1.0.0, power/sample size results are not persistent, 
+so the service deviates slightly from the standard definition of create/update/delete in the 
+REST philosophy.
+</p>
+<p>
+The Power Service was developed and tested for use within the <a href="http://tomcat.apache.org/">Apache Tomcat Server (v 6.0)</a>.
+</p>
+
+<h2><a name="params">2. Parameters for the General Linear Multivariate Model</a></h2>
+
+Power calculations for the GLMM are based on several matrices which describe 
+the study design, estimated regression coefficients, estimated variability, and 
+study hypotheses.  Optional attributes indicate the approximation methods to be used.  
+Users may also request lists of power values including various statistical tests, 
+type I error values, sample sizes, desired power values, and scale factors for 
+regression coefficients and variability.  For designs including a baseline 
+covariate, multiple power methods and quantiles may be specified.
+<p>
+All requests to the power service must specify GLMM power parameters with the general form 
+(attributes within [] characters are optional)
+</p>
+<pre>
+&lt;glmmPowerParameters&gt;
+  &lt;testList&gt;&lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;&lt;/testList&gt;
+  &lt;alphaList&gt;&lt;v&gt;<i>alpha</i>&lt;/v&gt;...&lt;v&gt;<i>alpha</i>&lt;/v&gt;&lt;/alphaList&gt;
+  &lt;sigmaScaleList&gt;&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;...&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;&lt;/sigmaScaleList&gt;
+  [&lt;powerList&gt;&lt;v&gt;<i>power</i>&lt;/v&gt;...&lt;v&gt;<i>power</i>&lt;/v&gt;&lt;/powerList&gt;]
+  [&lt;sampleSizeList&gt;&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;...&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;&lt;/sampleSizeList&gt;]
+  [&lt;betaScaleList&gt;&lt;v&gt;<i>betaScale</i>&lt;/v&gt;...&lt;v&gt;<i>betaScale</i>&lt;/v&gt;&lt;/betaScaleList&gt;]
+  [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
+  [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
+    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
+        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
+    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
+        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+        ...
+        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
+  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+
+  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
+  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+&lt;/glmmPowerParameters&gt;
+</pre>
+
+The glmmPowerParameters takes no attributes.  The matrix and list input parameters are described in sections <a href="#paramsMatrixInputs">2.1</a> and 
+<a href="#paramsLists">2.2</a>
+
+<!-- 
+The following attributes are available in the glmmPowerParameters tag.
+Note that appropriate defaults are selected for these attributes based on published research
+for each of the available statistical tests.  Most users should ignore these attributes unless
+power results based on older approximation methods are required.
+
+<table border='1' cellpadding='5'>
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td>unirepCdf</td><td>String</td>
+<td>Specifies the method of approximating the CDF for the univariate approach to repeated measures test.
+The unirepCdf attribute takes the following values:
+<ul>
+<li>mba - Muller and Barton (1989) approximation</li>
+<li>meta - Muller, Edwards and Taylor (2004) approximation</li>
+<li>mete - Muller, Edwards and Taylor (2004) exact, via Davies' algorithm. This algorithm may fail</li>
+<li>metea - Muller, Edwards and Taylor (2004) exact as in  'mete', except if the Davies' algorithm fails
+this replaces the missing value with the value resulting from 'meta'</li>
+</ul>
+</td></tr>
+<tr><td>momentMethod</td><td>String</td>
+<td>Specifies the type of method of moments approximation.  The following values are supported
+<ul>
+<li>pillai1 - Pillai (1954, 55) 1 moment null approximation.  
+Supported for the Hotelling-Lawley, Pillai Bartlett Trace tests</li>
+<li>pillai1mult - Pillai (1959) 1 moment null approximation + non-centrality multiplication.  
+Supported for the Hotelling-Lawley, Pillai Bartlett Trace tests</li>
+<li>mckeon2 - McKeon (1974) two moment null approximation.  
+Supported for the Hotelling-Lawley Trace test</li>
+<li>mckeon2mult - McKeon (1974) two moment null approximation + non-centrality multiplication.  
+Supported for the Hotelling-Lawley Trace test</li>
+<li>muller2 - Muller (1998) two moment null approximation.
+Supported for the Pillai-Bartlett Trace test</li>
+<li>muller2mult - Muller (1998) two moment null approximation + non-centrality multiplication.
+Supported for the Pillai-Bartlett Trace test</li>
+<li>rao2 - Rao (1951) two moment null approximation.
+Supported for the Wilks' Lambda test</li>
+<li>rao2mult - Rao (1951) two moment null approximation + non-centrality multiplication.
+Supported for the Wilks' Lambda test</li>
+</ul>
+</td></tr>
+</table>
+<p></p>
+ -->
+
+<h3><a name="paramsMatrixInputs">2.1 Matrix Inputs</a></h3>
+The general XML format for specifying an <i>n x m</i> matrix for the
+Power Service is:
+<pre>
+&lt;matrix name='<i>name</i>' rows='<i>n</i>' columns='<i>m</i>'&gt;
+&lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt&lt;/r&gt;
+...
+&lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt&lt;/r&gt;
+&lt;/matrix&gt;
+</pre>
+<table border='1'>
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td>name</td><td>String</td>
+<td>The name of the matrix.  Must be one of the following:
+<ul>
+<li>design - design matrix</li>
+<li>betweenSubjectContrast - contrasts for testing between subject hypotheses</li>
+<li>withinSubjectContrast - contrasts for testing within subject hypotheses</li>
+<li>beta - regression coefficient matrix</li>
+<li>sigmaError - covariance matrix</li>
+<li>sigmaGaussianRandom - single cell matrix containing variance of the baseline covariate</li>
+<li>sigmaOutcome - covariance matrix for outcome measures</li>
+<li>sigmaOutcomeGaussianRandom - covariance matrix between covariate and outcome measures</li>
+</ul>
+</td></tr>
+<tr><td>rows</td><td>Integer</td><td>Number of rows in the matrix</td></tr>
+<tr><td>columns</td><td>Integer</td><td>Number of columns in the matrix</td></tr>
+<tr><td>d<sub>i,j</sub></td><td>Real</td><td>Value of cell i,j in the matrix</td></tr>
+</table>
+<h3>2.2.1 Required Matrices</h3>
+<h4>The Design Essence Matrix</h4>
+
+<h4>The Between Subject Contrast Matrix</h4>
+
+<h4>The Within Subject Contrast Matrix</h4>
+
+<h4>The Theta Matrix</h4>
+<h4>The Beta Matrix</h4>
+<h4>The Sigma Matrices</h4>
+
+When the study design contains only fixed predictors, a single "sigmaError" matrix is specified:
+<pre>
+  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+</pre>
+This matrix should be symmetric and positive definite.  All cell values along the diagonal must be positive real numbers.
+Off diagonal values should be real numbers.
+<p></p>
+For study designs including a baseline covariate, three matrices must be specify to fully describe the
+variability.
+
+<h3><a name="paramsLists">2.1 List Inputs</a></h3>
+
+Once the required matrices are specified, users may request a list of powers by varying 
+the basic study design. Users can scale the regression coefficients in the beta matrix and 
+the variability specified in the sigma matrix. Users may also specify several statistical tests, 
+power methods (for designs with a baseline covariate), power values, alpha levels, and
+per group sample size values.
+<p></p>
+Note that each combination of values specified in these lists will produce a single power calculation.  
+Therefore, list sizes should be minimized to avoid long processing times.
+
+<h4>Test List</h4>
+
+The test list includes all statistical tests to be run.  It is required for all requests.  The test list is specified as:
+<pre>
+&lt;testList&gt;&lt;v&gt;<i>testList</i>&lt;/v&gt;...&lt;v&gt;<i>testList</i>&lt;/v&gt;&lt;/testList&gt;
+</pre>
+
+Power values should be equivalent for univariate designs regardless of the test selected.
+However, no uniformly most powerful test exists for the multivariate linear model.  The following
+tests are supported:
+<ul>
+<li>unirep - Univariate approach to repeated measures (uncorrected)</li>
+<li>unirepBox - Univariate approach to repeated measures with Box correction</li>
+<li>unirepGG - Univariate approach to repeated measures with Geisser-Greenhouse correction</li>
+<li>unirepHF - Univariate approach to repeated measures with Huynh-Feldt correction</li>
+<li>wl - Wilks' Lambda</li>
+<li>hlt - Hotelling-Lawley trace</li>
+<li>pbt - Pillai-Bartlett trace</li>
+</ul>
+
+<h4>Power List</h4>
+The power list includes all desired power values.  It is valid for sample size or detectable
+difference requests (it is ignored for power requests).  A power list is specified as follows:
+<pre>
+&lt;powerList&gt;&lt;v&gt;<i>power</i>&lt;/v&gt;...&lt;v&gt;<i>power</i>&lt;/v&gt;&lt;/powerList&gt;
+</pre>
+where each listed <i>power</i> is a decimal between 0 and 1.  Researchers typically
+require a minimum of 80&#37; power (0.80), so values between 0.80 and 1 are most common.
+
+<h4>Alpha List</h4>
+
+The alpha list specifies various type I error rates.  It is required for all requests.
+<pre>
+&lt;alphaList&gt;&lt;v&gt;<i>alpha</i>&lt;/v&gt;...&lt;v&gt;<i>alpha</i>&lt;/v&gt;&lt;/alphaList&gt;
+</pre>
+where each listed <i>alpha</i> is a decimal between 0 and 1. The most commonly used 
+values are 0.01, 0.05, and 0.10, which correspond to confidence levels of 99&#37;, 95&#37;, 
+and 90&#37; respectively.
+
+<h4>Per Group Sample Size List</h4>
+
+The per group sample size list includes all desired group sample sizes.  It is valid for power or 
+detectable difference requests (it is ignored for sample size requests).   The design essence matrix 
+will include the relative group sizes for each row in the design matrix.  The per group sample size will
+be multiplied by the relative group size to determine the number of subjects in that group.
+<p></p>
+For example, suppose a study has three treatment groups A,B, and C.  There are twice as many subjects 
+receiving treatment A than group B or group C.  The cell means coded design matrix would have the 
+following structure:
+<table cellspacing='0' cellpadding='5'>
+<tr><th>Relative Size</th><th>A</th><th>B</th><th>C</th></tr>
+<tr><td class='borderRight'>1</td><td>1</td><td>0</td><td>0</td></tr>
+<tr><td class='borderRight'>2</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td class='borderRight'>1</td><td>0</td><td>0</td><td>1</td></tr>
+</table>
+For a per group sample size of 5, the study design would include 5 subjects in group A, 10 subjects
+in group B, and 5 subjects in group C (total sample size = 20).  Similarly, a per group sample size of 10 would yield
+10, 20, and 10 subjects (total sample size = 40) in groups A,B,and C respectively.
+<p></p>
+A sample size list is specified as follows:
+<pre>
+&lt;sampleSizeList&gt;&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;...&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;&lt;/sampleSizeList&gt;
+</pre>
+where each listed <i>sampleSize</i> is a positive integer.  
+
+<h4>Beta Scale List</h4>
+
+The beta scale list includes all scale factors for the regression coefficient, or beta, matrix.  The beta scale
+list is valid for power and sample size requests (it is ignored for detectable difference requests).
+
+A beta scale list is specified as follows:
+<pre>
+&lt;betaScaleList&gt;&lt;v&gt;<i>betaScale</i>&lt;/v&gt;...&lt;v&gt;<i>betaScale</i>&lt;/v&gt;&lt;/betaScaleList&gt;
+</pre>
+where each listed <i>betaScale</i> is a real number.  
+
+<h4>Sigma Scale List</h4>
+
+The sigma scale list includes all scale factors for the error covariance matrix.  The sigma scale
+list is required for all requests.
+
+A sigma scale list is specified as follows:
+<pre>
+&lt;sigmaScaleList&gt;&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;...&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;&lt;/sigmaScaleList&gt;
+</pre>
+where each listed <i>sigmaScale</i> is a real number.  
+
+<h4>Power Method List</h4>
+
+The power method lists includes any combination of the conditional, unconditional, or quantile power methods.
+It is valid only for study designs involving a baseline covariate (ignored otherwise).  Note that only the 
+Hotelling-Lawley and univariate approach to repeated measures are supported for designs with a 
+baseline covariate.
+<p></p>
+A power method list is specified as follows:
+<pre>
+&lt;powerMethodList&gt;&lt;v&gt;<i>powerMethod</i>&lt;/v&gt;...&lt;v&gt;<i>powerMethod</i>&lt;/v&gt;&lt;/powerMethodList&gt;
+</pre>
+The following power methods are supported:
+<ul>
+<li>conditional - Power values conditional on the specific realization of the baseline covariate values</li>
+<li>unconditional - Power based on numerical integration over possible values of the non-centrality parameter</li>
+<li>quantile - Power based on specific quantiles of the non-centrality parameter's distribution</li>
+</ul>
+<h4>Quantile List</h4>
+
+The quantile list specifies all quantiles for use with the "quantile" power method.  This list is
+valid only for study designs with a baseline covariate, which specify quantile power in
+the power method list.
+A quantile list is specified as follows:
+<pre>
+&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;
+</pre>
+where each quantile is a real number between 0 and 1.
+
+<h2><a name="power">3. Calculating Power</a></h2>
+
+New power calculations are "created" with the following URI:
+<pre>
+POST /power/power/
+</pre>
+Parameters are specified in the entity body as:
+<pre>
+&lt;glmmPowerParameters&gt;
+  &lt;testList&gt;&lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;&lt;/testList&gt;
+  &lt;alphaList&gt;&lt;v&gt;<i>alpha</i>&lt;/v&gt;...&lt;v&gt;<i>alpha</i>&lt;/v&gt;&lt;/alphaList&gt;
+  &lt;sigmaScaleList&gt;&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;...&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;&lt;/sigmaScaleList&gt;
+  &lt;sampleSizeList&gt;&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;...&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;&lt;/sampleSizeList&gt;
+  &lt;betaScaleList&gt;&lt;v&gt;<i>betaScale</i>&lt;/v&gt;...&lt;v&gt;<i>betaScale</i>&lt;/v&gt;&lt;/betaScaleList&gt;
+  [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
+  [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
+    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
+        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
+    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
+        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+        ...
+        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
+  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+
+  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
+  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+&lt;/glmmPowerParameters&gt;
+</pre>
+
+Power requests must contain all <a href="#paramsRequiredMatrices:">required matrices</a>,
+a testList, an alphaList, a betaScaleList, a sigmaScaleList, and a sampleSizeList.
+<p></p>
+<a name="powerResults">Power results are returned as:</a>
+<pre>
+&lt;?xml version='1.0' encoding='UTF-8' standalone='no'?&gt;
+&lt;powerList count='<i>numberOfResults</i>'&gt;
+&lt;glmmPower alpha='<i>alpha</i>' nominalPower='<i>nominalPower</i>' 
+actualPower='<i>actualPower</i>' sampleSize='<i>totalSampleSize</i>' 
+betaScale='<i>betaScale</i>' sigmaScale='<i>sigmaScale</i>' /&gt;
+...
+&lt;/powerList&gt;
+</pre>
+The powerList tag encloses the list of power results and has a single attribute "count"
+which specifies the number of results in the list.
+<p></p>
+The glmmPower tag describes a specific power result and has the following attributes: 
+<table border='1'>
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td>alpha</td><td>Real</td><td>Type I error rate associated with this power result.  
+The value ranges from 0 to 1, although 0.01, 0.05, and 0.10 are typical.</td></tr>
+<tr><td>nominalPower</td><td>Real</td>
+<td>The desired power for this calculation (specified with sample size or detectable difference requests).
+For power requests, this value will be equal to the actualPower attribute.</td></tr>
+<tr><td>actualPower</td><td>Real</td>
+<td>The actual power associated with this power result.  
+For sample size and detectable difference requests, it may not be possible to perfectly match the
+desired power for certain study designs.  This value will be set to the calculated power associated 
+with the sample size or detectable difference which most closely matches the desired power.</td></tr>
+<tr><td>sampleSize</td><td>Real</td><td>The total sample size for this power result</td></tr>
+<tr><td>betaScale</td><td>Real</td><td>The scale factor applied to the beta matrix for this power result.
+This value can be used to generate the beta matrix representing the detectable difference.</td></tr>
+<tr><td>sigmaScale</td><td>Real</td><td>The scale factor applied to the error matrix for this power result</td></tr>
+</table>
+
+<h2><a name="samplesize">4. Calculating Sample Size</a></h2>
+
+New sample size calculations are "created" with the following URI:
+<pre>
+POST /power/samplesize/
+</pre>
+Parameters are specified in the entity body as:
+<pre>
+&lt;glmmPowerParameters&gt;
+  &lt;testList&gt;&lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;&lt;/testList&gt;
+  &lt;alphaList&gt;&lt;v&gt;<i>alpha</i>&lt;/v&gt;...&lt;v&gt;<i>alpha</i>&lt;/v&gt;&lt;/alphaList&gt;
+  &lt;sigmaScaleList&gt;&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;...&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;&lt;/sigmaScaleList&gt;
+  &lt;powerList&gt;&lt;v&gt;<i>power</i>&lt;/v&gt;...&lt;v&gt;<i>power</i>&lt;/v&gt;&lt;/powerList&gt;
+  &lt;betaScaleList&gt;&lt;v&gt;<i>betaScale</i>&lt;/v&gt;...&lt;v&gt;<i>betaScale</i>&lt;/v&gt;&lt;/betaScaleList&gt;
+  [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
+  [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
+    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
+        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
+    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
+        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+        ...
+        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
+  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+
+  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
+  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+&lt;/glmmPowerParameters&gt;
+</pre>
+
+Sample size requests must include all <a href="#paramsRequiredMatrices">required matrices</a>,
+a testList, an alphaList, a betaScaleList, a sigmaScaleList, and a powerList.
+<p></p>
+Results are returned as described in the <a href="#powerResults">power results section</a>.
+The sample size results should be extracted from the sampleSize attribute in each glmmPower object.
+
+<h2><a name="difference">5. Calculating Detectable Difference</a></h2>
+
+New detectable difference calculations are "created" with the following URI:
+<pre>
+POST /power/difference/
+</pre>
+Parameters are specified in the entity body as:
+<pre>
+&lt;glmmPowerParameters&gt;
+  &lt;testList&gt;&lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;&lt;/testList&gt;
+  &lt;alphaList&gt;&lt;v&gt;<i>alpha</i>&lt;/v&gt;...&lt;v&gt;<i>alpha</i>&lt;/v&gt;&lt;/alphaList&gt;
+  &lt;sigmaScaleList&gt;&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;...&lt;v&gt;<i>sigmaScale</i>&lt;/v&gt;&lt;/sigmaScaleList&gt;
+  [&lt;powerList&gt;&lt;v&gt;<i>power</i>&lt;/v&gt;...&lt;v&gt;<i>power</i>&lt;/v&gt;&lt;/powerList&gt;]
+  [&lt;sampleSizeList&gt;&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;...&lt;v&gt;<i>sampleSize</i>&lt;/v&gt;&lt;/sampleSizeList&gt;]
+  [&lt;betaScaleList&gt;&lt;v&gt;<i>betaScale</i>&lt;/v&gt;...&lt;v&gt;<i>betaScale</i>&lt;/v&gt;&lt;/betaScaleList&gt;]
+  [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
+    &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
+  [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
+    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
+        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
+    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
+        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+        ...
+        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
+  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+
+  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
+  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+&lt;/glmmPowerParameters&gt;
+</pre>
+
+Detectable difference requests must include all <a href="#paramsRequiredMatrices">required matrices</a>,
+a testList, an alphaList, a sigmaScaleList, a sampleSizeList, and a powerList.
+<p></p>
+Results are returned as described in the <a href="#powerResults">power results section</a>.  
+Since regression coefficients are specified as a beta matrix, the "detectable difference" is
+found in the betaScale attribute of the glmmPower result.  For easier interpretation of this value,
+the beta matrix should have a 1 in cells for groups expected to differ, and a 0 otherwise.
+<p>
+Example beta matrix for 2 outcomes, 3 treatment groups.  Treatment effect expected in group 1 on outcome 1.
+<table border='1' cellpadding='5' cellspacing='0'>
+<tr><td>1</td><td>0</td></tr>
+<tr><td>0</td><td>0</td></tr>
+<tr><td>0</td><td>0</td></tr>
+</table>
+</p>
+
+<h2><a name="examples">6. Examples</a></h2>
+
+<h3><a name="examplesTTest">6.1 One-Sample T-Test</a></h3>
+
+Suppose we are comparing mean height in sample of 200 adult males against an expected average height of 70 inches.
+We will assume a standard deviation of 8 inches (i.e. variance = 64).  We would like to determine the power for
+detecting a difference of 10 inches.  We will use the Wilks' Lambda as our statistical test, and a type I error
+rate of 0.05.
+<p></p>
+To calculate power, we would send the following HTTP request to the Power Service:
+<pre>
+POST /power/power
+</pre>
+with the entity body:
+<pre>
+&lt;glmmPowerParameters&gt;
+  &lt;testList&gt;&lt;v&gt;hlt&lt;/v&gt;&lt;/testList&gt;
+  &lt;alphaList&gt;&lt;v&gt;0.05&lt;/v&gt;&lt;/alphaList&gt;
+  &lt;sigmaScaleList&gt;&lt;v&gt;64&lt;/v&gt;&lt;/sigmaScaleList&gt;
+  &lt;sampleSizeList&gt;&lt;v&gt;200&lt;/v&gt;&lt;/sampleSizeList&gt;
+  &lt;betaScaleList&gt;&lt;v&gt;10&lt;/v&gt;&lt;/betaScaleList&gt;
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='1' /&gt;&lt;/rowMetaData&gt;
+    &lt;columnMetaData&gt;&lt;c type='fixed' /&gt;&lt;/columnMetaData&gt;
+    &lt;matrix name='design' rows='1' columns='1'&gt;&lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;&lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+  &lt;matrix name='betweenSubjectContrast' rows='1' columns='1'&gt;&lt;/matrix&gt;
+  &lt;matrix name='withinSubjectContrast' rows='2' columns='2'&gt;
+    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;-1&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='theta' rows='1' columns='1'&gt;&lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;&lt;/matrix&gt;
+  &lt;matrix name='beta' rows='1' columns='2'&gt;&lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;&lt;/matrix&gt;
+  &lt;matrix name='sigmaError' rows='2' columns='2'&gt;
+    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+&lt;/glmmPowerParameters&gt;
+</pre>
+
+
+
+<h3>6.2 One-Way ANOVA</h3>
+
+<h3>6.3 Model Comparing of Linear Trends Between Males and Females</h3>
+
+</body>
