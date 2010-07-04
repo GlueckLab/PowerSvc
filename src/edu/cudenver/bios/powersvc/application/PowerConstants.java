@@ -67,6 +67,8 @@ public class PowerConstants
     public static final String ATTR_MOMENT_METHOD = "momentMethod";
     public static final String ATTR_NOMINAL_POWER = "nominalPower";
     public static final String ATTR_ACTUAL_POWER = "actualPower";
+    public static final String ATTR_POWER_METHOD = "powerMethod";
+    public static final String ATTR_QUANTILE = "quantile";
     public static final String ATTR_BETA_SCALE = "betaScale";
     public static final String ATTR_SIGMA_SCALE = "sigmaScale";
     public static final String ATTR_ALPHA = "alpha";

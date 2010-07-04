@@ -48,11 +48,11 @@ public class TestRepresentation extends TestCase
 	private static final String expectedXML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>"+
 	"<powerList count=\"3\">"+
 	"<glmmPower actualPower=\"0.8\" alpha=\"0.05\" betaScale=\"3.0\" "+
-	"nominalPower=\"0.8\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"hlt\"/>"+
+	"nominalPower=\"0.8\" powerMethod=\"conditional\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"hlt\"/>"+
 	"<glmmPower actualPower=\"0.8\" alpha=\"0.05\" betaScale=\"3.0\" " + 
-	"nominalPower=\"0.8\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"wl\"/>"+
+	"nominalPower=\"0.8\" powerMethod=\"unconditional\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"wl\"/>"+
 	"<glmmPower actualPower=\"0.8\" alpha=\"0.05\" betaScale=\"3.0\" "+
-	"nominalPower=\"0.8\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"pbt\"/></powerList>";
+	"nominalPower=\"0.8\" powerMethod=\"quantile\" quantile=\"0.5\" sampleSize=\"10\" sigmaScale=\"5.0\" test=\"pbt\"/></powerList>";
 	
 	/**
 	 * Create some power results
@@ -60,11 +60,11 @@ public class TestRepresentation extends TestCase
     public void setUp()
     {
     	powerList.add(new GLMMPower(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE,0.05,
-    			0.8, 0.8, 10, 3, 5));
+    			0.8, 0.8, 10, 3.0, 5.0, GLMMPowerParameters.PowerMethod.CONDITIONAL_POWER));
     	powerList.add(new GLMMPower(GLMMPowerParameters.Test.WILKS_LAMBDA,0.05,
-    			0.8, 0.8, 10, 3, 5));
+    			0.8, 0.8, 10, 3, 5, GLMMPowerParameters.PowerMethod.UNCONDITIONAL_POWER));
     	powerList.add(new GLMMPower(GLMMPowerParameters.Test.PILLAI_BARTLETT_TRACE,0.05,
-    			0.8, 0.8, 10, 3, 5));
+    			0.8, 0.8, 10, 3, 5, GLMMPowerParameters.PowerMethod.QUANTILE_POWER, 0.5));
     }
 
     /**

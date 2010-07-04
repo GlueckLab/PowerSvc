@@ -92,7 +92,31 @@ public class GLMMPowerXMLRepresentation extends DomRepresentation
         glmmPowerElem.setAttribute(PowerConstants.ATTR_SAMPLE_SIZE, Integer.toString(power.getTotalSampleSize()));
         glmmPowerElem.setAttribute(PowerConstants.ATTR_BETA_SCALE, Double.toString(power.getBetaScale()));
         glmmPowerElem.setAttribute(PowerConstants.ATTR_SIGMA_SCALE, Double.toString(power.getSigmaScale()));
+
+        // add power method
+        switch (power.getPowerMethod())
+        {
+        case CONDITIONAL_POWER:
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_POWER_METHOD, 
+        			PowerConstants.POWER_METHOD_CONDITIONAL);
+        	break;
+        case UNCONDITIONAL_POWER:
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_POWER_METHOD, 
+        			PowerConstants.POWER_METHOD_UNCONDITIONAL);
+        	break;
+        case QUANTILE_POWER:
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_POWER_METHOD, 
+        			PowerConstants.POWER_METHOD_QUANTILE);
+        	break;
+        }
         
+        // add quantile if specified
+        if (!Double.isNaN(power.getQuantile()))
+        {
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_QUANTILE, 
+        			Double.toString(power.getQuantile()));
+        }
+
         return glmmPowerElem;
     }
 
