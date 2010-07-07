@@ -76,6 +76,7 @@
         <copy todir="${wardir}">
             <fileset dir="${wcdir}">
                 <exclude name="**/.svn/**/*" />
+            	<exclude name="test/*" />
             </fileset>
         </copy>
         <copy todir="${wardir}/WEB-INF/lib" flatten="true" >
