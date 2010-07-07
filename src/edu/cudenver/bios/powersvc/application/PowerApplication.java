@@ -31,6 +31,7 @@ import edu.cudenver.bios.powersvc.resource.DetecableDifferenceResource;
 import edu.cudenver.bios.powersvc.resource.PowerResource;
 import edu.cudenver.bios.powersvc.resource.SampleSizeResource;
 import edu.cudenver.bios.powersvc.resource.SimulationResource;
+import edu.cudenver.bios.powersvc.resource.test.FTestResource;
 
 /**
  * Main Restlet application class for the Power Service.
@@ -73,6 +74,9 @@ public class PowerApplication extends Application
         router.attach("/difference", DetecableDifferenceResource.class);
         // power simulation resource
         router.attach("/simulation", SimulationResource.class);
+        
+        // unit test resource - easier to collaborate with remote testers this way
+        router.attach("/testf", FTestResource.class);
         
         return router;
     }
