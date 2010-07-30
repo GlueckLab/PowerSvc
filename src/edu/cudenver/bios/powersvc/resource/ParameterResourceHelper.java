@@ -81,11 +81,11 @@ public class ParameterResourceHelper
                     
                     if (PowerConstants.MATRIX_TYPE_BETA.equals(matrixName))
                     {
-                    	params.setBeta(fixedRandomMatrixFromDomNode(child, false));
+                    	params.setBeta(fixedRandomMatrixFromDomNode(child));
                     }
                     else if (PowerConstants.MATRIX_TYPE_BETWEEN_CONTRAST.equals(matrixName))
                     {
-                    	params.setBetweenSubjectContrast(fixedRandomMatrixFromDomNode(child, true));
+                    	params.setBetweenSubjectContrast(fixedRandomMatrixFromDomNode(child));
                     }                	
                 }
                 else if (PowerConstants.TAG_MATRIX.equals(child.getNodeName()))
@@ -507,14 +507,19 @@ public class ParameterResourceHelper
     /**
      * 
      */
-    public static FixedRandomMatrix fixedRandomMatrixFromDomNode(Node node, 
-    		boolean combineHorizontal)
+    public static FixedRandomMatrix fixedRandomMatrixFromDomNode(Node node)
     throws ResourceException
     {
     	double[][] fixedData = null;
     	double[][] randomData = null;
+    	boolean combineHorizontal = true;
     	
-    	// parse the matrix data, row meta data, and column meta data
+    	// determine whether the fixed/random pieces should be combined vertically or horizontally
+        NamedNodeMap attrs = node.getAttributes();
+    	Node combineAttr = attrs.getNamedItem(PowerConstants.ATTR_COMBINE_HORIZONTAL);
+    	if (combineAttr != null) combineHorizontal = Boolean.parseBoolean(combineAttr.getNodeValue());
+    	
+    	// parse the fixed and random matrix data
         NodeList children = node.getChildNodes();
         if (children != null && children.getLength() > 0)
         {
