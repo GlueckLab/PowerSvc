@@ -50,14 +50,17 @@ public class TestParsing extends TestCase
     "<betaScaleList><v>10</v></betaScaleList>" +
     "<essenceMatrix>" +
     "<rowMetaData><r ratio='1' /></rowMetaData>" +
-    "<columnMetaData><c type='fixed' /></columnMetaData>" + 
-    "<matrix name='design' rows='1' columns='1'><r><c>1</c></r></matrix>" +
+    "<randomColumnMetaData><c mean='0' variance='1' /></randomColumnMetaData>" +
+    "<matrix name='fixed' rows='1' columns='1'><r><c>1</c></r></matrix>" +
+    "<matrix name='random' rows='1' columns='1'><r><c>1</c></r></matrix>" +
     "</essenceMatrix>" +
-    "<matrix name='betweenSubjectContrast' rows='1' columns='1'><r><c>1</c></r></matrix>" +
+    "<fixedRandomMatrix name='betweenSubjectContrast'>" +
+    "<matrix name='fixed' rows='1' columns='1'><r><c>1</c></r></matrix></fixedRandomMatrix>" +
     "<matrix name='withinSubjectContrast' rows='2' columns='2'>" +
     "<r><c>1</c></r><r><c>-1</c></r></matrix>" +
     "<matrix name='theta' rows='1' columns='1'><r><c>0</c></r></matrix>" +
-    "<matrix name='beta' rows='1' columns='2'><r><c>1</c><c>0</c></r></matrix>" +
+    "<fixedRandomMatrix name='beta'>" +
+    "<matrix name='fixed' rows='1' columns='2'><r><c>1</c><c>0</c></r></matrix></fixedRandomMatrix>" +
     "<matrix name='sigmaError' rows='2' columns='2'>" + 
     "<r><c>1</c><c>0</c></r><r><c>0</c><c>1</c></r></matrix>" +
     "</glmmPowerParameters>";

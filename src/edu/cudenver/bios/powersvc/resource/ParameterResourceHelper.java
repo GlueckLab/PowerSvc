@@ -31,10 +31,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import edu.cudenver.bios.matrix.ColumnMetaData;
-import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.RandomColumnMetaData;
+import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
@@ -69,8 +69,24 @@ public class ParameterResourceHelper
                 Node child = children.item(i);
                 if (PowerConstants.TAG_ESSENCE_MATRIX.equals(child.getNodeName()))
                 {
-                    EssenceMatrix essence = essenceMatrixFromDomNode(child);
+                    DesignEssenceMatrix essence = essenceMatrixFromDomNode(child);
                     params.setDesignEssence(essence);
+                }
+                else if (PowerConstants.TAG_FIXED_RANDOM_MATRIX.equals(child.getNodeName()))
+                {
+                    String matrixName = null;
+                    NamedNodeMap matrixAttrs = child.getAttributes();
+                    Node name = matrixAttrs.getNamedItem(PowerConstants.ATTR_NAME);
+                    if (name != null) matrixName = name.getNodeValue();
+                    
+                    if (PowerConstants.MATRIX_TYPE_BETA.equals(matrixName))
+                    {
+                    	params.setBeta(fixedRandomMatrixFromDomNode(child, false));
+                    }
+                    else if (PowerConstants.MATRIX_TYPE_BETWEEN_CONTRAST.equals(matrixName))
+                    {
+                    	params.setBetweenSubjectContrast(fixedRandomMatrixFromDomNode(child, true));
+                    }                	
                 }
                 else if (PowerConstants.TAG_MATRIX.equals(child.getNodeName()))
                 {
@@ -85,16 +101,12 @@ public class ParameterResourceHelper
                     {
                         RealMatrix matrix = matrixFromDomNode(child);
 
-                        if (PowerConstants.MATRIX_TYPE_BETA.equals(matrixName))
-                            params.setBeta(matrix);
-                        else if (PowerConstants.MATRIX_TYPE_DESIGN.equals(matrixName))
+                        if (PowerConstants.MATRIX_TYPE_DESIGN.equals(matrixName))
                             params.setDesign(matrix);
                         else if (PowerConstants.MATRIX_TYPE_THETA.equals(matrixName))
                             params.setTheta(matrix);
                         else if (PowerConstants.MATRIX_TYPE_WITHIN_CONTRAST.equals(matrixName))
                             params.setWithinSubjectContrast(matrix);
-                        else if (PowerConstants.MATRIX_TYPE_BETWEEN_CONTRAST.equals(matrixName))
-                            params.setBetweenSubjectContrast(matrix);
                         else if (PowerConstants.MATRIX_TYPE_SIGMA_ERROR.equals(matrixName))
                             params.setSigmaError(matrix);
                         else if (PowerConstants.MATRIX_TYPE_SIGMA_GAUSSIAN.equals(matrixName))
@@ -351,13 +363,14 @@ public class ParameterResourceHelper
      * @return
      * @throws IllegalArgumentException
      */
-    public static EssenceMatrix essenceMatrixFromDomNode(Node node)
+    public static DesignEssenceMatrix essenceMatrixFromDomNode(Node node)
     throws ResourceException
     {
-        EssenceMatrix essence = null;
-        RealMatrix matrix = null;
+        DesignEssenceMatrix essence = null;
+        double[][] fixedData = null;
+        double[][] randomData = null;
         RowMetaData[] rmd = null;
-        ColumnMetaData[] cmd = null;
+        RandomColumnMetaData[] cmd = null;
         Node seed = null;
         
         // parse the random seed value if specified
@@ -373,15 +386,31 @@ public class ParameterResourceHelper
                 Node child = children.item(i);
                 if (PowerConstants.TAG_MATRIX.equals(child.getNodeName()))
                 {
-                    matrix = ParameterResourceHelper.matrixFromDomNode(child);
+                    String matrixName = null;
+                    NamedNodeMap matrixAttrs = child.getAttributes();
+                    Node name = matrixAttrs.getNamedItem(PowerConstants.ATTR_NAME);
+                    if (name != null) 
+                    {
+                    	matrixName = name.getNodeValue();
+                    	RealMatrix matrix = ParameterResourceHelper.matrixFromDomNode(child);
+                    	
+                    	if (PowerConstants.ATTR_FIXED.equals(matrixName))
+                    	{
+                    		fixedData = matrix.getData();
+                    	}
+                    	else if (PowerConstants.ATTR_RANDOM.equals(matrixName))
+                    	{
+                    		randomData = matrix.getData();
+                    	}
+                    }
                 }
                 else if (PowerConstants.TAG_ROW_META_DATA.equals(child.getNodeName()))
                 {
                     rmd = ParameterResourceHelper.rowMetaDataFromDomNode(child);
                 }
-                else if (PowerConstants.TAG_COLUMN_META_DATA.equals(child.getNodeName()))
+                else if (PowerConstants.TAG_RANDOM_COLUMN_META_DATA.equals(child.getNodeName()))
                 {
-                    cmd = ParameterResourceHelper.columnMetaDataFromDomNode(child);
+                    cmd = ParameterResourceHelper.randomColumnMetaDataFromDomNode(child);
                 }
                 else
                 {
@@ -391,14 +420,14 @@ public class ParameterResourceHelper
         }
         
         // now that we're done parsing, build the essence matrix object
-        if (matrix != null)
+        essence =  new DesignEssenceMatrix(fixedData, rmd, randomData, cmd); 
+        if (seed != null)
         {
-            essence = new EssenceMatrix(matrix);
-            if (seed != null) essence.setRandomSeed(Integer.parseInt(seed.getNodeValue()));
-            if (cmd != null) essence.setColumnMetaData(cmd);
-            if (rmd != null) essence.setRowMetaData(rmd);
-        }        
+        	essence.setRandomSeed(Integer.parseInt(seed.getNodeValue()));
+        }
+        
         return essence;
+        
     }
     
     /**
@@ -442,37 +471,28 @@ public class ParameterResourceHelper
      * @param node 
      * @return list of column meta data
      */
-    public static ColumnMetaData[] columnMetaDataFromDomNode(Node node)
+    public static RandomColumnMetaData[] randomColumnMetaDataFromDomNode(Node node)
     {
-        ArrayList<ColumnMetaData> metaDataList = new ArrayList<ColumnMetaData>();
+        ArrayList<RandomColumnMetaData> metaDataList = new ArrayList<RandomColumnMetaData>();
         
         NodeList children = node.getChildNodes();
         if (children != null && children.getLength() > 0)
         {
             for (int i = 0; i < children.getLength(); i++)
             {
-                ColumnMetaData cmd = new ColumnMetaData();
                 Node child = children.item(i);
                 if (PowerConstants.TAG_COLUMN.equals(child.getNodeName()))
                 {
                     NamedNodeMap attrs = child.getAttributes();
-                    Node predictorType = attrs.getNamedItem(PowerConstants.ATTR_TYPE);
-                    if (predictorType != null)
-                    {
-                        // default is fixed, so only set if we see a random predictor specified
-                        if (PowerConstants.COLUMN_TYPE_RANDOM.equals(predictorType.getNodeValue()))
-                        {
-                            cmd.setPredictorType(PredictorType.RANDOM);
-                        }
-                    }
                     
                     Node mean = attrs.getNamedItem(PowerConstants.ATTR_MEAN);
-                    if (mean != null) cmd.setMean(Double.parseDouble(mean.getNodeValue()));
-                    
                     Node variance = attrs.getNamedItem(PowerConstants.ATTR_VARIANCE);
-                    if (variance != null) cmd.setVariance(Double.parseDouble(variance.getNodeValue()));                   
-                    
-                    metaDataList.add(cmd);
+
+                    if (mean != null && variance != null)
+                    {
+                    	metaDataList.add(new RandomColumnMetaData(Double.parseDouble(mean.getNodeValue()),
+                    			Double.parseDouble(variance.getNodeValue())));
+                    }
                 }
                 else
                 {
@@ -481,7 +501,54 @@ public class ParameterResourceHelper
             }
         }
         
-        return (ColumnMetaData[]) metaDataList.toArray(new ColumnMetaData[metaDataList.size()]);
+        return (RandomColumnMetaData[]) metaDataList.toArray(new RandomColumnMetaData[metaDataList.size()]);
+    }
+    
+    /**
+     * 
+     */
+    public static FixedRandomMatrix fixedRandomMatrixFromDomNode(Node node, 
+    		boolean combineHorizontal)
+    throws ResourceException
+    {
+    	double[][] fixedData = null;
+    	double[][] randomData = null;
+    	
+    	// parse the matrix data, row meta data, and column meta data
+        NodeList children = node.getChildNodes();
+        if (children != null && children.getLength() > 0)
+        {
+            for (int i = 0; i < children.getLength(); i++)
+            {
+                Node child = children.item(i);  
+                if (PowerConstants.TAG_MATRIX.equals(child.getNodeName()))
+                {
+                    String matrixName = null;
+                    NamedNodeMap matrixAttrs = child.getAttributes();
+                    Node name = matrixAttrs.getNamedItem(PowerConstants.ATTR_NAME);
+                    if (name != null) 
+                    {
+                    	matrixName = name.getNodeValue();
+                    	RealMatrix matrix = ParameterResourceHelper.matrixFromDomNode(child);
+                    	
+                    	if (PowerConstants.ATTR_FIXED.equals(matrixName))
+                    	{
+                    		fixedData = matrix.getData();
+                    	}
+                    	else if (PowerConstants.ATTR_RANDOM.equals(matrixName))
+                    	{
+                    		randomData = matrix.getData();
+                    	}
+                    }
+                }
+                else
+                {
+                    PowerLogger.getInstance().warn("Ignoring unknown fixed/random matrix child tag: " + child.getNodeName());
+                }
+            }
+        }
+    	
+    	return new FixedRandomMatrix(fixedData, randomData, combineHorizontal);
     }
     
     /**

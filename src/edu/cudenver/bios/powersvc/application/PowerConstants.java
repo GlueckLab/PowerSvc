@@ -38,11 +38,12 @@ public class PowerConstants
     public static final String TAG_GLMM_POWER = "glmmPower";
     public static final String TAG_GLMM_POWER_PARAMETERS = "glmmPowerParameters";
     public static final String TAG_ESSENCE_MATRIX = "essenceMatrix";
+    public static final String TAG_FIXED_RANDOM_MATRIX = "fixedRandomMatrix";
     public static final String TAG_MATRIX = "matrix";
     public static final String TAG_ROW = "r";
     public static final String TAG_COLUMN = "c";
     public static final String TAG_ROW_META_DATA = "rowMetaData";
-    public static final String TAG_COLUMN_META_DATA = "columnMetaData";
+    public static final String TAG_RANDOM_COLUMN_META_DATA = "randomColumnMetaData";
     public static final String TAG_TEST_LIST = "testList";
     public static final String TAG_ALPHA_LIST = "alphaList";
     public static final String TAG_POWER_LIST = "powerList";
@@ -74,6 +75,8 @@ public class PowerConstants
     public static final String ATTR_ALPHA = "alpha";
     public static final String ATTR_SAMPLE_SIZE = "sampleSize";
     public static final String ATTR_TEST = "test";
+    public static final String ATTR_FIXED = "fixed";
+    public static final String ATTR_RANDOM = "random";
     
     // statistical test name constants
     public static final String TEST_HOTELLING_LAWLEY_TRACE = "hlt";
