@@ -77,7 +77,8 @@ public class PowerConstants
     public static final String ATTR_TEST = "test";
     public static final String ATTR_FIXED = "fixed";
     public static final String ATTR_RANDOM = "random";
-    
+    public static final String ATTR_COMBINE_HORIZONTAL = "combineHorizontal";
+
     // statistical test name constants
     public static final String TEST_HOTELLING_LAWLEY_TRACE = "hlt";
     public static final String TEST_PILLAI_BARTLETT_TRACE = "pbt";
