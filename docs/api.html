@@ -41,10 +41,34 @@
  	text-indent: 60px;
  }
  
+  div.toc3 {
+ 	text-indent: 80px;
+ }
+
  td.borderRight {
  	border-right: 1px solid #000;
  	text-align: center;
  }
+ 
+tr.bgGray {
+	background: #ddd;
+ }
+ 
+table {
+	border-collapse: collapse;
+	border: 1px solid black;
+ }
+ 
+table td, th {
+ 	border: 1px solid black;
+ 	spacing: 0;
+ 	padding: 5px;
+ }
+ 
+ table th {
+	background: #ddd;
+ }
+ 
  </STYLE>
 </head>
 <body>
@@ -58,6 +82,8 @@ consists of four main components:
 <ul>
 <li>Glimmpse.com user interface - a Javascript/GWT front-end user interface</li>
 <li><b>Power Service</b> - RESTful Java web service which processes power/sample size requests</li>
+<li>Chart Service - RESTful Java web service which produces graphs.  For the Glimmpse system, this service
+produces power curves.</li>
 <li>File Service - RESTful Java web service providing upload/save functionality for study design information</li>
 <li>JavaStatistics library - low level library containing routines for computing GLMM power</li>
 </ul>
@@ -72,6 +98,11 @@ For additional background on GLMM power calculations when controlling for a base
 <div class="toc1"><a href="#powersvc">1. The Power Service</a></div>
 <div class="toc1"><a href="#params">2. Parameters for the General Linear Multivariate Model</a></div>
 <div class="toc2"><a href="#paramsMatrixInputs">2.1 Matrix Inputs</a></div>
+<div class="toc3"><a href="#basicMatrix">2.1.1 Basic Matrices</a></div>
+<div class="toc3"><a href="#fixedRandomMatrix">2.1.2 Fixed / Random Matrices</a></div>
+<div class="toc3"><a href="#essenceMatrix">2.1.3 Essence Matrix</a></div>
+<div class="toc3"><a href="#paramsRequiredMatrices">2.1.4 Required Matrices</a></div>
+<div class="toc3"><a href="#conformance">2.1.5 Matrix Conformance</a></div>
 <div class="toc2"><a href="#paramsLists">2.2 List Inputs</a></div>
 <div class="toc1"><a href="#power">3. Calculating Power</a></div>
 <div class="toc1"><a href="#samplesize">4. Calculating Sample Size</a></div>
@@ -79,7 +110,7 @@ For additional background on GLMM power calculations when controlling for a base
 <div class="toc1"><a href="#examples">6. Examples</a></div>
 <div class="toc2"><a href="#examplesTTest">6.1 One-Sample T-Test</a></div>
 <div class="toc2"><a href="#examplesANOVA">6.2 One-Way ANOVA</a></div>
-<div class="toc2"><a href="#examplesLinear">6.3 Model Comparing of Linear Trends Between Males and Females</a></div>
+<div class="toc2"><a href="#examplesLinear">6.3 Model Comparing Linear Trends Between Males and Females</a></div>
 </div>
 
 <h2><a name="powersvc">1. The Power Service</a></h2>
@@ -89,7 +120,7 @@ which processes requests for power and sample size for the GLMM.  The system
 supports GLMM study designs with either all fixed predictors or fixed predictors
 with a single baseline covariate (assumed to be normally distributed).  The REST API
 allows users to specify the matrices required for GLMM power calculations, and request
-power, sample size, or minimum detectable difference.  Users may request a list of results
+power, sample size, or minimum detectable difference.  Users may request a list of power results
 which can then be displayed in tables or as power curves.
 </p>
 <p>
@@ -107,8 +138,8 @@ The Power Service was developed and tested for use within the <a href="http://to
 
 Power calculations for the GLMM are based on several matrices which describe 
 the study design, estimated regression coefficients, estimated variability, and 
-study hypotheses.  Optional attributes indicate the approximation methods to be used.  
-Users may also request lists of power values including various statistical tests, 
+study hypotheses.  Users may request multiple power values in a single request to the
+power service, including variations such as different statistical tests, 
 type I error values, sample sizes, desired power values, and scale factors for 
 regression coefficients and variability.  For designs including a baseline 
 covariate, multiple power methods and quantiles may be specified.
@@ -116,6 +147,7 @@ covariate, multiple power methods and quantiles may be specified.
 All requests to the power service must specify GLMM power parameters with the general form 
 (attributes within [] characters are optional)
 </p>
+
 <pre>
 &lt;glmmPowerParameters&gt;
   &lt;testList&gt;&lt;v&gt;<i>(hlt|wl|pbt|unirep|unirepBox|unirepGG|unirepHF)</i>&lt;/v&gt;...
@@ -130,21 +162,32 @@ All requests to the power service must specify GLMM power parameters with the ge
   [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
   &lt;essenceMatrix&gt;
     &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
-    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
-        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
-    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
-        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-        ...
-        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+    &lt;randomColumnMetaData&gt;&lt;c mean='<i>mean</i>' variance='<i>variance</i>' /&gt;&lt;/randomColumnMetaData&gt;
+    &lt;matrix name='<i>random</i>' rows='<i>n</i>' columns='<i>1</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;/r&gt;
     &lt;/matrix&gt;
   &lt;/essenceMatrix&gt;
-  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
+  &lt;fixedRandomMatrix name='betweenSubjectContrast' combineHorizontal='true' &gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
       &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
       ...
       &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
+    &lt;/matrix&gt;    
+    &lt;matrix name='<i>random</i>' rows='<i>a</i>' columns='<i>1</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
   &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
     ...
     &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
@@ -153,18 +196,22 @@ All requests to the power service must specify GLMM power parameters with the ge
     ...
     &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
-  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
+  &lt;fixedRandomMatrix name='beta' combineHorizontal='true' &gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>q,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>q,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>q,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;    
+    &lt;matrix name='<i>random</i>' rows='<i>1</i>' columns='<i>p</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
   &lt;!-- Specify sigmaError if all fixed predictors --&gt;
   &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
     &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
     ...
     &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
-
   &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
   &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
     &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
@@ -176,62 +223,29 @@ All requests to the power service must specify GLMM power parameters with the ge
   &lt;/matrix&gt;
   &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
     &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
+     ...
     &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
 &lt;/glmmPowerParameters&gt;
 </pre>
 
-The glmmPowerParameters takes no attributes.  The matrix and list input parameters are described in sections <a href="#paramsMatrixInputs">2.1</a> and 
+The glmmPowerParameters tag takes no attributes.  The matrix and list input parameters are described in sections <a href="#paramsMatrixInputs">2.1</a> and 
 <a href="#paramsLists">2.2</a>
 
-<!-- 
-The following attributes are available in the glmmPowerParameters tag.
-Note that appropriate defaults are selected for these attributes based on published research
-for each of the available statistical tests.  Most users should ignore these attributes unless
-power results based on older approximation methods are required.
-
-<table border='1' cellpadding='5'>
-<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
-<tr><td>unirepCdf</td><td>String</td>
-<td>Specifies the method of approximating the CDF for the univariate approach to repeated measures test.
-The unirepCdf attribute takes the following values:
-<ul>
-<li>mba - Muller and Barton (1989) approximation</li>
-<li>meta - Muller, Edwards and Taylor (2004) approximation</li>
-<li>mete - Muller, Edwards and Taylor (2004) exact, via Davies' algorithm. This algorithm may fail</li>
-<li>metea - Muller, Edwards and Taylor (2004) exact as in  'mete', except if the Davies' algorithm fails
-this replaces the missing value with the value resulting from 'meta'</li>
-</ul>
-</td></tr>
-<tr><td>momentMethod</td><td>String</td>
-<td>Specifies the type of method of moments approximation.  The following values are supported
-<ul>
-<li>pillai1 - Pillai (1954, 55) 1 moment null approximation.  
-Supported for the Hotelling-Lawley, Pillai Bartlett Trace tests</li>
-<li>pillai1mult - Pillai (1959) 1 moment null approximation + non-centrality multiplication.  
-Supported for the Hotelling-Lawley, Pillai Bartlett Trace tests</li>
-<li>mckeon2 - McKeon (1974) two moment null approximation.  
-Supported for the Hotelling-Lawley Trace test</li>
-<li>mckeon2mult - McKeon (1974) two moment null approximation + non-centrality multiplication.  
-Supported for the Hotelling-Lawley Trace test</li>
-<li>muller2 - Muller (1998) two moment null approximation.
-Supported for the Pillai-Bartlett Trace test</li>
-<li>muller2mult - Muller (1998) two moment null approximation + non-centrality multiplication.
-Supported for the Pillai-Bartlett Trace test</li>
-<li>rao2 - Rao (1951) two moment null approximation.
-Supported for the Wilks' Lambda test</li>
-<li>rao2mult - Rao (1951) two moment null approximation + non-centrality multiplication.
-Supported for the Wilks' Lambda test</li>
-</ul>
-</td></tr>
-</table>
-<p></p>
- -->
-
 <h3><a name="paramsMatrixInputs">2.1 Matrix Inputs</a></h3>
-The general XML format for specifying an <i>n x m</i> matrix for the
-Power Service is:
+
+The power service supports three types of matrix inputs:
+<ul>
+<li>Basic Matrix - a simple <I>n x m</I> matrix</li>
+<li>Fixed / Random Matrix - a matrix which has both a fixed submatrix and a random submatrix</li>
+<li>Essence Matrix - the study design matrix, including both fixed and random submatrices, and
+meta data describing relative group sizes, and the distribution of the baseline covariate.</li> 
+</ul>
+<p/>
+<h3><a name="basicMatrix">2.1.1 Basic Matrices</a></h3>
+
+A basic matrix is a 2-dimensional array of real numbers with <i>n</i> rows and <i>m</i> columns.  
+The XML format for specifying a basic matrix for the Power Service is:
 <pre>
 &lt;matrix name='<i>name</i>' rows='<i>n</i>' columns='<i>m</i>'&gt;
 &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt&lt;/r&gt;
@@ -239,26 +253,140 @@ Power Service is:
 &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt&lt;/r&gt;
 &lt;/matrix&gt;
 </pre>
-<table border='1'>
+<table >
 <tr><th>Variable</th><th>Type</th><th>Description</th></tr>
 <tr><td>name</td><td>String</td>
-<td>The name of the matrix.  Must be one of the following:
-<ul>
-<li>design - design matrix</li>
-<li>betweenSubjectContrast - contrasts for testing between subject hypotheses</li>
-<li>withinSubjectContrast - contrasts for testing within subject hypotheses</li>
-<li>beta - regression coefficient matrix</li>
-<li>sigmaError - covariance matrix</li>
-<li>sigmaGaussianRandom - single cell matrix containing variance of the baseline covariate</li>
-<li>sigmaOutcome - covariance matrix for outcome measures</li>
-<li>sigmaOutcomeGaussianRandom - covariance matrix between covariate and outcome measures</li>
-</ul>
+<td>The name of the matrix. 
 </td></tr>
 <tr><td>rows</td><td>Integer</td><td>Number of rows in the matrix</td></tr>
 <tr><td>columns</td><td>Integer</td><td>Number of columns in the matrix</td></tr>
 <tr><td>d<sub>i,j</sub></td><td>Real</td><td>Value of cell i,j in the matrix</td></tr>
 </table>
-<h3>2.2.1 Required Matrices</h3>
+
+<h3><a name="fixedRandomMatrix">2.1.2 Fixed / Random Matrices</a></h3>
+
+A fixed random matrix is a 2-dimensional array of real numbers, which is separated into both a fixed
+submatrix and a random submatrix.  Both the regession coefficient matrix (&beta;) and the between 
+subject contrast matrix (C) are represented as fixed/random matrices, since they will have fixed and 
+random components for study designs with a baseline covariate.  The XML format for a fixed/random matrix is:
+<pre>
+  &lt;fixedRandomMatrix name='<i>name</i>' combineHorizontal='[true|false]' &gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>n</i>' columns='<i>m</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;    
+    &lt;matrix name='<i>random</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>q,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>q,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>q,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
+</pre>
+The fixedRandomMatrix tag has two attributes:
+<p></p>
+<table >
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td>name</td><td>String</td><td>the name of the matrix</td></tr>
+<tr><td>combineHorizontal</td><td>Boolean</td><td>Indicates if the complete matrix should be created by 
+combining the fixed and random submatrices vertically or horizontally</td></tr>
+</table>
+<p/>
+In addition, the fixedRandomMatrix tag encloses two <a href="#basicMatrix">basic matrices</a>, named "fixed" and "random", 
+which specify the data in the fixed and random submatrices.
+
+<h3>2.1.3 <a name="essenceMatrix">Essence Matrix</a></h3>
+
+The essence matrix specifies the study design.  Any linear model encoding can be used
+for this matrix (cell means, reference cell, etc.).  Since this matrix is used for power analysis, 
+it should only include a single row for each unique row in the full design matrix.  Thus,
+it is referred to as a design "essence" matrix.  The XML format for the essence matrix is:
+<pre>
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+    &lt;randomColumnMetaData&gt;&lt;c mean='<i>mean</i>' variance='<i>variance</i>' /&gt;&lt;/randomColumnMetaData&gt;
+    &lt;matrix name='<i>random</i>' rows='<i>n</i>' columns='<i>1</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+</pre>
+
+The essenceMatrix tag itself does not have any attributes.  The essenceMatrix tag encloses the following child tags:
+
+<h4>Fixed and Random Basic Matrices</h4>
+
+The essence matrix contains two basic matrices containing the actual data in the design.  Similar to the fixed/random matrix, 
+the data is separated into fixed and random components.  The fixed matrix represents the study design coding
+for categorical or fixed predictors.  The random matrix represents the random covariate.  The values in this column will
+be replaced by random values from a normal distribution with mean and variance specified in the randomColumnMetaData
+tag described below.
+<p></p>
+For version 1.0.0, only a single baseline covariate is allowed.  Therefore, for a fixed submatrix with dimensions <i>n x q</i>,
+the random submatrix should have dimensions <i>n x 1</i>.
+
+<h4>Row Meta Data</h4>
+
+Depending on the coding scheme used, each row in the design matrix may represent a unique subgroup of subjects 
+in the study.  Since the number of subjects in each group may not be equal, the rowMetaData tag allows users to 
+specify the relative size of each subgroup. The rowMetaData tag contains a list of relative sizes for each row in the 
+design matrix.  The number of entries enclosed by the rowMetaData tag should match the number of rows in 
+both the fixed and random submatrices in the study design.
+<pre>
+    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
+</pre>
+The relative sizes are specified with an "r" tag with a single attribute:
+<p></p>
+<table >
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td>ratio</td><td>Positive Integer</td><td>The relative number of subjects in the group represented by the
+current row in the design matrix.</td></tr>
+</table>
+<p></p>
+For example, suppose a study is performing a t-test to compare drug A against drug B.  
+There are twice as many subjects taking drug A vs. drug B.  In this case, the essence matrix and row meta data 
+would be specified as:
+
+<pre>
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='2' /&gt;...&lt;r ratio='1' /&gt;&lt;/rowMetaData&gt;
+    &lt;matrix name='<i>fixed</i>' rows='2' columns='2'&gt;
+      &lt;r&gt;&lt;c&gt;<i>1</i>&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;...&lt;c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;<i>0</i>&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;...&lt;c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+</pre>
+where the first row in the design matrix corresponds to the drug A group, and the second row corresponds to the drug B group.
+
+<h4>Random Column Meta Data</h4>
+
+The random column meta data is a list of distribution information for each random predictor column in the design matrix.
+The number of entries in this list should match the number of columns in the random submatrix in the study design 
+(for a single baseline covariate, this list will have one entry).  The first entry in the list corresponds to the first column
+ in the random submatrix of the study design, the second with the second column in the random submatrix, and so on.
+<p></p>
+<pre>
+    &lt;randomColumnMetaData&gt;&lt;c mean='<i>mean</i>' variance='<i>variance</i>' /&gt;&lt;/randomColumnMetaData&gt;
+</pre>
+<p></p>
+The randomColumnMetaData tag has no attributes.  It encloses a list of "c" tags with the following attributes.
+<p></p>
+<table >
+<tr><th>Variable</th><th>Type</th><th>Description</th></tr>
+<tr><td>mean</td><td>Number</td><td>The mean of the normal distribution for the random covariate represented
+by the current column in the random submatrix of the study design</td></tr>
+<tr><td>variance</td><td>Number</td><td>The variance of the normal distribution for the random covariate represented
+by the current column in the random submatrix of the study design</td></tr>
+</table>
+
+<h3><a name="paramsRequiredMatrices">2.1.4 Required Matrices</a></h3>
+
 <h4>The Design Essence Matrix</h4>
 
 <h4>The Between Subject Contrast Matrix</h4>
@@ -283,7 +411,34 @@ Off diagonal values should be real numbers.
 For study designs including a baseline covariate, three matrices must be specify to fully describe the
 variability.
 
-<h3><a name="paramsLists">2.1 List Inputs</a></h3>
+<h3><a name="conformance">2.1.5 Matrix Conformance</a></h3>
+
+For successful computation of power for the GLMM, the required matrices must conform appropriately to 
+one another.  The following table lists the dimensions required for each of the matrices:
+<p></p>
+<table>
+<tr><th>Matrix</th><th>Rows</th><th>Columns</th><th>Conformance Details</th></tr>
+<tr><td>X: Design essence matrix</td><td>N</td><td>Q</td><td>Columns equal number of rows in &beta;</td></tr>
+<tr><td>C: Between subject contrast</td><td>A</td><td>Q</td><td>Columns equal number of rows in &beta;
+<br>Rows must be one less than number of rows in X</br></td></tr>
+<tr><td>U: Within subject contrast</td><td>P</td><td>B</td><td>Rows equals the number of columns in &beta;</td></tr>
+<tr><td>&Theta;: Null hypothesis values</td><td>A</td><td>B</td><td>Rows equals the number of rows in C<br>
+Columns equals the number of columns in U</br></td></tr>
+<tr><td>&beta;: Regression coefficient estimates</td><td>Q</td><td>P</td><td>Rows equals the number of columns
+in X (number of predictors)<br>Columns equals the number of columns in U (number of outcomes)</br></td></tr>
+<tr class='bgGray'><td colspan='4' >Design with fixed predictors only</td></tr>
+<tr><td>&Sigma;: covariance matrix of residuals<sub>error</sub></td><td>P</td><td>P</td>
+<td>Matrix is square and symmetric.<br>Rows/columns equal the number of columns in &beta;</br></td></tr>
+<tr class='bgGray'><td colspan='4' background='#ddd'>Design which controls for a baseline covariate</td></tr>
+<tr><td>&Sigma;<sub>G</sub>: Covariance of Gaussian predictor</td><td>1</td><td>1</td>
+<td>Since only a single baseline covariate is allowed, this matrix is 1x1.</td></tr>
+<tr><td>&Sigma;<sub>YG: Covariance of Gaussian predictor with outcomes</sub></td><td>P</td><td>P</td>
+<td>Rows/columns equal the number of columns in &beta;</td></tr>
+<tr><td>&Sigma;<sub>Y: Covariance of outcomes</sub></td><td>P</td><td>P</td>
+<td>Rows/columns equal the number of columns in &beta; (i.e. number of outcomes)</td></tr>
+</table>
+
+<h3><a name="paramsLists">2.2 List Inputs</a></h3>
 
 Once the required matrices are specified, users may request a list of powers by varying 
 the basic study design. Users can scale the regression coefficients in the beta matrix and 
@@ -427,57 +582,9 @@ Parameters are specified in the entity body as:
   [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
     &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
   [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
-  &lt;essenceMatrix&gt;
-    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
-    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
-        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
-    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
-        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-        ...
-        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-    &lt;/matrix&gt;
-  &lt;/essenceMatrix&gt;
-  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
-      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-      ...
-      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
-  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
+  
+...<i>required matrices</i>...
 
-  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
-  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
 &lt;/glmmPowerParameters&gt;
 </pre>
 
@@ -498,7 +605,7 @@ The powerList tag encloses the list of power results and has a single attribute 
 which specifies the number of results in the list.
 <p></p>
 The glmmPower tag describes a specific power result and has the following attributes: 
-<table border='1'>
+<table >
 <tr><th>Variable</th><th>Type</th><th>Description</th></tr>
 <tr><td>alpha</td><td>Real</td><td>Type I error rate associated with this power result.  
 The value ranges from 0 to 1, although 0.01, 0.05, and 0.10 are typical.</td></tr>
@@ -534,57 +641,9 @@ Parameters are specified in the entity body as:
   [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
     &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
   [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
-  &lt;essenceMatrix&gt;
-    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
-    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
-        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
-    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
-        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-        ...
-        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-    &lt;/matrix&gt;
-  &lt;/essenceMatrix&gt;
-  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
-      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-      ...
-      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
-  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
+  
+...<i>required matrices</i>...
 
-  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
-  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
 &lt;/glmmPowerParameters&gt;
 </pre>
 
@@ -613,57 +672,9 @@ Parameters are specified in the entity body as:
   [&lt;powerMethodList&gt;&lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;...
     &lt;v&gt;<i>(conditional|quantile|unconditional)</i>&lt;/v&gt;&lt;/powerMethodList&gt;]
   [&lt;quantileList&gt;&lt;v&gt;<i>quantile</i>&lt;/v&gt;...&lt;v&gt;<i>quantile</i>&lt;/v&gt;&lt;/quantileList&gt;]
-  &lt;essenceMatrix&gt;
-    &lt;rowMetaData&gt;&lt;r ratio='<i>relativeSize</i>' /&gt;...&lt;r ratio='<i>relativeSize</i>' /&gt;&lt;/rowMetaData&gt;
-    &lt;columnMetaData&gt;&lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;...
-        &lt;c type='<i>(fixed|random)</i>' [mean='<i>mean</i>' variance='<i>variance</i>'] /&gt;&lt;/columnMetaData&gt;
-    &lt;matrix name='<i>design</i>' rows='<i>n</i>' columns='<i>q</i>'&gt;
-        &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-        ...
-        &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-    &lt;/matrix&gt;
-  &lt;/essenceMatrix&gt;
-  &lt;matrix name='<i>betweenSubjectContrast</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
-      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-      ...
-      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>beta</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>n,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>n,m</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;!-- Specify sigmaError if all fixed predictors --&gt;
-  &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
+  
+...<i>required matrices</i>...
 
-  &lt;!-- Specify the following three sigma matrices if controlling for a baseline covariate --&gt;
-  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-    ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
-  &lt;/matrix&gt;
 &lt;/glmmPowerParameters&gt;
 </pre>
 
@@ -676,7 +687,7 @@ found in the betaScale attribute of the glmmPower result.  For easier interpreta
 the beta matrix should have a 1 in cells for groups expected to differ, and a 0 otherwise.
 <p>
 Example beta matrix for 2 outcomes, 3 treatment groups.  Treatment effect expected in group 1 on outcome 1.
-<table border='1' cellpadding='5' cellspacing='0'>
+<table  cellpadding='5' cellspacing='0'>
 <tr><td>1</td><td>0</td></tr>
 <tr><td>0</td><td>0</td></tr>
 <tr><td>0</td><td>0</td></tr>
@@ -725,8 +736,8 @@ with the entity body:
 
 
 
-<h3>6.2 One-Way ANOVA</h3>
+<h3><a name="examplesANOVA">6.2 One-Way ANOVA</a></h3>
 
-<h3>6.3 Model Comparing of Linear Trends Between Males and Females</h3>
+<h3><a name="examplesLinear">6.3 Model Comparing of Linear Trends Between Males and Females</a></h3>
 
 </body>
