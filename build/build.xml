@@ -102,16 +102,19 @@
         </war>
     </target>
     
-    <target name="doc" depends="compile" description="Generates the API specification (javadoc)">
+    <target name="javadoc" depends="compile" description="Generates the API specification (javadoc)">
         <javadoc packagenames="edu.cudenver.bios.*"
-                 sourcepath="${basedir}/../src"
+                 access="public"
                  classpath="${basedir}/../classes" 
-                 destdir="${basedir}/../docs"
+                 destdir="${javadocdir}"
                  use="true"
-                 author="false"
-                 version="false"
-                 windowtitle="Power Service API Specification"
-                 doctitle="Power Service API Specification">
+                 author="true"
+                 version="true"
+                 windowtitle="UC Denver Biostatistics - Power Service Java API Specification"
+                 doctitle="UC Denver Biostatistics - Power Service Java API Specification">
+             <fileset dir="${sourcedir}" defaultexcludes="yes">
+                 <include name="**/*.java"/>
+            </fileset>
             <header><![CDATA[<p><b>power service</b></p>]]></header>
             <bottom><![CDATA[<font size=1>CU Denver Biostatistic Department</font>]]></bottom>
             <link href="http://java.sun.com/javase/6/docs/api"/>
@@ -131,21 +134,6 @@
   		  </test>
         </junit>
     </target>
-    
-	<target name="javadoc">
-      <javadoc
-           access="public"
-           destdir="${javadocdir}"
-           author="true"
-           version="true"
-           use="true"
-           windowtitle="UC Denver Biostatistics - Power Service Java API Specification"
-         >
-        <fileset dir="${sourcedir}" defaultexcludes="yes">
-            <include name="**/*.java"/>
-        </fileset>
-      </javadoc>
-	</target>
 	
 	<!-- Create the javadoc distribution  -->
 	<target name="javadoc-distribution" depends="javadoc">
