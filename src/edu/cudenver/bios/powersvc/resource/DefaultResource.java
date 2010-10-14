@@ -34,6 +34,8 @@ import org.restlet.resource.Variant;
 /**
  * Default request resource.  Called from the URI /power
  * Simply returns a self-identifying message for the server
+ * 
+ * @author Sarah Kreidler
  */
 public class DefaultResource extends Resource
 {

@@ -21,25 +21,20 @@
  */
 package edu.cudenver.bios.powersvc.test;
 
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-
-import org.w3c.dom.Document;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.xml.sax.InputSource;
 
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
-import edu.cudenver.bios.powersvc.resource.ParameterResourceHelper;
 
 import junit.framework.TestCase;
 
 /**
  * Unit test for building the outgoing representation of power results
+ * 
+ * @author Sarah Kreidler
  */
 public class TestRepresentation extends TestCase
 {

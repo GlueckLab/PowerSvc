@@ -45,6 +45,8 @@ import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 /**
  * Resource for handling requests for sample size calculations.
  * See the PowerApplication class for URI mappings
+ * 
+ * @author Sarah Kreidler
  */
 public class SampleSizeResource extends Resource
 {

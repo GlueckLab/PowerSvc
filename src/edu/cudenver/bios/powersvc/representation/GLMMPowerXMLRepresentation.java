@@ -33,6 +33,8 @@ import edu.cudenver.bios.powersvc.application.PowerConstants;
 
 /**
  * Class which converts a GLMM Power object to an XML DOM
+ * 
+ *  @author Sarah Kreidler
  */
 public class GLMMPowerXMLRepresentation extends DomRepresentation
 {
@@ -56,7 +58,7 @@ public class GLMMPowerXMLRepresentation extends DomRepresentation
      * 
      * @param doc the DOM document
      * @param power the GLMM power object
-     * @return
+     * @return DOM node for a single power result
      */
     public static Element createGLMMPowerElement(Document doc, GLMMPower power) 
     {

@@ -37,6 +37,8 @@ import edu.cudenver.bios.powersvc.resource.test.FTestResource;
  * Main Restlet application class for the Power Service.
  * Defines URI mappings to the appropriate power,
  * sample size, or detectable difference resource
+ * 
+ * @author Sarah Kreidler
  */
 public class PowerApplication extends Application
 {   

@@ -25,6 +25,8 @@ import org.apache.log4j.Logger;
 
 /**
  * Singleton Log4J wrapper class
+ * 
+ * @author Sarah Kreidler
  */
 public class PowerLogger
 {

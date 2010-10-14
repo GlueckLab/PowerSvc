@@ -34,6 +34,8 @@ import edu.cudenver.bios.powersvc.application.PowerConstants;
  * XML representation of an error message.  
  * Avoids using server default and allows easier parsing/presentation
  * of error message on the client side
+ * 
+ * @author Sarah Kreidler
  */
 public class ErrorXMLRepresentation extends DomRepresentation
 {

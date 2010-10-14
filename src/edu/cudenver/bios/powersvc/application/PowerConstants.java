@@ -23,6 +23,8 @@ package edu.cudenver.bios.powersvc.application;
 
 /**
  * Convenience class for power service constants
+ * 
+ * @author Sarah Kreidler
  */
 public class PowerConstants
 {

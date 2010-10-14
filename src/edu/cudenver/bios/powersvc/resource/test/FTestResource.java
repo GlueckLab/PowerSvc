@@ -50,8 +50,9 @@ import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
 /**
  * Resource exposing some unit test functionality.
- * .
  * See the PowerApplication class for URI mappings
+ * 
+ * @author Sarah Kreidler
  */
 public class FTestResource extends Resource
 {

@@ -38,6 +38,8 @@ import junit.framework.TestCase;
 
 /**
  * Unit test for parsing of incoming entity body
+ * 
+ * @author Sarah Kreidler
  */
 public class TestParsing extends TestCase
 {

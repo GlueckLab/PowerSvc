@@ -35,6 +35,8 @@ import edu.cudenver.bios.powersvc.application.PowerConstants;
 
 /**
  * Class which converts a list of GLMM power results to an XML DOM
+ * 
+ * @author Sarah Kreidler
  */
 public class GLMMPowerListXMLRepresentation extends DomRepresentation
 {

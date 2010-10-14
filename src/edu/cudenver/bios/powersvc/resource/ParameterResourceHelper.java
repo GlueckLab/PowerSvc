@@ -41,6 +41,8 @@ import edu.cudenver.bios.powersvc.application.PowerLogger;
 
 /**
  * Helper class for parsing GLMM parameters from a DOM tree.
+ * 
+ * @author Sarah Kreidler
  */
 public class ParameterResourceHelper
 {
@@ -360,7 +362,7 @@ public class ParameterResourceHelper
      * Parse an essence matrix from a DOM tree
      * 
      * @param node root node of the DOM tree
-     * @return
+     * @return essence matrix object
      * @throws IllegalArgumentException
      */
     public static DesignEssenceMatrix essenceMatrixFromDomNode(Node node)
@@ -565,7 +567,7 @@ public class ParameterResourceHelper
      * <br>&lt;/matrix&gt;
      * 
      * @param node
-     * @return
+     * @return matrix object
      * @throws ResourceException
      */
     public static RealMatrix matrixFromDomNode(Node node) throws ResourceException
