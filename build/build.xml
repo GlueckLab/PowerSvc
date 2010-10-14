@@ -22,24 +22,22 @@
 <project name="power" default="test">
     
     <property name="svcname" value="power" />
-    <property name="wardir" value="${basedir}/../tmpwar" />
+    <property name="wardir" value="${basedir}/war" />
     <property name="sourcedir" value="${basedir}/../src" />
-    <property name="bindir" value="${basedir}/../tmpbin" />
+    <property name="bindir" value="${basedir}/bin" />
     <property name="wcdir" value="${basedir}/../WebContent" />
 	<property name="javastatsdir" value="${basedir}/../../JavaStatistics/bin" />
 	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
+	<property name="javadocdir" value="${basedir}/javadoc" />
 	
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
-		<include name="ApacheCommonsMath/2.0/commons-math-2.0.jar" />
-		<include name="jsc/1.0/jsc.jar" />
+		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
+		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="restlet/1.1.6/lib/org.restlet.jar" />
 		<include name="restlet/1.1.6/lib/com.noelios.restlet.jar" />
 	    <include name="restlet/1.1.6/lib/com.noelios.restlet.ext.servlet_2.5.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
-		<include name="log4j/1.2.15/log4j-1.2.15.jar" />
-		<include name="jfreechart/1.0/lib/jfreechart-1.0.13.jar" /> 
-		<include name="jfreechart/1.0/lib/jcommon-1.0.16.jar" /> 
-		<include name="ApacheCommonsCodec/1.4/commons-codec-1.4.jar" />
+		<include name="log4j/1.2.15/lib/log4j-1.2.15.jar" />
 	</fileset>
 
 	<path id="libraries">
@@ -52,6 +50,10 @@
     <target name="clean">
         <delete dir="${wardir}"/>
         <delete dir="${bindir}"/>
+        <delete dir="${javadocdir}"/>
+    	  <delete>
+    	    <fileset dir="." includes="TEST-*"/>
+    	  </delete>
         <mkdir dir="${wardir}"/>
         <mkdir dir="${bindir}"/>
     </target>
@@ -123,13 +125,58 @@
               <pathelement location="${wardir}/WEB-INF/classes"/>
             </classpath>
             <formatter type="plain" />
-  		  <test name="edu.cudenver.bios.powersvc.test.TestParsing" haltonfailure="no" outfile="result">
-  		    <formatter type="xml"/>
+  		  <test name="edu.cudenver.bios.powersvc.test.TestParsing" haltonfailure="no">
   		  </test>
-  		  <test name="edu.cudenver.bios.powersvc.test.TestRepresentation" haltonfailure="no" outfile="result">
-  			 <formatter type="xml"/>
+  		  <test name="edu.cudenver.bios.powersvc.test.TestRepresentation" haltonfailure="no">
   		  </test>
         </junit>
     </target>
     
+	<target name="javadoc">
+      <javadoc
+           access="public"
+           destdir="${javadocdir}"
+           author="true"
+           version="true"
+           use="true"
+           windowtitle="UC Denver Biostatistics - Power Service Java API Specification"
+         >
+        <fileset dir="${sourcedir}" defaultexcludes="yes">
+            <include name="**/*.java"/>
+        </fileset>
+      </javadoc>
+	</target>
+	
+	<!-- Create the javadoc distribution  -->
+	<target name="javadoc-distribution" depends="javadoc">
+		<jar destfile="${bindir}/${svcname}-javadoc.jar" basedir="${javadocdir}" >
+			<manifest>
+				<attribute name="Author" value="Sarah Kreidler"/>
+				<section name="Shared">
+					<attribute name="Title" value="${svcname} Javadoc"/>
+					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+				</section>
+				<section name="Copyright">
+					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+				</section>
+			</manifest>
+		</jar>
+	</target>
+	
+	<!-- Create the source distribution -->
+	<target name="source-distribution">
+		<jar destfile="${bindir}/${svcname}-source.jar" basedir="${basedir}/.." 
+			includes="src/**,build/**,docs/**,.classpath,.project,LICENSE-gpl2.0.txt,README.txt">
+			<manifest>
+				<attribute name="Author" value="Sarah Kreidler"/>
+				<section name="Shared">
+					<attribute name="Title" value="${svcname} Source Code"/>
+					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+				</section>
+				<section name="Copyright">
+					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+				</section>
+			</manifest>
+		</jar>
+	</target>
 </project>
