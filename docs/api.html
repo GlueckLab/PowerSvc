@@ -110,7 +110,6 @@ For additional background on GLMM power calculations when controlling for a base
 <div class="toc1"><a href="#examples">6. Examples</a></div>
 <div class="toc2"><a href="#examplesTTest">6.1 One-Sample T-Test</a></div>
 <div class="toc2"><a href="#examplesANOVA">6.2 One-Way ANOVA</a></div>
-<div class="toc2"><a href="#examplesLinear">6.3 Model Comparing Linear Trends Between Males and Females</a></div>
 </div>
 
 <h2><a name="powersvc">1. The Power Service</a></h2>
@@ -221,10 +220,10 @@ All requests to the power service must specify GLMM power parameters with the ge
     ...
     &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
-  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
-    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
      ...
-    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
 &lt;/glmmPowerParameters&gt;
 </pre>
@@ -357,8 +356,8 @@ would be specified as:
   &lt;essenceMatrix&gt;
     &lt;rowMetaData&gt;&lt;r ratio='2' /&gt;...&lt;r ratio='1' /&gt;&lt;/rowMetaData&gt;
     &lt;matrix name='<i>fixed</i>' rows='2' columns='2'&gt;
-      &lt;r&gt;&lt;c&gt;<i>1</i>&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;...&lt;c&gt;&lt;/r&gt;
-      &lt;r&gt;&lt;c&gt;<i>0</i>&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;...&lt;c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;<i>1</i>&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;<i>0</i>&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
     &lt;/matrix&gt;
   &lt;/essenceMatrix&gt;
 </pre>
@@ -389,15 +388,95 @@ by the current column in the random submatrix of the study design</td></tr>
 
 <h4>The Design Essence Matrix</h4>
 
+A single <a href="#essenceMatrix">'X' design essence matrix</a> should be specified to describe the study design.
+There are no restrictions on the coding scheme, although the design matrix should be full rank.
+The fixed portion of the design represents the study design coding for categorical or fixed predictors.  
+The random portion of the design is optional, and should be specified as a column vector when controlling
+for a baseline covariate.  
+
 <h4>The Between Subject Contrast Matrix</h4>
+
+A single between subject contrast matrix must be specified.
+ The between subject contrast matrix ("C" matrix) defines the between subject hypotheses that the user
+wishes to test.  When controlling for a baseline covariate, this matrix includes a random column vector
+with the same number of rows as the contrast matrix.  It is most common to have 0's in this column - since the 
+value of the baseline covariate is expected to differ across subjects, between subject hypotheses 
+do not typically involve the baseline covariate.  
+
+<pre>
+  &lt;fixedRandomMatrix name='betweenSubjectContrast' combineHorizontal='true' &gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>a</i>' columns='<i>q</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,q</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;    
+    &lt;matrix name='<i>random</i>' rows='<i>a</i>' columns='<i>1</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
+</pre>
 
 <h4>The Within Subject Contrast Matrix</h4>
 
-<h4>The Theta Matrix</h4>
-<h4>The Beta Matrix</h4>
-<h4>The Sigma Matrices</h4>
+The within subject contrast ("U" matrix) defines hypotheses on responses within the
+same subject (or other sampling unit).  This matrix is required for multivariate linear models, but
+may be omitted for univariate models.
+<pre>
+  &lt;matrix name='<i>withinSubjectContrast</i>' rows='<i>p</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>p,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+</pre>
+  
+<h4>The Theta Null Matrix</h4>
 
-When the study design contains only fixed predictors, a single "sigmaError" matrix is specified:
+A single theta null matrix must be specified.  The theta null matrix represents the null hypotheses for
+the contrasts defined in the C and U matrices.  It is most common to have 0's in all cells of this matrix,
+although this depends on the specific hypotheses being tested.
+<pre>
+  &lt;matrix name='<i>theta</i>' rows='<i>a</i>' columns='<i>b</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>a,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>a,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>a,b</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+</pre>
+  
+<h4>The Beta Matrix</h4>
+
+A single beta matrix must be specified.  This represents the estimated regression coefficients for the
+model (the interpretation depends on the design matrix coding scheme used).  If the study design
+includes a baseline covariate, this matrix will include an additional "random" row to represent the estimated
+coefficients for the baseline covariate.  The values in this row will be automatically generated based 
+on the covariance matrices described below, and should simply be filled with 1's.
+<pre>
+  &lt;fixedRandomMatrix name='beta' combineHorizontal='true' &gt;
+    &lt;matrix name='<i>fixed</i>' rows='<i>q</i>' columns='<i>p</i>'&gt;
+      &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+      ...
+      &lt;r&gt;&lt;c&gt;<i>d<sub>q,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>q,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>q,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;    
+    &lt;matrix name='<i>random</i>' rows='<i>1</i>' columns='<i>p</i>'&gt;
+      &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;...&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
+</pre>
+
+<h4>The Covariance (&Sigma;) Matrices</h4>
+
+The sigma matrices represent the estimated covariance for the model.  Different matrices are specified
+for fixed designs as opposed to those with a basline covariate.  In general, all sigma matrices should be 
+symmetric and positive definite.  All cell values along the diagonal must be positive real numbers.
+Off diagonal values should be real numbers.
+<p>
+<b>Covariance in Fixed Designs</b>
+</p>
+<p>
+When the study design contains only fixed predictors, a single "sigmaError" matrix is specified.  This matrix
+represents the estimated residual (or "error") covariance.  For univariate study designs, this will be a 1x1 scalar value.
+</p>
 <pre>
   &lt;matrix name='<i>sigmaError</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
     &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
@@ -405,11 +484,42 @@ When the study design contains only fixed predictors, a single "sigmaError" matr
     &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
 </pre>
-This matrix should be symmetric and positive definite.  All cell values along the diagonal must be positive real numbers.
-Off diagonal values should be real numbers.
-<p></p>
-For study designs including a baseline covariate, three matrices must be specify to fully describe the
+
+<b>Covariance in Designs with a Baseline Covariate</b>
+<p>
+For study designs including a baseline covariate, three matrices must be specified to fully describe the
 variability.
+</p>
+<b>Covariance of Baseline Covariate (&Sigma;<sub>G</sub>)</b> - since only a single baseline covariate
+is allowed, this matrix is 1x1 and represents the estimated variance of the baseline covariate.
+<p>
+<u>Known issue:</u> the variance of the baseline covariate is also specified in the essence matrix.  The
+value specified in the random column meta data should match the value in &Sigma;<sub>G</sub> to
+ensure valid power results.
+</p>
+<pre>
+  &lt;matrix name='<i>sigmaGaussianRandom</i>' rows='<i>1</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+</pre>
+<b>Covariance of Responses (&Sigma;<sub>Y</sub>)</b> - covariance between responses on the same
+subject (or sampling unit).  For univariate designs, this is a 1x1 matrix.
+<pre>
+  &lt;matrix name='<i>sigmaOutcome</i>' rows='<i>p</i>' columns='<i>p</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>1,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>1,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+    ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;c&gt;<i>d<sub>n,2</sub></i>&lt;/c&gt;...&lt;c&gt;<i>d<sub>p,p</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+</pre>
+<b>Covariance of Outcomes with Baseline Covariate (&Sigma;<sub>YG</sub>)</b> - column vector indicating the covariance
+between each outcome and the baseline covariate.
+<pre>  
+  &lt;matrix name='<i>sigmaOutcomeGaussianRandom</i>' rows='<i>p</i>' columns='<i>1</i>'&gt;
+    &lt;r&gt;&lt;c&gt;<i>d<sub>1,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+     ...
+    &lt;r&gt;&lt;c&gt;<i>d<sub>p,1</sub></i>&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+</pre>
 
 <h3><a name="conformance">2.1.5 Matrix Conformance</a></h3>
 
@@ -432,9 +542,9 @@ in X (number of predictors)<br>Columns equals the number of columns in U (number
 <tr class='bgGray'><td colspan='4' background='#ddd'>Design which controls for a baseline covariate</td></tr>
 <tr><td>&Sigma;<sub>G</sub>: Covariance of Gaussian predictor</td><td>1</td><td>1</td>
 <td>Since only a single baseline covariate is allowed, this matrix is 1x1.</td></tr>
-<tr><td>&Sigma;<sub>YG: Covariance of Gaussian predictor with outcomes</sub></td><td>P</td><td>P</td>
-<td>Rows/columns equal the number of columns in &beta;</td></tr>
-<tr><td>&Sigma;<sub>Y: Covariance of outcomes</sub></td><td>P</td><td>P</td>
+<tr><td>&Sigma;<sub>YG</sub>: Covariance of Gaussian predictor with outcomes</td><td>P</td><td>1</td>
+<td>Rows equals the number of columns in &beta;</td></tr>
+<tr><td>&Sigma;<sub>Y</sub>: Covariance of outcomes</td><td>P</td><td>P</td>
 <td>Rows/columns equal the number of columns in &beta; (i.e. number of outcomes)</td></tr>
 </table>
 
@@ -698,29 +808,32 @@ Example beta matrix for 2 outcomes, 3 treatment groups.  Treatment effect expect
 
 <h3><a name="examplesTTest">6.1 One-Sample T-Test</a></h3>
 
-Suppose we are comparing mean height in sample of 200 adult males against an expected average height of 70 inches.
+Suppose we are comparing mean height in sample of 200 adult males against a known height for US males.
 We will assume a standard deviation of 8 inches (i.e. variance = 64).  We would like to determine the power for
-detecting a difference of 10 inches.  We will use the Wilks' Lambda as our statistical test, and a type I error
-rate of 0.05.
+detecting a difference of 2 inches.  We will use the univariate approach to repeated measures as our statistical test, 
+and a type I error rate of 0.05.
 <p></p>
 To calculate power, we would send the following HTTP request to the Power Service:
 <pre>
 POST /power/power
 </pre>
-with the entity body:
+with the entity body (whitespace included for legibility, actual entity bodies for power service 
+should have extraneous whitespace removed):
 <pre>
 &lt;glmmPowerParameters&gt;
-  &lt;testList&gt;&lt;v&gt;hlt&lt;/v&gt;&lt;/testList&gt;
+  &lt;testList&gt;&lt;v&gt;unirep&lt;/v&gt;&lt;/testList&gt;
   &lt;alphaList&gt;&lt;v&gt;0.05&lt;/v&gt;&lt;/alphaList&gt;
   &lt;sigmaScaleList&gt;&lt;v&gt;64&lt;/v&gt;&lt;/sigmaScaleList&gt;
   &lt;sampleSizeList&gt;&lt;v&gt;200&lt;/v&gt;&lt;/sampleSizeList&gt;
-  &lt;betaScaleList&gt;&lt;v&gt;10&lt;/v&gt;&lt;/betaScaleList&gt;
+  &lt;betaScaleList&gt;&lt;v&gt;2&lt;/v&gt;&lt;/betaScaleList&gt;
   &lt;essenceMatrix&gt;
     &lt;rowMetaData&gt;&lt;r ratio='1' /&gt;&lt;/rowMetaData&gt;
     &lt;columnMetaData&gt;&lt;c type='fixed' /&gt;&lt;/columnMetaData&gt;
     &lt;matrix name='design' rows='1' columns='1'&gt;&lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;&lt;/matrix&gt;
   &lt;/essenceMatrix&gt;
-  &lt;matrix name='betweenSubjectContrast' rows='1' columns='1'&gt;&lt;/matrix&gt;
+  &lt;matrix name='betweenSubjectContrast' rows='1' columns='1'&gt;
+    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
   &lt;matrix name='withinSubjectContrast' rows='2' columns='2'&gt;
     &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
     &lt;r&gt;&lt;c&gt;-1&lt;/c&gt;&lt;/r&gt;
@@ -728,16 +841,90 @@ with the entity body:
   &lt;matrix name='theta' rows='1' columns='1'&gt;&lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;&lt;/matrix&gt;
   &lt;matrix name='beta' rows='1' columns='2'&gt;&lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;&lt;/matrix&gt;
   &lt;matrix name='sigmaError' rows='2' columns='2'&gt;
-    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
-    &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0.5&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;0.5&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
   &lt;/matrix&gt;
 &lt;/glmmPowerParameters&gt;
 </pre>
 
-
+This yields the results:
+<pre>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="no"?&gt;
+&lt;powerList count="3"&gt;
+&lt;glmmPower actualPower="0.9404375882587327" alpha="0.05" betaScale="2.0"  nominalPower="0.9404375882587327" 
+    powerMethod="conditional" sampleSize="200" sigmaScale="64.0" test="unirepBox"/&gt;
+&lt;/powerList&gt;
+</pre>
+Indicating that power = 0.94 to detect a difference of 2 inches.
 
 <h3><a name="examplesANOVA">6.2 One-Way ANOVA</a></h3>
 
-<h3><a name="examplesLinear">6.3 Model Comparing of Linear Trends Between Males and Females</a></h3>
+Suppose we are comparing resting heart rate in individuals taking three drugs A, B, and C.
+There are equal numbers of subjects taking each drug.
+We wish to determine the power for detecting a difference of 5 beats/min between the groups,
+when there are 10, 15, or 20 subjects in each group.
+We will use a cell means coding (3x3 identity matrix) for our study design.
+<p></p>
+To calculate power, we would send the following HTTP request to the Power Service:
+<pre>
+POST /power/power
+</pre>
+with the entity body (whitespace included for legibility, actual entity bodies for power service 
+should have extraneous whitespace removed):
+<pre>
+&lt;glmmPowerParameters&gt;
+  &lt;alphaList&gt;&lt;v&gt;0.05&lt;/v&gt;&lt;/alphaList&gt;
+  &lt;sampleSizeList&gt;&lt;v&gt;10&lt;/v&gt;&lt;v&gt;15&lt;/v&gt;&lt;v&gt;20&lt;/v&gt;&lt;/sampleSizeList&gt;
+  &lt;essenceMatrix&gt;
+    &lt;rowMetaData&gt;&lt;r ratio='1' /&gt;&lt;r ratio='1' /&gt;&lt;r ratio='1' /&gt;&lt;/rowMetaData&gt;
+    &lt;matrix name='fixed' rows='3' columns='3'&gt;
+      &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/essenceMatrix&gt;
+  &lt;betaScaleList&gt;&lt;v&gt;5&lt;/v&gt;&lt;/betaScaleList&gt;
+  &lt;fixedRandomMatrix name='beta' combineHorizontal='false' &gt;
+    &lt;matrix name='fixed' rows='3' columns='1'&gt;
+      &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
+  &lt;fixedRandomMatrix name='betweenSubjectContrast' combineHorizontal='true' &gt;
+    &lt;matrix name='fixed' rows='2' columns='3'&gt;
+      &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;-1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+      &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;c&gt;0&lt;/c&gt;&lt;c&gt;-1&lt;/c&gt;&lt;/r&gt;
+    &lt;/matrix&gt;
+  &lt;/fixedRandomMatrix&gt;
+  &lt;matrix name='withinSubjectContrast' rows='1' columns='1'&gt;
+    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='theta' rows='2' columns='1'&gt;
+    &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+    &lt;r&gt;&lt;c&gt;0&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;matrix name='sigmaError' rows='1' columns='1'&gt;
+    &lt;r&gt;&lt;c&gt;1&lt;/c&gt;&lt;/r&gt;
+  &lt;/matrix&gt;
+  &lt;sigmaScaleList&gt;&lt;v&gt;20&lt;/v&gt;&lt;/sigmaScaleList&gt;
+  &lt;testList&gt;&lt;v&gt;unirep&lt;/v&gt;&lt;/testList&gt;
+  &lt;powerMethodList&gt;&lt;v&gt;conditional&lt;/v&gt;&lt;/powerMethodList&gt;
+&lt;/glmmPowerParameters&gt;
+</pre>
+This yields the results:
+<pre>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="no"?&gt;
+&lt;powerList count="3"&gt;
+&lt;glmmPower actualPower="0.6843301311850237" alpha="0.05" betaScale="5.0" nominalPower="0.6843301311850237"
+   powerMethod="conditional" sampleSize="30" sigmaScale="20.0" test="unirep"/&gt;
+ &lt;glmmPower actualPower="0.8724721326515791" alpha="0.05" betaScale="5.0" nominalPower="0.8724721326515791" 
+   powerMethod="conditional" sampleSize="45" sigmaScale="20.0" test="unirep"/&gt;
+ &lt;glmmPower actualPower="0.9543921012167697" alpha="0.05" betaScale="5.0" nominalPower="0.9543921012167697" 
+   powerMethod="conditional" sampleSize="60" sigmaScale="20.0" test="unirep"/&gt;
+&lt;/powerList&gt;
+</pre>
+This indicates that power = 0.68 for 10 subjects per group, 0.87 with 15 subjects per group, and 0.95 with 20 subjects per group.
 
 </body>
+</html>
