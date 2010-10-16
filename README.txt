@@ -86,8 +86,12 @@ ant
 
 The resulting war file is called
 
-${POWER_SERVICE_HOME}/tmpbin/power.war
+${POWER_SERVICE_HOME}/build/bin/power.war
 
+The build script assumes that the a directory called thirdparty is
+installed at the same directory level as ${POWER_SERVICE_HOME}.
+A thirdparty distribution in the appropriate format is available from 
+http://www.glimmpse.com/
 ------------------------------
 7. CONTRIBUTORS / ACKNOWLEDGEMENTS
 ------------------------------
