@@ -36,6 +36,7 @@ import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters.ConfidenceIntervalType;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 
@@ -69,7 +70,11 @@ public class ParameterResourceHelper
             for (int i = 0; i < children.getLength(); i++)
             {
                 Node child = children.item(i);
-                if (PowerConstants.TAG_ESSENCE_MATRIX.equals(child.getNodeName()))
+                if (PowerConstants.TAG_CONFIDENCE_INTERVAL.equals(child.getNodeName()))
+                {
+                	parseConfidenceInterval(params, child);
+                }
+                else if (PowerConstants.TAG_ESSENCE_MATRIX.equals(child.getNodeName()))
                 {
                     DesignEssenceMatrix essence = essenceMatrixFromDomNode(child);
                     params.setDesignEssence(essence);
@@ -166,6 +171,119 @@ public class ParameterResourceHelper
         }
  
         return params;    	
+    }
+    
+    
+    /**
+     * Parse the confidence interval description from the confidenceInterval tag
+     * 
+     * @param params power parameter object
+     * @param node DOM node for confidenceInterval tag 
+     */
+    private static void parseConfidenceInterval(GLMMPowerParameters params, Node node)
+    throws ResourceException
+    {
+        NamedNodeMap attrs = node.getAttributes();
+        Node type = attrs.getNamedItem(PowerConstants.ATTR_TYPE);
+        // user must specifiy a type attribute for the CI tag to be recognized
+        if (type != null)
+        {
+        	if (PowerConstants.CONFIDENCE_INTERVAL_BETA_KNOWN_EST_SIGMA.equals(type.getNodeValue()))
+        	{
+        		params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);
+        	}
+        	else
+        	{
+        		// default to assuming both matrices are estimated
+        		params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_SIGMA_ESTIMATED);
+        	}
+        	
+        	try
+        	{
+        		// get the lower tail alpha level
+        		Node alphaLowerNode = attrs.getNamedItem(PowerConstants.ATTR_CI_ALPHA_LOWER);
+        		if (alphaLowerNode != null)
+        		{
+        			double alphaLower = Double.parseDouble(alphaLowerNode.getNodeValue());
+        			if (alphaLower > 0 && alphaLower < 0.5)
+        			{
+        				params.setAlphaLowerConfidenceLimit(alphaLower);
+        			}
+        			else 
+        			{
+        				PowerLogger.getInstance().warn("Ignoring invalid lower tail probability for confidence intervals [" 
+        						+ alphaLower + "], using 0.025 instead");
+        			}
+        		}
+
+        		// get the upper tail alpha level
+        		Node alphaUpperNode = attrs.getNamedItem(PowerConstants.ATTR_CI_ALPHA_UPPER);
+        		if (alphaUpperNode != null)
+        		{
+        			double alphaUpper = Double.parseDouble(alphaUpperNode.getNodeValue());
+        			if (alphaUpper > 0 && alphaUpper < 0.5)
+        			{
+        				params.setAlphaUpperConfidenceLimit(alphaUpper);
+        			}
+        			else
+        			{
+        				PowerLogger.getInstance().warn("Ignoring invalid upper tail probability for confidence intervals [" 
+        						+ alphaUpper + "], using 0.025 instead");
+        			}
+        		}
+        	}
+        	catch (Exception e)
+        	{
+        		// catch any number parsing problems for the alpha limits
+        		throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid alpha limits for confidence intervals");
+        	}
+
+            // NOTE: estimate sample size and design matrix rank are required for CI's to work,
+            // so we throw an exception if either is missing
+            // get the rank of the design matrix used for the estimates
+            Node rankNode = attrs.getNamedItem(PowerConstants.ATTR_CI_ESTIMATES_RANK);
+            int rank = 0;
+            if (rankNode != null)
+            {
+            	try
+            	{
+            		rank = Integer.parseInt(rankNode.getNodeValue());
+            		if (rank <= 0) throw new IllegalArgumentException("invalid rank");
+            		params.setDesignMatrixRankForEstimates(rank);
+            	}
+            	catch (Exception e)
+            	{
+                	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+        				"Invalid design matrix rank specified for confidence intervals");
+            	}
+            }
+            else
+            {
+            	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+            			"No design matrix rank specified for confidence intervals");
+            }
+            
+            Node sampleSizeNode = attrs.getNamedItem(PowerConstants.ATTR_CI_ESTIMATES_SAMPLE_SIZE);
+            if (sampleSizeNode != null)
+            {
+            	try
+            	{
+            		int sampleSize = Integer.parseInt(sampleSizeNode.getNodeValue());
+            		if (sampleSize < rank) throw new IllegalArgumentException("invalid sample size");
+            		params.setSampleSizeForEstimates(sampleSize);
+            	}
+            	catch (Exception e)
+            	{
+                	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+        				"Invalid sample size specified for confidence intervals");
+            	}
+            }
+            else
+            {
+            	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+            			"No sample size specified for confidence intervals");
+            }
+        }
     }
     
     /**

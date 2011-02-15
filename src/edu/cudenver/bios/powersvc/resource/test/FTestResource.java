@@ -39,9 +39,9 @@ import org.restlet.resource.XmlRepresentation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
-import edu.cudenver.bios.power.glmm.NonCentralFDistribution;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;

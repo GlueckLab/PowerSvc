@@ -30,6 +30,7 @@ import org.w3c.dom.Element;
 
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
+import edu.cudenver.bios.utils.ConfidenceInterval;
 
 /**
  * Class which converts a GLMM Power object to an XML DOM
@@ -95,6 +96,16 @@ public class GLMMPowerXMLRepresentation extends DomRepresentation
         glmmPowerElem.setAttribute(PowerConstants.ATTR_BETA_SCALE, Double.toString(power.getBetaScale()));
         glmmPowerElem.setAttribute(PowerConstants.ATTR_SIGMA_SCALE, Double.toString(power.getSigmaScale()));
 
+        // add confidence limits if specified
+        ConfidenceInterval ci = power.getConfidenceInterval();
+        if (ci != null)
+        {
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_CI_LOWER, Double.toString(ci.getLowerLimit()));
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_CI_UPPER, Double.toString(ci.getUpperLimit()));
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_CI_ALPHA_LOWER, Double.toString(ci.getAlphaLower()));
+        	glmmPowerElem.setAttribute(PowerConstants.ATTR_CI_ALPHA_UPPER, Double.toString(ci.getAlphaUpper()));
+        }
+        
         // add power method
         switch (power.getPowerMethod())
         {

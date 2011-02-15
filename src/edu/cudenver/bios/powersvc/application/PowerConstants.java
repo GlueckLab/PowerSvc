@@ -54,11 +54,18 @@ public class PowerConstants
     public static final String TAG_SIGMA_SCALE_LIST = "sigmaScaleList";
     public static final String TAG_POWER_METHOD_LIST = "powerMethodList";
     public static final String TAG_QUANTILE_LIST = "quantileList";
+    public static final String TAG_CONFIDENCE_INTERVAL = "confidenceInterval";
     
     // XML attribute names
     public static final String ATTR_COUNT = "count";
     public static final String ATTR_NAME = "name";
     public static final String ATTR_POWER = "power";
+    public static final String ATTR_CI_ALPHA_LOWER = "alphaLower";
+    public static final String ATTR_CI_ALPHA_UPPER = "alphaUpper";
+    public static final String ATTR_CI_LOWER = "ciLower";
+    public static final String ATTR_CI_UPPER = "ciUpper";
+    public static final String ATTR_CI_ESTIMATES_SAMPLE_SIZE = "estimatesSampleSize";
+    public static final String ATTR_CI_ESTIMATES_RANK = "estimatesRank";
     public static final String ATTR_RATIO = "ratio";
     public static final String ATTR_TYPE = "type";
     public static final String ATTR_MEAN = "mean";
@@ -89,6 +96,12 @@ public class PowerConstants
     public static final String TEST_UNIREP_BOX = "unirepBox";
     public static final String TEST_UNIREP_GG = "unirepGG";
     public static final String TEST_UNIREP_HF = "unirepHF";
+    
+    // types of confidence intervals
+    // known beta coefficients, sigma estimated
+    public static final String CONFIDENCE_INTERVAL_BETA_KNOWN_EST_SIGMA = "sigma";
+    // both beta and sigma are estimated
+    public static final String CONFIDENCE_INTERVAL_EST_BETA_SIGMA = "betaSigma";
     
     // types of power approximations
     public static final String POWER_METHOD_CONDITIONAL = "conditional";
