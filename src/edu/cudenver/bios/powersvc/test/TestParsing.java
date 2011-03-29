@@ -50,12 +50,7 @@ public class TestParsing extends TestCase
     "<sigmaScaleList><v>64</v></sigmaScaleList>" +
     "<sampleSizeList><v>200</v></sampleSizeList>" +
     "<betaScaleList><v>10</v></betaScaleList>" +
-    "<essenceMatrix>" +
-    "<rowMetaData><r ratio='1' /></rowMetaData>" +
-    "<randomColumnMetaData><c mean='0' variance='1' /></randomColumnMetaData>" +
-    "<matrix name='fixed' rows='1' columns='1'><r><c>1</c></r></matrix>" +
-    "<matrix name='random' rows='1' columns='1'><r><c>1</c></r></matrix>" +
-    "</essenceMatrix>" +
+    "<matrix name='design' rows='1' columns='1'><r><c>1</c></r></matrix>" +
     "<fixedRandomMatrix name='betweenSubjectContrast'>" +
     "<matrix name='fixed' rows='1' columns='1'><r><c>1</c></r></matrix></fixedRandomMatrix>" +
     "<matrix name='withinSubjectContrast' rows='2' columns='2'>" +
@@ -76,11 +71,6 @@ public class TestParsing extends TestCase
     "<sigmaScaleList><v>64</v></sigmaScaleList>" +
     "<sampleSizeList><v>200</v></sampleSizeList>" +
     "<betaScaleList><v>10</v></betaScaleList>" +
-    "<essenceMatrix>" +
-    "<rowMetaData><r ratio='1' /></rowMetaData>" +
-    "<columnMetaData><c type='fixed' /></columnMetaData>" + 
-    "<matrix name='design' rows='1' columns='1'><r><c>1</c></r></matrix>" +
-    "</essenceMatrix>" +
     "<matrix name='betweenSubjectContrast'></matrix>" +
     "<matrix name='withinSubjectContrast' rows='2' columns='2'>" +
     "<r><c>1</c></r><r><c>-1</c></r></matrix>" +

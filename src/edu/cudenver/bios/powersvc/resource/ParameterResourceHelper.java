@@ -35,8 +35,9 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.ConfidenceIntervalType;
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 
@@ -74,12 +75,7 @@ public class ParameterResourceHelper
                 {
                 	parseConfidenceInterval(params, child);
                 }
-                else if (PowerConstants.TAG_ESSENCE_MATRIX.equals(child.getNodeName()))
-                {
-                    DesignEssenceMatrix essence = essenceMatrixFromDomNode(child);
-                    params.setDesignEssence(essence);
-                }
-                else if (PowerConstants.TAG_FIXED_RANDOM_MATRIX.equals(child.getNodeName()))
+                if (PowerConstants.TAG_FIXED_RANDOM_MATRIX.equals(child.getNodeName()))
                 {
                     String matrixName = null;
                     NamedNodeMap matrixAttrs = child.getAttributes();
@@ -109,7 +105,7 @@ public class ParameterResourceHelper
                         RealMatrix matrix = matrixFromDomNode(child);
 
                         if (PowerConstants.MATRIX_TYPE_DESIGN.equals(matrixName))
-                            params.setDesign(matrix);
+                            params.setDesignEssence(matrix);
                         else if (PowerConstants.MATRIX_TYPE_THETA.equals(matrixName))
                             params.setTheta(matrix);
                         else if (PowerConstants.MATRIX_TYPE_WITHIN_CONTRAST.equals(matrixName))
@@ -304,31 +300,31 @@ public class ParameterResourceHelper
     				String text = textNode.getNodeValue();
     				if (PowerConstants.TEST_HOTELLING_LAWLEY_TRACE.equals(text))
     				{
-    	    			params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
+    	    			params.addTest(Test.HOTELLING_LAWLEY_TRACE);
     				}
     				else if (PowerConstants.TEST_PILLAI_BARTLETT_TRACE.equals(text))
     				{
-    					params.addTest(GLMMPowerParameters.Test.PILLAI_BARTLETT_TRACE);
+    					params.addTest(Test.PILLAI_BARTLETT_TRACE);
     				}
     				else if (PowerConstants.TEST_WILKS_LAMBDA.equals(text))
     				{
-    					params.addTest(GLMMPowerParameters.Test.WILKS_LAMBDA);
+    					params.addTest(Test.WILKS_LAMBDA);
     				}
     				else if (PowerConstants.TEST_UNIREP.equals(text))
     				{
-    					params.addTest(GLMMPowerParameters.Test.UNIREP);
+    					params.addTest(Test.UNIREP);
     				}
     				else if (PowerConstants.TEST_UNIREP_BOX.equals(text))
     				{
-    					params.addTest(GLMMPowerParameters.Test.UNIREP_BOX);
+    					params.addTest(Test.UNIREP_BOX);
     				}
     				else if (PowerConstants.TEST_UNIREP_GG.equals(text))
     				{
-    					params.addTest(GLMMPowerParameters.Test.UNIREP_GEISSER_GREENHOUSE);
+    					params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
     				}
     				else if (PowerConstants.TEST_UNIREP_HF.equals(text))
     				{
-    					params.addTest(GLMMPowerParameters.Test.UNIREP_HUYNH_FELDT);
+    					params.addTest(Test.UNIREP_HUYNH_FELDT);
     				}
     			}
     		}

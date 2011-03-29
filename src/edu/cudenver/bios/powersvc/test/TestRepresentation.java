@@ -26,6 +26,7 @@ import java.util.ArrayList;
 
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
@@ -54,11 +55,11 @@ public class TestRepresentation extends TestCase
 	 */
     public void setUp()
     {
-    	powerList.add(new GLMMPower(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE,0.05,
+    	powerList.add(new GLMMPower(Test.HOTELLING_LAWLEY_TRACE,0.05,
     			0.8, 0.8, 10, 3.0, 5.0, GLMMPowerParameters.PowerMethod.CONDITIONAL_POWER));
-    	powerList.add(new GLMMPower(GLMMPowerParameters.Test.WILKS_LAMBDA,0.05,
+    	powerList.add(new GLMMPower(Test.WILKS_LAMBDA,0.05,
     			0.8, 0.8, 10, 3, 5, GLMMPowerParameters.PowerMethod.UNCONDITIONAL_POWER));
-    	powerList.add(new GLMMPower(GLMMPowerParameters.Test.PILLAI_BARTLETT_TRACE,0.05,
+    	powerList.add(new GLMMPower(Test.PILLAI_BARTLETT_TRACE,0.05,
     			0.8, 0.8, 10, 3, 5, GLMMPowerParameters.PowerMethod.QUANTILE_POWER, 0.5));
     }
 
