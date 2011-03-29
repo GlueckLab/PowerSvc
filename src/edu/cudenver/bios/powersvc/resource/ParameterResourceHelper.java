@@ -64,6 +64,15 @@ public class ParameterResourceHelper
         if (!node.getNodeName().equals(PowerConstants.TAG_GLMM_POWER_PARAMETERS))
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid root node '" + node.getNodeName() + "' when parsing parameter object");
 
+        // parse the random seed value if specified
+        // TODO: API for specifying random seeds?
+//        NamedNodeMap attrs = node.getAttributes();
+//        if (attrs != null) 
+//        {
+//        	Node seedNode = attrs.getNamedItem(PowerConstants.ATTR_RANDOM_SEED);
+//        	if (seedNode != null) params.setS
+//        }
+        
         /* process the child elements.  Includes matrix and list inputs */
         NodeList children = node.getChildNodes();
         if (children != null && children.getLength() > 0)
@@ -471,157 +480,10 @@ public class ParameterResourceHelper
     		}
     	}
     }
-        
-    /**
-     * Parse an essence matrix from a DOM tree
-     * 
-     * @param node root node of the DOM tree
-     * @return essence matrix object
-     * @throws IllegalArgumentException
-     */
-    public static DesignEssenceMatrix essenceMatrixFromDomNode(Node node)
-    throws ResourceException
-    {
-        DesignEssenceMatrix essence = null;
-        double[][] fixedData = null;
-        double[][] randomData = null;
-        RowMetaData[] rmd = null;
-        RandomColumnMetaData[] cmd = null;
-        Node seed = null;
-        
-        // parse the random seed value if specified
-        NamedNodeMap attrs = node.getAttributes();
-        if (attrs != null) seed = attrs.getNamedItem(PowerConstants.ATTR_RANDOM_SEED);
-        
-        // parse the matrix data, row meta data, and column meta data
-        NodeList children = node.getChildNodes();
-        if (children != null && children.getLength() > 0)
-        {
-            for (int i = 0; i < children.getLength(); i++)
-            {
-                Node child = children.item(i);
-                if (PowerConstants.TAG_MATRIX.equals(child.getNodeName()))
-                {
-                    String matrixName = null;
-                    NamedNodeMap matrixAttrs = child.getAttributes();
-                    Node name = matrixAttrs.getNamedItem(PowerConstants.ATTR_NAME);
-                    if (name != null) 
-                    {
-                    	matrixName = name.getNodeValue();
-                    	RealMatrix matrix = ParameterResourceHelper.matrixFromDomNode(child);
-                    	
-                    	if (PowerConstants.ATTR_FIXED.equals(matrixName))
-                    	{
-                    		fixedData = matrix.getData();
-                    	}
-                    	else if (PowerConstants.ATTR_RANDOM.equals(matrixName))
-                    	{
-                    		randomData = matrix.getData();
-                    	}
-                    }
-                }
-                else if (PowerConstants.TAG_ROW_META_DATA.equals(child.getNodeName()))
-                {
-                    rmd = ParameterResourceHelper.rowMetaDataFromDomNode(child);
-                }
-                else if (PowerConstants.TAG_RANDOM_COLUMN_META_DATA.equals(child.getNodeName()))
-                {
-                    cmd = ParameterResourceHelper.randomColumnMetaDataFromDomNode(child);
-                }
-                else
-                {
-                    PowerLogger.getInstance().warn("Ignoring unknown essence matrix child tag: " + child.getNodeName());
-                }
-            }
-        }
-        
-        // now that we're done parsing, build the essence matrix object
-        essence =  new DesignEssenceMatrix(fixedData, rmd, randomData, cmd); 
-        if (seed != null)
-        {
-        	essence.setRandomSeed(Integer.parseInt(seed.getNodeValue()));
-        }
-        
-        return essence;
-        
-    }
     
     /**
-     * Parse a row meta data object from a DOM node
-     * 
-     * @param node
-     * @return array of RowMetaData objects
-     */
-    public static RowMetaData[] rowMetaDataFromDomNode(Node node)
-    {
-        ArrayList<RowMetaData> metaDataList = new ArrayList<RowMetaData>();
-        
-        NodeList children = node.getChildNodes();
-        if (children != null && children.getLength() > 0)
-        {
-            for (int i = 0; i < children.getLength(); i++)
-            {
-                RowMetaData rmd = new RowMetaData();
-                Node child = children.item(i);
-                if (PowerConstants.TAG_ROW.equals(child.getNodeName()))
-                {
-                    NamedNodeMap attrs = child.getAttributes();
-                    
-                    Node ratio = attrs.getNamedItem(PowerConstants.ATTR_RATIO);
-                    if (ratio != null) rmd.setRatio(Integer.parseInt(ratio.getNodeValue()));
-                }
-                else
-                {
-                    PowerLogger.getInstance().warn("Ignoring unknown tag while parsing row meta data: " + child.getNodeName());
-                }
-                metaDataList.add(rmd);
-            }
-        }
-        
-        return (RowMetaData[]) metaDataList.toArray(new RowMetaData[metaDataList.size()]);
-    }
-
-    /**
-     * Parse an array of column meta data from a DOM tree
-     * 
-     * @param node 
-     * @return list of column meta data
-     */
-    public static RandomColumnMetaData[] randomColumnMetaDataFromDomNode(Node node)
-    {
-        ArrayList<RandomColumnMetaData> metaDataList = new ArrayList<RandomColumnMetaData>();
-        
-        NodeList children = node.getChildNodes();
-        if (children != null && children.getLength() > 0)
-        {
-            for (int i = 0; i < children.getLength(); i++)
-            {
-                Node child = children.item(i);
-                if (PowerConstants.TAG_COLUMN.equals(child.getNodeName()))
-                {
-                    NamedNodeMap attrs = child.getAttributes();
-                    
-                    Node mean = attrs.getNamedItem(PowerConstants.ATTR_MEAN);
-                    Node variance = attrs.getNamedItem(PowerConstants.ATTR_VARIANCE);
-
-                    if (mean != null && variance != null)
-                    {
-                    	metaDataList.add(new RandomColumnMetaData(Double.parseDouble(mean.getNodeValue()),
-                    			Double.parseDouble(variance.getNodeValue())));
-                    }
-                }
-                else
-                {
-                    PowerLogger.getInstance().warn("Ignoring unknown tag while parsing row meta data: " + child.getNodeName());
-                }
-            }
-        }
-        
-        return (RandomColumnMetaData[]) metaDataList.toArray(new RandomColumnMetaData[metaDataList.size()]);
-    }
-    
-    /**
-     * 
+     *  Parse a fixed/random matrix from a DOM node tree
+     *  @param node root node for fixed/random matrix
      */
     public static FixedRandomMatrix fixedRandomMatrixFromDomNode(Node node)
     throws ResourceException
