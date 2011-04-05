@@ -20,7 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  -->
 <project name="power" default="test">
-    
+	<property environment="env"/>
+	<property name="catalina.home" value="${env.CATALINA_HOME}" />
     <property name="svcname" value="power" />
     <property name="wardir" value="${basedir}/war" />
     <property name="sourcedir" value="${basedir}/../src" />
@@ -134,7 +135,17 @@
   		  </test>
         </junit>
     </target>
+	<target name="deploy" description="This target moves the ${svcname}.war 
+		to the user's catalina.home\webapps directory." >
+		<copy todir="${catalina.home}\webapps">
+			<fileset dir="${bindir}">
+				<include name="${svcname}.war"/>
+			</fileset>
+		</copy>
+		<echo>Deployed the ${svcname}.war to ${catalina.home}\webapps</echo>
+	</target>
 	
+	<target name="buildDeploy" depends="test, deploy"/>
 	<!-- Create the javadoc distribution  -->
 	<target name="javadoc-distribution" depends="javadoc">
 		<jar destfile="${bindir}/${svcname}-javadoc.jar" basedir="${javadocdir}" >
