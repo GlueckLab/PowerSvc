@@ -32,9 +32,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RandomColumnMetaData;
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
