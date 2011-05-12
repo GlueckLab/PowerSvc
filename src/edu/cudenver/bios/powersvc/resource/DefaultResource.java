@@ -30,6 +30,8 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.StringRepresentation;
 import org.restlet.resource.Variant;
 
+import edu.cudenver.bios.powersvc.application.PowerConstants;
+
 
 /**
  * Default request resource.  Called from the URI /power
@@ -59,7 +61,8 @@ public class DefaultResource extends Resource
     @Override
     public Representation represent(Variant variant) {
         Representation representation = 
-            new StringRepresentation("Statistical Power REST Service", MediaType.TEXT_PLAIN);
+            new StringRepresentation("Statistical Power REST Service, version " + PowerConstants.VERSION, 
+            		MediaType.TEXT_PLAIN);
 
         return representation;
     }

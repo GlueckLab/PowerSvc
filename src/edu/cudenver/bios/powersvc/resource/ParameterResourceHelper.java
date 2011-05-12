@@ -21,8 +21,6 @@
  */
 package edu.cudenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
-
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 import org.restlet.data.Status;
