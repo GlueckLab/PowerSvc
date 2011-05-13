@@ -29,7 +29,7 @@
     <property name="wcdir" value="${basedir}/../WebContent" />
 	<property name="javastatsdir" value="${basedir}/../../JavaStatistics/bin" />
 	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
-	<property name="javadocdir" value="${basedir}/javadoc" />
+	<property name="javadocdir" value="${basedir}/javadoc/PowerSvc-javadoc" />
 	
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
 		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
@@ -148,7 +148,7 @@
 	<target name="buildDeploy" depends="test, deploy"/>
 	<!-- Create the javadoc distribution  -->
 	<target name="javadoc-distribution" depends="javadoc">
-		<jar destfile="${bindir}/${svcname}-javadoc.jar" basedir="${javadocdir}" >
+		<jar destfile="${bindir}/${svcname}-javadoc.jar" basedir="${javadocdir}/.." >
 			<manifest>
 				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
