@@ -164,8 +164,13 @@
 	
 	<!-- Create the source distribution -->
 	<target name="source-distribution">
-		<jar destfile="${bindir}/${svcname}-source.jar" basedir="${basedir}/.." 
-			includes="src/**,build/**,docs/**,.classpath,.project,LICENSE-gpl2.0.txt,README.txt">
+		<jar destfile="${bindir}/${svcname}-source.jar" basedir="${basedir}/../.." 
+			includes="PowerSvc/*,
+				PowerSvc/build/build.xml,
+				PowerSvc/config/**,
+				PowerSvc/src/**,
+				PowerSvc/text/**,
+				PowerSvc/WebContent/**">			
 			<manifest>
 				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
