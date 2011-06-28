@@ -27,7 +27,7 @@
     <property name="sourcedir" value="${basedir}/../src" />
     <property name="bindir" value="${basedir}/bin" />
     <property name="wcdir" value="${basedir}/../WebContent" />
-	<property name="javastatsdir" value="${basedir}/../../JavaStatistics/bin" />
+	<property name="javastatsdir" value="${basedir}/../../JavaStatistics/build/bin" />
 	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
 	<property name="javadocdir" value="${basedir}/javadoc/PowerSvc-javadoc" />
 	
