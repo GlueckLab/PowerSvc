@@ -34,9 +34,9 @@
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
 		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
-		<include name="restlet/1.1.6/lib/org.restlet.jar" />
-		<include name="restlet/1.1.6/lib/com.noelios.restlet.jar" />
-	    <include name="restlet/1.1.6/lib/com.noelios.restlet.ext.servlet_2.5.jar" />
+		<include name="restlet/2.0.10/lib/org.restlet.jar" />
+		<include name="restlet/2.0.10/lib/org.restlet.ext.xml.jar" />
+	    <include name="restlet/2.0.10/lib/org.restlet.ext.servlet.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 		<include name="log4j/1.2.15/lib/log4j-1.2.15.jar" />
 	</fileset>
