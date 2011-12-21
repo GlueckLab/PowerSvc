@@ -22,31 +22,18 @@
 package edu.cudenver.bios.powersvc.resource.test;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.restlet.Context;
 import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.DomRepresentation;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
+import org.restlet.ext.xml.DomRepresentation;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.StringRepresentation;
-import org.restlet.resource.Variant;
-import org.restlet.resource.XmlRepresentation;
+import org.restlet.resource.ServerResource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
-import edu.cudenver.bios.power.Power;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.powersvc.application.PowerConstants;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
-import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
 /**
  * Resource exposing some unit test functionality.
@@ -54,7 +41,7 @@ import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
  * 
  * @author Sarah Kreidler
  */
-public class FTestResource extends Resource
+public class FTestResource extends ServerResource
 {
     // query param specifying the type of test
     private static final String REQUEST_TEST = "test";
@@ -76,6 +63,7 @@ public class FTestResource extends Resource
     
     // xml tag for result
     private static final String TAG_RESULT = "testResult";
+    
     /**
      * Create a new resource to handle unit test requests.  
      * Data is returned as XML.
@@ -84,44 +72,16 @@ public class FTestResource extends Resource
      * @param request http request object
      * @param response http response object
      */
-    public FTestResource(Context context, Request request, Response response) 
+    public FTestResource() 
     {
-        super(context, request, response);
-        getVariants().add(new Variant(MediaType.APPLICATION_XML));
-    }
-
-    /**
-     * Allow GET requests
-     */
-    @Override
-    public boolean allowGet()
-    {
-        return true;
-    }
-
-    /**
-     * Disallow PUT requests
-     */
-    @Override
-    public boolean allowPut()
-    {
-        return false;
-    }
-
-    /**
-     * Disallow POST requests
-     */
-    @Override
-    public boolean allowPost() 
-    {
-        return  false;
+        super();
     }
 
     /**
      * Process the unit test request for a given variant.
      */
     @Override
-    public Representation represent(Variant variant) 
+    public DomRepresentation get() throws ResourceException
     {
         DomRepresentation result = null;
         try
@@ -174,24 +134,14 @@ public class FTestResource extends Resource
         catch (NumberFormatException nfe)
         {
             PowerLogger.getInstance().error(nfe.getMessage());
-            try { result = new ErrorXMLRepresentation(nfe.getMessage());
-            } catch (IOException e) {}
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, nfe.getMessage());
         }
         catch (IllegalArgumentException iae)
         {
             PowerLogger.getInstance().error(iae.getMessage());
-            try { result = new ErrorXMLRepresentation(iae.getMessage());
-            } catch (IOException e) {}
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
         }
-        catch (ResourceException re)
-        {
-            PowerLogger.getInstance().error(re.getMessage());
-            try { result = new ErrorXMLRepresentation(re.getMessage());
-            } catch (IOException e) {}
-            getResponse().setStatus(re.getStatus());
-        }
+
 
         return result;
     }
