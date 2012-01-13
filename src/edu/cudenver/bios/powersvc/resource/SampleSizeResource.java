@@ -24,22 +24,17 @@ package edu.cudenver.bios.powersvc.resource;
 import java.io.IOException;
 import java.util.List;
 
-import org.restlet.Context;
-import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
 import org.restlet.data.Status;
-import org.restlet.resource.DomRepresentation;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
+import org.restlet.ext.xml.DomRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.Variant;
+import org.restlet.resource.ServerResource;
 
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
 import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
 
 /**
@@ -48,49 +43,8 @@ import edu.cudenver.bios.powersvc.representation.GLMMPowerListXMLRepresentation;
  * 
  * @author Sarah Kreidler
  */
-public class SampleSizeResource extends Resource
+public class SampleSizeResource extends ServerResource
 {
-	/**
-	 * Create a new resource to handle sample size requests.  Data
-	 * is returned as XML.
-	 * 
-	 * @param context restlet context
-	 * @param request http request object
-	 * @param response http response object
-	 */
-    public SampleSizeResource(Context context, Request request, Response response) 
-    {
-        super(context, request, response);
-        getVariants().add(new Variant(MediaType.APPLICATION_XML));
-    }
-
-    /**
-     * Disallow GET requests
-     */
-    @Override
-    public boolean allowGet()
-    {
-        return false;
-    }
-
-    /**
-     * Disallow PUT requests
-     */
-    @Override
-    public boolean allowPut()
-    {
-        return false;
-    }
-
-    /**
-     * Allow POST requests to create a sample size list
-     */
-    @Override
-    public boolean allowPost() 
-    {
-        return  true;
-    }
-
     /**
      * Process a POST request to perform a set of sample size
      * calculations.  Please see REST API documentation for details on
@@ -98,15 +52,18 @@ public class SampleSizeResource extends Resource
      * 
      * @param entity HTTP entity body for the request
      */
-    @Override 
-    public void acceptRepresentation(Representation entity)
+    @Post 
+    public GLMMPowerListXMLRepresentation calculateSampleSize(Representation entity)
+    throws ResourceException
     {
-        DomRepresentation rep = new DomRepresentation(entity);
-
+    	if (entity == null) 
+    		throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "No inputs to calculation specified");
         try
         {
+        	DomRepresentation rep = new DomRepresentation(entity);
             // parse the power parameters from the entity body
-            GLMMPowerParameters params = ParameterResourceHelper.glmmPowerParametersFromDomNode(rep.getDocument().getDocumentElement());
+            GLMMPowerParameters params = 
+            	ParameterResourceHelper.glmmPowerParametersFromDomNode(rep.getDocument().getDocumentElement());
 
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
@@ -115,29 +72,17 @@ public class SampleSizeResource extends Resource
            
             // build the response xml
             GLMMPowerListXMLRepresentation response = new GLMMPowerListXMLRepresentation(results);
-            getResponse().setEntity(response); 
-            getResponse().setStatus(Status.SUCCESS_CREATED);
+            return response;
         }
         catch (IOException ioe)
         {
             PowerLogger.getInstance().error(ioe.getMessage());
-            try { getResponse().setEntity(new ErrorXMLRepresentation(ioe.getMessage())); }
-            catch (IOException e) {}
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, ioe.getMessage());
         }
         catch (IllegalArgumentException iae)
         {
             PowerLogger.getInstance().error(iae.getMessage());
-            try { getResponse().setEntity(new ErrorXMLRepresentation(iae.getMessage())); }
-            catch (IOException e) {}
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-        }
-        catch (ResourceException re)
-        {
-            PowerLogger.getInstance().error(re.getMessage());
-            try { getResponse().setEntity(new ErrorXMLRepresentation(re.getMessage())); }
-            catch (IOException e) {}
-            getResponse().setStatus(re.getStatus());
+        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
         }
     }
 
