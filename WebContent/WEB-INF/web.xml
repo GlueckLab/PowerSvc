@@ -5,7 +5,7 @@
     <!-- Application class name -->
     <context-param>
         <param-name>org.restlet.application</param-name>
-        <param-value>edu.cudenver.bios.powersvc.application.PowerApplication</param-value>
+        <param-value>edu.ucdenver.bios.powersvc.application.PowerApplication</param-value>
     </context-param>
     
     <!-- Restlet adapter -->

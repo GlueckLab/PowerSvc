@@ -21,17 +21,18 @@
  -->
 <project name="power" default="test">
 	<property environment="env"/>
+	<property name="version" value="2.0.0" />
 	<property name="catalina.home" value="${env.CATALINA_HOME}" />
-    <property name="svcname" value="power" />
-    <property name="wardir" value="${basedir}/war" />
-    <property name="sourcedir" value="${basedir}/../src" />
-    <property name="bindir" value="${basedir}/bin" />
-    <property name="wcdir" value="${basedir}/../WebContent" />
-	<property name="javastatsdir" value="${basedir}/../../JavaStatistics/build/bin" />
-	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
-	<property name="javadocdir" value="${basedir}/javadoc/PowerSvc-javadoc" />
+    <property name="svc.name" value="power" />
+    <property name="war.dir" value="${basedir}/war" />
+    <property name="source.dir" value="${basedir}/../src" />
+    <property name="bin.dir" value="${basedir}/bin" />
+    <property name="wc.dir" value="${basedir}/../WebContent" />
+	<property name="javastats.dir" value="${basedir}/../../JavaStatistics/build/bin" />
+	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
+	<property name="javadoc.dir" value="${basedir}/javadoc/PowerSvc-javadoc" />
 	
-	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
+	<fileset id="thirdpartylibs" dir="${thirdparty.dir}">
 		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="restlet/2.0.10/lib/org.restlet.jar" />
@@ -43,63 +44,66 @@
 
 	<path id="libraries">
 		<fileset refid="thirdpartylibs"/>
-    	<fileset dir="${javastatsdir}">
-            <include name="JavaStatistics.jar"/>
+    	<fileset dir="${javastats.dir}">
+            <include name="edu.ucdenver.bios.javastatistics-2.0.0.jar"/>
         </fileset>
 	</path>
 		
     <target name="clean">
-        <delete dir="${wardir}"/>
-        <delete dir="${bindir}"/>
-        <delete dir="${javadocdir}"/>
-    	  <delete>
+        <delete dir="${war.dir}"/>
+        <delete dir="${bin.dir}"/>
+        <delete dir="${javadoc.dir}"/>
+    	<delete>
     	    <fileset dir="." includes="TEST-*"/>
-    	  </delete>
-        <mkdir dir="${wardir}"/>
-        <mkdir dir="${bindir}"/>
+    	</delete>
     </target>
+	
+	<target name="setup" depends="clean">
+        <mkdir dir="${war.dir}"/>
+        <mkdir dir="${bin.dir}"/>
+	</target>
 
-    <target name="compile" depends="clean, copy-resources">
+    <target name="compile" depends="setup, copy-resources">
       <javac debug="true"
              deprecation="on"
              listfiles="true"
              debuglevel="lines,vars,source"
-             srcdir="${sourcedir}"
-             destdir="${wardir}/WEB-INF/classes"
+             srcdir="${source.dir}"
+             destdir="${war.dir}/WEB-INF/classes"
              classpathref="libraries"
       />
     </target>
 
     <target name="copy-resources">
-        <copy todir="${wardir}/WEB-INF/classes">
-            <fileset dir="${sourcedir}">
+        <copy todir="${war.dir}/WEB-INF/classes">
+            <fileset dir="${source.dir}">
                 <exclude name="**/*.java" />
             </fileset>
         </copy>
-        <copy todir="${wardir}">
-            <fileset dir="${wcdir}">
+        <copy todir="${war.dir}">
+            <fileset dir="${wc.dir}">
                 <exclude name="**/.svn/**/*" />
             	<exclude name="test/*" />
             </fileset>
         </copy>
-        <copy todir="${wardir}/WEB-INF/lib" flatten="true" >
+        <copy todir="${war.dir}/WEB-INF/lib" flatten="true" >
             <fileset refid="thirdpartylibs" />
-        	<fileset dir="${javastatsdir}">
-                <include name="JavaStatistics.jar"/>
+        	<fileset dir="${javastats.dir}">
+                <include name="edu.ucdenver.bios.javastatistics-2.0.0.jar"/>
             </fileset>
         </copy>
     </target>
 
     <!-- Build the project's web application.  -->
     <target name="compress" depends="compile">              
-        <echo>webapps DIR IS ${bindir}</echo>
-        <war destfile="${bindir}/${svcname}.war" webxml="${wardir}/WEB-INF/web.xml">
-            <webinf dir="${wardir}/WEB-INF" excludes="**/web.xml"/>
-            <classes dir="${wardir}/WEB-INF/classes"/>
+        <echo>webapps DIR IS ${bin.dir}</echo>
+        <war destfile="${bin.dir}/${svc.name}.war" webxml="${war.dir}/WEB-INF/web.xml">
+            <webinf dir="${war.dir}/WEB-INF" excludes="**/web.xml"/>
+            <classes dir="${war.dir}/WEB-INF/classes"/>
             <classes dir="../config">
                 <include name="log4j.properties"/>
             </classes>
-            <lib dir="${wardir}/WEB-INF/lib" includes="**/*.jar"/>
+            <lib dir="${war.dir}/WEB-INF/lib" includes="**/*.jar"/>
         </war>
     </target>
     
@@ -107,13 +111,13 @@
         <javadoc packagenames="edu.cudenver.bios.*"
                  access="public"
                  classpath="${basedir}/../classes" 
-                 destdir="${javadocdir}"
+                 destdir="${javadoc.dir}"
                  use="true"
                  author="true"
                  version="true"
-                 windowtitle="UC Denver Biostatistics - Power Service Java API Specification"
-                 doctitle="UC Denver Biostatistics - Power Service Java API Specification">
-             <fileset dir="${sourcedir}" defaultexcludes="yes">
+                 windowtitle="UC Denver Biostatistics - Power Service Java API (${version}) Specification"
+                 doctitle="UC Denver Biostatistics - Power Service Java API (${version}) Specification">
+             <fileset dir="${source.dir}" defaultexcludes="yes">
                  <include name="**/*.java"/>
             </fileset>
             <header><![CDATA[<p><b>power service</b></p>]]></header>
@@ -138,8 +142,8 @@
 	<target name="deploy" description="This target moves the ${svcname}.war 
 		to the user's catalina.home\webapps directory." >
 		<copy todir="${catalina.home}\webapps">
-			<fileset dir="${bindir}">
-				<include name="${svcname}.war"/>
+			<fileset dir="${bin.dir}">
+				<include name="${svc.name}.war"/>
 			</fileset>
 		</copy>
 		<echo>Deployed the ${svcname}.war to ${catalina.home}\webapps</echo>
@@ -148,11 +152,11 @@
 	<target name="buildDeploy" depends="test, deploy"/>
 	<!-- Create the javadoc distribution  -->
 	<target name="javadoc-distribution" depends="javadoc">
-		<jar destfile="${bindir}/${svcname}-javadoc.jar" basedir="${javadocdir}/.." >
+		<jar destfile="${bin.dir}/${svc.name}-javadoc.jar" basedir="${javadoc.dir}/.." >
 			<manifest>
 				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
-					<attribute name="Title" value="${svcname} Javadoc"/>
+					<attribute name="Title" value="${svc.name} Javadoc"/>
 					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
 				</section>
 				<section name="Copyright">
@@ -164,7 +168,7 @@
 	
 	<!-- Create the source distribution -->
 	<target name="source-distribution">
-		<jar destfile="${bindir}/${svcname}-source.jar" basedir="${basedir}/../.." 
+		<jar destfile="${bin.dir}/${svc.name}-source.jar" basedir="${basedir}/../.." 
 			includes="PowerSvc/*,
 				PowerSvc/build/build.xml,
 				PowerSvc/config/**,
@@ -174,7 +178,7 @@
 			<manifest>
 				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
-					<attribute name="Title" value="${svcname} Source Code"/>
+					<attribute name="Title" value="${svc.name} Source Code"/>
 					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
 				</section>
 				<section name="Copyright">
