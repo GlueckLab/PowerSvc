@@ -23,13 +23,20 @@ package edu.ucdenver.bios.powersvc.resource;
 
 import java.util.List;
 
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 
 import edu.cudenver.bios.power.Power;
-import edu.ucdenver.bios.javastatistics.design.StudyDesign;
+import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 public interface PowerResource
 {
+    @Post
+    public SimplePojo modPojo(SimplePojo pojo);
+    
+    @Get
+    public SimplePojo getPojo(SimplePojo pojo);
+    
 	/**
 	 * Calculate power for the specified study design
 	 * 

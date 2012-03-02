@@ -28,6 +28,7 @@ import org.restlet.routing.Router;
 
 import edu.ucdenver.bios.powersvc.resource.DefaultResource;
 import edu.ucdenver.bios.powersvc.resource.PowerResource;
+import edu.ucdenver.bios.powersvc.resource.PowerServerResource;
 import edu.ucdenver.bios.powersvc.resource.test.FTestResource;
 
 /**
@@ -66,7 +67,7 @@ public class PowerApplication extends Application
 
         /* attributes of power resources */
         // Power, sample size, and detectable difference  calculation resource 
-        router.attach("/power", PowerResource.class);
+        router.attach("/power", PowerServerResource.class);
         
         // unit test resource - easier to collaborate with remote testers this way
         router.attach("/testf", FTestResource.class);

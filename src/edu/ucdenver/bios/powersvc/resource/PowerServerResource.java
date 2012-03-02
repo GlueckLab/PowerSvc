@@ -24,6 +24,7 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.util.List;
 
 import org.restlet.data.Status;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -31,18 +32,35 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.ucdenver.bios.javastatistics.design.StudyDesign;
+import edu.ucdenver.bios.webservice.common.domain.BetaScale;
+import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
+import edu.ucdenver.bios.webservice.common.domain.TypeIError;
 
 public class PowerServerResource extends ServerResource
 implements PowerResource
 {
+    @Post("json")
+    public SimplePojo modPojo(SimplePojo pojo)
+    {
+        SimplePojo outPojo = new SimplePojo(pojo.getName() + "_mod", pojo.getNumber()*2,
+                pojo.getDecimalNumber()/2);
+        return outPojo;
+    }
+    
+    @Post("json")
+    public SimplePojo getPojo(SimplePojo pojo)
+    {
+        SimplePojo outPojo = new SimplePojo("brand new pojo", 11, 3.14);
+        return outPojo;
+    }
+    
 	/**
 	 * Calculate power for the specified study design
 	 * 
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design
 	 */
-	@Override
+    @Post("json")
 	public List<Power> getPower(StudyDesign studyDesign)
 	{
     	if (studyDesign == null) 
@@ -72,7 +90,6 @@ implements PowerResource
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design.  These will contain the total sample size
 	 */
-	@Override
 	public List<Power> getSampleSize(StudyDesign studyDesign)
 	{
 		// TODO Auto-generated method stub
@@ -85,7 +102,6 @@ implements PowerResource
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design.  These will contain the detectable difference
 	 */
-	@Override
 	public List<Power> getDetectableDifference(StudyDesign studyDesign)
 	{
 		// TODO Auto-generated method stub
