@@ -33,7 +33,6 @@ import edu.cudenver.bios.power.Power;
 import edu.ucdenver.bios.powersvc.resource.PowerResource;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
-import edu.ucdenver.bios.webservice.common.domain.SimplePojo;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**

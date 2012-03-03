@@ -40,7 +40,6 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
-import edu.ucdenver.bios.webservice.common.domain.SimplePojo;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.domain.TypeIError;
 
