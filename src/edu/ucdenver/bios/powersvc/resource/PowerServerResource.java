@@ -21,38 +21,32 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.MatrixUtils;
 import org.restlet.data.Status;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
+import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
+import edu.ucdenver.bios.webservice.common.domain.SimplePojo;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.domain.TypeIError;
 
 public class PowerServerResource extends ServerResource
 implements PowerResource
 {
-    @Post("json")
-    public SimplePojo modPojo(SimplePojo pojo)
-    {
-        SimplePojo outPojo = new SimplePojo(pojo.getName() + "_mod", pojo.getNumber()*2,
-                pojo.getDecimalNumber()/2);
-        return outPojo;
-    }
-    
-    @Post("json")
-    public SimplePojo getPojo(SimplePojo pojo)
-    {
-        SimplePojo outPojo = new SimplePojo("brand new pojo", 11, 3.14);
-        return outPojo;
-    }
     
 	/**
 	 * Calculate power for the specified study design
@@ -60,8 +54,8 @@ implements PowerResource
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design
 	 */
-    @Post("json")
-	public List<Power> getPower(StudyDesign studyDesign)
+    @Post
+    public ArrayList<GLMMPower> getPower(StudyDesign studyDesign)
 	{
     	if (studyDesign == null) 
     		throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
@@ -72,9 +66,16 @@ implements PowerResource
         	GLMMPowerParameters params = studyDesignToPowerParameters(studyDesign);
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
-            // calculate the detecable difference results
-            List<Power> results = calculator.getPower(params);
-
+            // calculate the power results
+            List<Power> calcResults = calculator.getPower(params);
+            // convert to concrete classes
+            // TODO: redesign java stats so we can skip this step!
+            ArrayList<GLMMPower> results = new ArrayList<GLMMPower>();
+            for(Power power: calcResults)
+            {
+                results.add((GLMMPower) power);
+            }
+            
             return results;
         }
         catch (IllegalArgumentException iae)
@@ -90,10 +91,34 @@ implements PowerResource
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design.  These will contain the total sample size
 	 */
-	public List<Power> getSampleSize(StudyDesign studyDesign)
+	public ArrayList<GLMMPower> getSampleSize(StudyDesign studyDesign)
 	{
-		// TODO Auto-generated method stub
-		return null;
+        if (studyDesign == null) 
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Invalid study design");
+        
+        try
+        {
+            GLMMPowerParameters params = studyDesignToPowerParameters(studyDesign);
+            // create the appropriate power calculator for this model
+            GLMMPowerCalculator calculator = new GLMMPowerCalculator();
+            // calculate the power results
+            List<Power> calcResults = calculator.getSampleSize(params);
+            // convert to concrete classes
+            // TODO: redesign java stats so we can skip this step!
+            ArrayList<GLMMPower> results = new ArrayList<GLMMPower>();
+            for(Power power: calcResults)
+            {
+                results.add((GLMMPower) power);
+            }
+            
+            return results;
+        }
+        catch (IllegalArgumentException iae)
+        {
+            PowerLogger.getInstance().error(iae.getMessage());
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
+        }
 	}
 
 	/**
@@ -102,10 +127,34 @@ implements PowerResource
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design.  These will contain the detectable difference
 	 */
-	public List<Power> getDetectableDifference(StudyDesign studyDesign)
+	public ArrayList<GLMMPower> getDetectableDifference(StudyDesign studyDesign)
 	{
-		// TODO Auto-generated method stub
-		return null;
+        if (studyDesign == null) 
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Invalid study design");
+        
+        try
+        {
+            GLMMPowerParameters params = studyDesignToPowerParameters(studyDesign);
+            // create the appropriate power calculator for this model
+            GLMMPowerCalculator calculator = new GLMMPowerCalculator();
+            // calculate the power results
+            List<Power> calcResults = calculator.getDetectableDifference(params);
+            // convert to concrete classes
+            // TODO: redesign java stats so we can skip this step!
+            ArrayList<GLMMPower> results = new ArrayList<GLMMPower>();
+            for(Power power: calcResults)
+            {
+                results.add((GLMMPower) power);
+            }
+            
+            return results;
+        }
+        catch (IllegalArgumentException iae)
+        {
+            PowerLogger.getInstance().error(iae.getMessage());
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
+        }
 	}
 	
 	/**
@@ -118,8 +167,43 @@ implements PowerResource
 	private GLMMPowerParameters studyDesignToPowerParameters(StudyDesign studyDesign)
 	{
 		GLMMPowerParameters params = new GLMMPowerParameters();
-		
+        
+        // add tests
+        params.addTest(Test.UNIREP);
+        
+        // add alpha values
+        params.addAlpha(0.05);
+
+        // build beta matrix
+        double [][] beta = {{0},{1}};
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
+        // add beta scale values
+        for(double betaScale = 0; betaScale <= 2.5; betaScale += 0.05) params.addBetaScale(betaScale);
+        
+        // build theta null matrix
+        double [][] theta0 = {{0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+        
+        // build sigma matrix
+        double [][] sigma = {{1}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+        double[] values = {1,2,0.5};
+        for(double sigmaScale: values) params.addSigmaScale(sigmaScale);
+        
+        // build design matrix
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(2));
+        // add sample size multipliers
+        int[] nValues = {10,20,30};
+        for(int sampleSize: nValues) params.addSampleSize(sampleSize);
+        
+        // build between subject contrast
+        double [][] between = {{1,-1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
+
 		return params;
 	}
+
+
 
 }

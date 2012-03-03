@@ -21,23 +21,20 @@
  */
 package edu.ucdenver.bios.powersvc.resource.test;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
+
 import org.restlet.resource.ClientResource;
 
-import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
-import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.resource.PowerResource;
-import edu.ucdenver.bios.powersvc.resource.SimplePojo;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
+import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
+import edu.ucdenver.bios.webservice.common.domain.SimplePojo;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
-import edu.ucdenver.bios.webservice.common.domain.TypeIError;
-
-import junit.framework.TestCase;
 
 /**
  * Test class to connect to a local instance of the power service
@@ -58,6 +55,7 @@ public class TestPowerResource extends TestCase
         try
         {
             clientResource = new ClientResource("http://localhost:8080/power/power"); 
+            //clientResource = new ClientResource("http://sph-bi-sakhadeo:8080/power/power"); 
             powerResource = clientResource.wrap(PowerResource.class);
         }
         catch (Exception e)
@@ -68,51 +66,26 @@ public class TestPowerResource extends TestCase
     }
 
     /**
-     * Call the calculatePower function
+     * Calculate power for a two-sample t test
      */
-    public void testFunction()
+    public void testPower()
     {
-        StudyDesign design = buildDesign();
-
+        StudyDesign studyDesign = buildDesign();
         // calculate power
         try
         {
-            SimplePojo pojo = new SimplePojo("sdcsdchello", 5, 26.0);
-            TypeIError alpha = new TypeIError();
-            alpha.setAlphaValue(0.026);
-            SimplePojo pojoOut = powerResource.modPojo(pojo);
-            System.err.println("Got object: " + pojoOut.toString());
+            ArrayList<GLMMPower> powerList = powerResource.getPower(studyDesign);
+            for(GLMMPower power : powerList)
+            {
+                System.out.println(power.toXML());
+            }
             assertTrue(true);
         }
         catch (Exception e)
         {
-            System.err.println("Failed to retrieve: " + e.getMessage());
+            System.err.println("testPower Failed to retrieve: " + e.getMessage());
             fail();
         }
-
-
-    }
-    
-    /**
-     * Call the calculatePower function
-     */
-    private void testCalculatePower()
-    {
-        StudyDesign design = buildDesign();
-
-        // calculate power
-        try
-        {
-            List<Power> powerList = powerResource.getPower(design);
-            assertTrue(true);
-        }
-        catch (Exception e)
-        {
-            System.err.println("Failed to calculate power: " + e.getMessage());
-            fail();
-        }
-
-
     }
 
     /**

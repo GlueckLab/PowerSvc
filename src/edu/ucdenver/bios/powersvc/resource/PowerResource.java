@@ -21,22 +21,13 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.List;
-
-import org.restlet.resource.Get;
+import java.util.ArrayList;
 import org.restlet.resource.Post;
-
-import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.GLMMPower;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 public interface PowerResource
 {
-    @Post
-    public SimplePojo modPojo(SimplePojo pojo);
-    
-    @Get
-    public SimplePojo getPojo(SimplePojo pojo);
-    
 	/**
 	 * Calculate power for the specified study design
 	 * 
@@ -44,7 +35,7 @@ public interface PowerResource
 	 * @return List of power objects for the study design
 	 */
 	@Post
-	public List<Power> getPower(StudyDesign studyDesign);
+	public ArrayList<GLMMPower> getPower(StudyDesign studyDesign);
 
 	/**
 	 * Calculate the total sample size for the specified study design.
@@ -53,7 +44,7 @@ public interface PowerResource
 	 * @return List of power objects for the study design.  These will contain the total sample size
 	 */
 	@Post
-	public List<Power> getSampleSize(StudyDesign studyDesign);
+	public ArrayList<GLMMPower> getSampleSize(StudyDesign studyDesign);
 
 	/**
 	 * Calculate the detectable difference for the specified study design.
@@ -62,5 +53,5 @@ public interface PowerResource
 	 * @return List of power objects for the study design.  These will contain the detectable difference
 	 */
 	@Post
-	public List<Power> getDetectableDifference(StudyDesign studyDesign);
+	public ArrayList<GLMMPower> getDetectableDifference(StudyDesign studyDesign);
 }
