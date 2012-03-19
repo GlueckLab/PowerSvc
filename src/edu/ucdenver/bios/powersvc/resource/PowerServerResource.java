@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
 package edu.ucdenver.bios.powersvc.resource;
 
@@ -43,26 +44,32 @@ import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.domain.TypeIError;
 
+/**
+ * Implementation of the PowerResource interface for calculating
+ * power, sample size, and detectable difference.
+ * @author Sarah Kreidler
+ *
+ */
 public class PowerServerResource extends ServerResource
-implements PowerResource
-{
-    
-	/**
-	 * Calculate power for the specified study design
-	 * 
-	 * @param studyDesign study design object
-	 * @return List of power objects for the study design
-	 */
+implements PowerResource {
+
+    /**
+     * Calculate power for the specified study design.
+     *
+     * @param studyDesign study design object
+     * @return List of power objects for the study design
+     */
     @Post
-    public ArrayList<GLMMPower> getPower(StudyDesign studyDesign)
-	{
-    	if (studyDesign == null) 
-    		throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
-    				"Invalid study design");
-    	
-        try
-        {
-        	GLMMPowerParameters params = studyDesignToPowerParameters(studyDesign);
+    public final ArrayList<GLMMPower> getPower(final StudyDesign studyDesign) {
+
+        if (studyDesign == null) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            "Invalid study design");
+        }
+
+        try {
+        	GLMMPowerParameters params = 
+        	    studyDesignToPowerParameters(studyDesign);
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // calculate the power results
@@ -70,17 +77,15 @@ implements PowerResource
             // convert to concrete classes
             // TODO: redesign java stats so we can skip this step!
             ArrayList<GLMMPower> results = new ArrayList<GLMMPower>();
-            for(Power power: calcResults)
-            {
+            for (Power power: calcResults) {
                 results.add((GLMMPower) power);
             }
-            
+
             return results;
-        }
-        catch (IllegalArgumentException iae)
-        {
+        } catch (IllegalArgumentException iae) {
             PowerLogger.getInstance().error(iae.getMessage());
-        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
+        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+        	        iae.getMessage());
         }
 	}
 

@@ -21,9 +21,12 @@
 */
 
 /**
- * Application level classes including Restlet entry point, constants,
- * and logging setup.
-* <p>
+* Restlet resources which process incoming requests based on the incoming
+* URI structure.  The URI mappings are defined in the edu.cudenver.bios.powersvc.application.PowerApplication
+* class.
+* 
+* <h2>Package Specification</h2>
+* 
 * Dependencies:
 * <ul>
 * <li>JRE 1.6.0 or higher</li>
@@ -35,14 +38,14 @@
 * </ul>
 * 
 * <h2>Related Documentation</h2>
-*
+* 
 * This package is part of the Power web service component for the Glimmpse software system, please see
 * the following for more information:
 * <ul>
-*  <li><a href="http://glimmpse.samplesizeshop.com/">http://glimmpse.samplesizeshop.com/</a>
+*   <li><a href="http://www.glimmpse.com/">http://www.glimmpse.com/</a>
 * </ul>
  */
-package edu.ucdenver.bios.powersvc.application;
+package edu.ucdenver.bios.powersvc.resource;
 
  
 
