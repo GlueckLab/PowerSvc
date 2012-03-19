@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,36 +17,35 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
 package edu.ucdenver.bios.powersvc.application;
 
 import org.apache.log4j.Logger;
 
 /**
- * Singleton Log4J wrapper class
- * 
+ * Singleton Log4J wrapper class.
+ *
  * @author Sarah Kreidler
  */
-public class PowerLogger
-{
+public final class PowerLogger {
+
+    /** Singleton instance of the Logger class. */
     private static Logger instance = null;
 
     /**
-     * Create a new logging object
+     * Create a new logging object.
      */
-    private PowerLogger() 
-    {
+    private PowerLogger() {
     }
 
     /**
-     * Create a single instance of a logging class
+     * Create a single instance of a logging class.
      * @return Logger object
      */
-    public static Logger getInstance() 
-    {
-        if (instance == null) 
-        {
+    public static Logger getInstance() {
+        if (instance == null) {
             instance = Logger.getLogger("edu.cudenver.bios.powersvc.Power");
         }
 

@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,24 +17,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
 package edu.ucdenver.bios.powersvc.application;
 
 /**
- * Convenience class for power service constants
- * 
+ * Convenience class for power service constants.
+ *
  * @author Sarah Kreidler
  */
-public class PowerConstants
-{
-	// current version
-	public static final String VERSION = "2.0.0";
-	
-    // maximum allowed simulation size
-    public static final int MAX_SIMULATION_SIZE = 100000;
-    public static final int DEFAULT_SIMULATION_SIZE = 10000;
-    
+public final class PowerConstants {
 
-    
+    /** Private constructor ensures this class cannot be instantiated. */
+    private PowerConstants() { }
+    /** Current version. */
+    public static final String VERSION = "2.0.0";
+
+    /** Maximum allowed simulation size. */
+    public static final int MAX_SIMULATION_SIZE = 100000;
+    /** Default simulation size. */
+    public static final int DEFAULT_SIMULATION_SIZE = 10000;
+
 }
