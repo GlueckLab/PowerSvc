@@ -141,7 +141,7 @@ public class TestPowerResourceOnServer extends TestCase {
             {
                 System.out.println(matrix.toString());
             }
-            assertEquals((matrixList != null ? matrixList.size() : 0), 6);
+            assertEquals((matrixList != null ? matrixList.size() : 0), 5);
         }
         catch (Exception e)
         {
