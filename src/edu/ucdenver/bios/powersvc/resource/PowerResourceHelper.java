@@ -75,31 +75,40 @@ public final class PowerResourceHelper {
 
         /** Build list inputs **/
         // add tests
-        for(StatisticalTest test: studyDesign.getStatisticalTestList()) {
-            params.addTest(toGLMMTest(test));
+        if (studyDesign.getStatisticalTestList() != null) {
+            for(StatisticalTest test: studyDesign.getStatisticalTestList()) {
+                params.addTest(toGLMMTest(test));
+            }
         }
         // add alpha values
-        for(TypeIError alpha: studyDesign.getAlphaList()) {
-            params.addAlpha(alpha.getAlphaValue());
+        if (studyDesign.getAlphaList() != null) {
+            for(TypeIError alpha: studyDesign.getAlphaList()) {
+                params.addAlpha(alpha.getAlphaValue());
+            }
         }
         // add nominal powers
-        for(NominalPower power: studyDesign.getNominalPowerList()) {
-            params.addPower(power.getValue());
+        if (studyDesign.getNominalPowerList() != null) {
+            for(NominalPower power: studyDesign.getNominalPowerList()) {
+                params.addPower(power.getValue());
+            }
         }
-
         // add per group sample sizes
-        for(SampleSize size: studyDesign.getSampleSizeList()) {
-            params.addSampleSize(size.getValue());
+        if (studyDesign.getSampleSizeList() != null) {
+            for(SampleSize size: studyDesign.getSampleSizeList()) {
+                params.addSampleSize(size.getValue());
+            }
         }
-
         // add beta scale values
-        for(BetaScale betaScale: studyDesign.getBetaScaleList()) {
-            params.addBetaScale(betaScale.getValue());
+        if (studyDesign.getBetaScaleList() != null) {
+            for(BetaScale betaScale: studyDesign.getBetaScaleList()) {
+                params.addBetaScale(betaScale.getValue());
+            }
         }
-
         // add sigma scale values
-        for(SigmaScale scale: studyDesign.getSigmaScaleList()) {
-            params.addSigmaScale(scale.getValue());
+        if (studyDesign.getSigmaScaleList() != null) {
+            for(SigmaScale scale: studyDesign.getSigmaScaleList()) {
+                params.addSigmaScale(scale.getValue());
+            }
         }
 
         /** Generate and add matrices **/
@@ -120,12 +129,16 @@ public final class PowerResourceHelper {
             params.setSigmaOutcomeGaussianRandom(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign));
 
             // add power methods
-            for(PowerMethod method: studyDesign.getPowerMethodList()) {
-                params.addPowerMethod(toGLMMPowerMethod(method));
+            if (studyDesign.getPowerMethodList() != null) {
+                for(PowerMethod method: studyDesign.getPowerMethodList()) {
+                    params.addPowerMethod(toGLMMPowerMethod(method));
+                }
             }
             // add quantiles
-            for(Quantile quantile: studyDesign.getQuantileList()) {
-                params.addQuantile(quantile.getValue());
+            if (studyDesign.getQuantileList() != null) {
+                for(Quantile quantile: studyDesign.getQuantileList()) {
+                    params.addQuantile(quantile.getValue());
+                }
             }
         } else {
             params.setSigmaError(sigmaErrorMatrixFromStudyDesign(studyDesign));
