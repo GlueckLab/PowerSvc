@@ -35,13 +35,15 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  * @author Sarah Kreidler
  *
  */
-public interface PowerResource {
+public interface DetectableDifferenceResource {
+
     /**
-     * Calculate power for the specified study design.
+     * Calculate the detectable difference for the specified study design.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design
+     * @return List of power objects for the study design.  These will contain
+     * the detectable difference.
      */
     @Post
-    ArrayList<PowerResult> getPower(StudyDesign studyDesign);
+    ArrayList<PowerResult> getDetectableDifference(StudyDesign studyDesign);
 }

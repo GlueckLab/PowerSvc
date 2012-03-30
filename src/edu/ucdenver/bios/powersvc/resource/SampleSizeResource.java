@@ -30,18 +30,20 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Main interface for calculating power, sample size, and
- * detectable difference.
+ * Main interface for calculating sample size.
  * @author Sarah Kreidler
  *
  */
-public interface PowerResource {
+public interface SampleSizeResource {
+
     /**
-     * Calculate power for the specified study design.
+     * Calculate the total sample size for the specified study design.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design
+     * @return List of power objects for the study design.  These will contain
+     * the total sample size
      */
     @Post
-    ArrayList<PowerResult> getPower(StudyDesign studyDesign);
+    ArrayList<PowerResult> getSampleSize(StudyDesign studyDesign);
+
 }

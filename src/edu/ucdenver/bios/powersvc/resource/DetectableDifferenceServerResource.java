@@ -44,36 +44,36 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  * @author Sarah Kreidler
  *
  */
-public class PowerServerResource extends ServerResource
-implements PowerResource {
+public class DetectableDifferenceServerResource extends ServerResource
+implements DetectableDifferenceResource {
 
-    /**
-     * Calculate power for the specified study design.
-     *
-     * @param studyDesign study design object
-     * @return List of power objects for the study design
-     */
-    @Post
-    public final ArrayList<PowerResult> getPower(final StudyDesign studyDesign) {
-        PowerLogger.getInstance().info("ENTERED POWER");
-        if (studyDesign == null) {
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Invalid study design");
-        }
-
-        try {
-        	GLMMPowerParameters params = 
-        	    PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
+	/**
+	 * Calculate the detectable difference for the specified study design.
+	 * 
+	 * @param studyDesign study design object
+	 * @return List of power objects for the study design.  These will contain the detectable difference
+	 */
+	public ArrayList<PowerResult> getDetectableDifference(StudyDesign studyDesign)
+	{
+        if (studyDesign == null) 
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Invalid study design");
+        
+        try
+        {
+            GLMMPowerParameters params = 
+                PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // calculate the power results
-            List<Power> calcResults = calculator.getPower(params);
-            // convert to concrete classes         
+            List<Power> calcResults = calculator.getDetectableDifference(params);
+            // convert to concrete classes            
             return PowerResourceHelper.toPowerResultList(calcResults);
-        } catch (IllegalArgumentException iae) {
+        }
+        catch (IllegalArgumentException iae)
+        {
             PowerLogger.getInstance().error(iae.getMessage());
-        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-        	        iae.getMessage());
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
         }
 	}
 

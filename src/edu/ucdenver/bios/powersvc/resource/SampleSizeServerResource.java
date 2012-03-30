@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.restlet.data.Status;
-import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -34,46 +33,46 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
 import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the PowerResource interface for calculating
- * power, sample size, and detectable difference.
+ * Implementation of the SampleSizeResource interface for calculating
+ * sample size.
  * @author Sarah Kreidler
  *
  */
-public class PowerServerResource extends ServerResource
-implements PowerResource {
+public class SampleSizeServerResource extends ServerResource
+implements SampleSizeResource {
 
-    /**
-     * Calculate power for the specified study design.
-     *
-     * @param studyDesign study design object
-     * @return List of power objects for the study design
-     */
-    @Post
-    public final ArrayList<PowerResult> getPower(final StudyDesign studyDesign) {
-        PowerLogger.getInstance().info("ENTERED POWER");
-        if (studyDesign == null) {
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Invalid study design");
-        }
-
-        try {
-        	GLMMPowerParameters params = 
-        	    PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
+	/**
+	 * Calculate the total sample size for the specified study design.
+	 * 
+	 * @param studyDesign study design object
+	 * @return List of power objects for the study design.  These will contain the total sample size
+	 */
+	public ArrayList<PowerResult> getSampleSize(StudyDesign studyDesign)
+	{
+	    edu.ucdenver.bios.powersvc.application.PowerLogger.getInstance().info("ENTERED SAMPLE SIZE");
+        if (studyDesign == null) 
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Invalid study design");
+        
+        try
+        {
+            GLMMPowerParameters params = 
+                PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // calculate the power results
-            List<Power> calcResults = calculator.getPower(params);
-            // convert to concrete classes         
+            List<Power> calcResults = calculator.getSampleSize(params);
+            // convert to concrete classes           
             return PowerResourceHelper.toPowerResultList(calcResults);
-        } catch (IllegalArgumentException iae) {
+        }
+        catch (IllegalArgumentException iae)
+        {
             PowerLogger.getInstance().error(iae.getMessage());
-        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-        	        iae.getMessage());
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
         }
 	}
 

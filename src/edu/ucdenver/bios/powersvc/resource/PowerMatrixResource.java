@@ -35,13 +35,11 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  * @author Sarah Kreidler
  *
  */
-public interface PowerResource {
+public interface PowerMatrixResource {
+    
     /**
-     * Calculate power for the specified study design.
-     *
-     * @param studyDesign study design object
-     * @return List of power objects for the study design
+     * Get matrices used in the power calculation for a "guided" study design
      */
     @Post
-    ArrayList<PowerResult> getPower(StudyDesign studyDesign);
+    ArrayList<NamedMatrix> getMatrices(StudyDesign studyDesign);
 }

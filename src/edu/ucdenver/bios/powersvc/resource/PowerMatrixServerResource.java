@@ -44,37 +44,20 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  * @author Sarah Kreidler
  *
  */
-public class PowerServerResource extends ServerResource
-implements PowerResource {
-
+public class PowerMatrixServerResource extends ServerResource
+implements PowerMatrixResource {
+	
     /**
-     * Calculate power for the specified study design.
-     *
-     * @param studyDesign study design object
-     * @return List of power objects for the study design
+     * Get matrices used in the power calculation for a "guided" study design
+     * @param studyDesign the Study Design object
      */
     @Post
-    public final ArrayList<PowerResult> getPower(final StudyDesign studyDesign) {
-        PowerLogger.getInstance().info("ENTERED POWER");
-        if (studyDesign == null) {
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Invalid study design");
-        }
+    public ArrayList<NamedMatrix> getMatrices(StudyDesign studyDesign) {
+        return PowerResourceHelper.namedMatrixListFromStudyDesign(studyDesign);
+    }
+	
 
-        try {
-        	GLMMPowerParameters params = 
-        	    PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
-            // create the appropriate power calculator for this model
-            GLMMPowerCalculator calculator = new GLMMPowerCalculator();
-            // calculate the power results
-            List<Power> calcResults = calculator.getPower(params);
-            // convert to concrete classes         
-            return PowerResourceHelper.toPowerResultList(calcResults);
-        } catch (IllegalArgumentException iae) {
-            PowerLogger.getInstance().error(iae.getMessage());
-        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-        	        iae.getMessage());
-        }
-	}
+
+
 
 }
