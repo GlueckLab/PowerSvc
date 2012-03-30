@@ -38,5 +38,19 @@ public final class PowerConstants {
     public static final int MAX_SIMULATION_SIZE = 100000;
     /** Default simulation size. */
     public static final int DEFAULT_SIMULATION_SIZE = 10000;
+    
+    // type name constants
+    public static final String MATRIX_BETA = "beta";
+    public static final String MATRIX_BETA_RANDOM = "betaRandom";
+    public static final String MATRIX_DESIGN = "design";
+    public static final String MATRIX_THETA_NULL = "thetaNull";
+    public static final String MATRIX_WITHIN_CONTRAST = "withinSubjectContrast";
+    public static final String MATRIX_BETWEEN_CONTRAST = "betweenSubjectContrast";
+    public static final String MATRIX_BETWEEN_CONTRAST_RANDOM = "betweenSubjectContrastRandom";
+    public static final String MATRIX_SIGMA_ERROR = "sigmaError";
+    public static final String MATRIX_SIGMA_GAUSSIAN = "sigmaGaussianRandom";
+    public static final String MATRIX_SIGMA_OUTCOME = "sigmaOutcome";
+    public static final String MATRIX_SIGMA_OUTCOME_GAUSSIAN = "sigmaOutcomeGaussianRandom";
+    
 
 }

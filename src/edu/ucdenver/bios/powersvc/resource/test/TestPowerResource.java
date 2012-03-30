@@ -22,17 +22,13 @@
 package edu.ucdenver.bios.powersvc.resource.test;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.restlet.resource.ClientResource;
 
-import edu.cudenver.bios.power.GLMMPower;
-import edu.cudenver.bios.power.Power;
 import edu.ucdenver.bios.powersvc.resource.PowerResource;
-import edu.ucdenver.bios.webservice.common.domain.BetaScale;
-import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
+import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
@@ -73,8 +69,8 @@ public class TestPowerResource extends TestCase
         // calculate power
         try
         {
-            ArrayList<GLMMPower> powerList = powerResource.getPower(studyDesign);
-            for(GLMMPower power : powerList)
+            ArrayList<PowerResult> powerList = powerResource.getPower(studyDesign);
+            for(PowerResult power : powerList)
             {
                 System.out.println(power.toXML());
             }

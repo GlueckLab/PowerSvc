@@ -25,6 +25,8 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.util.ArrayList;
 import org.restlet.resource.Post;
 import edu.cudenver.bios.power.GLMMPower;
+import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
+import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
@@ -41,7 +43,7 @@ public interface PowerResource {
      * @return List of power objects for the study design
      */
     @Post
-    ArrayList<GLMMPower> getPower(StudyDesign studyDesign);
+    ArrayList<PowerResult> getPower(StudyDesign studyDesign);
 
     /**
      * Calculate the total sample size for the specified study design.
@@ -51,7 +53,7 @@ public interface PowerResource {
      * the total sample size
      */
     @Post
-    ArrayList<GLMMPower> getSampleSize(StudyDesign studyDesign);
+    ArrayList<PowerResult> getSampleSize(StudyDesign studyDesign);
 
     /**
      * Calculate the detectable difference for the specified study design.
@@ -61,5 +63,11 @@ public interface PowerResource {
      * the detectable difference.
      */
     @Post
-    ArrayList<GLMMPower> getDetectableDifference(StudyDesign studyDesign);
+    ArrayList<PowerResult> getDetectableDifference(StudyDesign studyDesign);
+    
+    /**
+     * Get matrices used in the power calculation for a "guided" study design
+     */
+    @Post
+    ArrayList<NamedMatrix> getMatrices(StudyDesign studyDesign);
 }
