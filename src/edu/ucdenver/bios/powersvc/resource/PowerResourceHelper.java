@@ -391,15 +391,48 @@ public final class PowerResourceHelper {
         if (studyDesign == null) {
             return null;
         }
-
+        // allocate a result list
         ArrayList<NamedMatrix> matrixList = new ArrayList<NamedMatrix>();
-        // parse the study design into matrices
-        //        GLMMPowerParameters params = 
-        //            PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
-        //        // return the list of matrices by name
-        //        matrixList.add(toNamedMatrix(params.getDesignEssence(), 
-        //                PowerConstants.MATRIX_DESIGN));
+        // parse the study design into matrices 
+        // build design matrix
+        matrixList.add(toNamedMatrix(designMatrixFromStudyDesign(studyDesign),
+                PowerConstants.MATRIX_DESIGN));
+        // build beta matrix
+        FixedRandomMatrix beta = betaMatrixFromStudyDesign(studyDesign);
+        matrixList.add(toNamedMatrix(beta.getFixedMatrix(), PowerConstants.MATRIX_BETA));
+        if (studyDesign.isGaussianCovariate()) {
+            matrixList.add(toNamedMatrix(beta.getRandomMatrix(), 
+                    PowerConstants.MATRIX_BETA_RANDOM));
+        }
+        // build the between subject contrast
+        FixedRandomMatrix C = betweenParticipantContrastFromStudyDesign(studyDesign);
+        matrixList.add(toNamedMatrix(C.getFixedMatrix(), 
+                PowerConstants.MATRIX_BETWEEN_CONTRAST));
+        if (studyDesign.isGaussianCovariate()) {
+            matrixList.add(toNamedMatrix(C.getRandomMatrix(), 
+                    PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM));
+        }
 
+        // build the within subject contrast
+        RealMatrix U = withinParticipantContrastFromStudyDesign(studyDesign);
+        if (U != null) {
+            matrixList.add(toNamedMatrix(U, PowerConstants.MATRIX_WITHIN_CONTRAST));
+        }
+        // build theta null matrix
+        matrixList.add(toNamedMatrix(thetaNullMatrixFromStudyDesign(studyDesign),
+                PowerConstants.MATRIX_THETA_NULL));
+        // add matrices for either GLMM(F) or GLMM(F,g) designs
+        if (studyDesign.isGaussianCovariate()) {
+            matrixList.add(toNamedMatrix(sigmaOutcomesMatrixFromStudyDesign(studyDesign),
+                    PowerConstants.MATRIX_SIGMA_OUTCOME));
+            matrixList.add(toNamedMatrix(sigmaCovariateMatrixFromStudyDesign(studyDesign),
+                    PowerConstants.MATRIX_SIGMA_GAUSSIAN));
+            matrixList.add(toNamedMatrix(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign),
+                    PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+        } else {
+            matrixList.add(toNamedMatrix(sigmaErrorMatrixFromStudyDesign(studyDesign),
+                    PowerConstants.MATRIX_SIGMA_ERROR));
+        }
         return matrixList;
     }
 
@@ -434,6 +467,10 @@ public final class PowerResourceHelper {
      *         the input matrix to NamedMatrix
      */
     public static NamedMatrix toNamedMatrix(final RealMatrix matrix, final String name) {
+        if (matrix == null || name == null || name.isEmpty()) {
+            logger.error("failed to create NamedMatrix object name=[" + (name != null ? name : "NULL")+ "]");
+            return null;
+        }
         NamedMatrix namedMatrix = new NamedMatrix();
         namedMatrix.setData(matrix.getData());
         namedMatrix.setName(name);
