@@ -219,7 +219,7 @@ public class TestPowerResourceOnServer extends TestCase {
         // build between subject contrast
         double [][] betweenData = {{1,-1}};
         NamedMatrix betweenContrast = new NamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST);
-        betweenContrast.setData(betweenData);
+        betweenContrast.setDataFromArray(betweenData);
         betweenContrast.setRows(1);
         betweenContrast.setColumns(2);
         studyDesign.setNamedMatrix(betweenContrast);
@@ -227,7 +227,7 @@ public class TestPowerResourceOnServer extends TestCase {
         // build beta matrix
         double [][] betaData = {{0},{1}};
         NamedMatrix beta = new NamedMatrix(PowerConstants.MATRIX_BETA);
-        beta.setData(betaData);
+        beta.setDataFromArray(betaData);
         beta.setRows(2);
         beta.setColumns(1);
         studyDesign.setNamedMatrix(beta);
@@ -235,7 +235,7 @@ public class TestPowerResourceOnServer extends TestCase {
         // build theta null matrix
         double [][] thetaNullData = {{0}};
         NamedMatrix thetaNull = new NamedMatrix(PowerConstants.MATRIX_THETA_NULL);
-        thetaNull.setData(thetaNullData);
+        thetaNull.setDataFromArray(thetaNullData);
         thetaNull.setRows(1);
         thetaNull.setColumns(1);
         studyDesign.setNamedMatrix(thetaNull);
@@ -243,11 +243,11 @@ public class TestPowerResourceOnServer extends TestCase {
         // build sigma matrix
         double [][] sigmaData = {{1}};
         NamedMatrix sigmaError = new NamedMatrix(PowerConstants.MATRIX_SIGMA_ERROR);
-        sigmaError.setData(sigmaData);
+        sigmaError.setDataFromArray(sigmaData);
         sigmaError.setRows(1);
         sigmaError.setColumns(1);
         studyDesign.setNamedMatrix(sigmaError);
-
+        
         return studyDesign;
     }
 }
