@@ -271,8 +271,8 @@ public final class PowerResourceHelper {
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
 
             FixedRandomMatrix betaFixedRandom = 
-                new FixedRandomMatrix((betaFixed != null ? betaFixed.getDataFromBlob() : null),
-                        (betaRandom != null ? betaRandom.getDataFromBlob() : null),
+                new FixedRandomMatrix((betaFixed != null ? betaFixed.getDataAsArray() : null),
+                        (betaRandom != null ? betaRandom.getDataAsArray() : null),
                         false);
             return betaFixedRandom;
         } else {
@@ -294,8 +294,8 @@ public final class PowerResourceHelper {
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM);
 
             FixedRandomMatrix betaFixedRandom = 
-                new FixedRandomMatrix((cFixed != null ? cFixed.getDataFromBlob() : null),
-                        (cRandom != null ? cRandom.getDataFromBlob() : null),
+                new FixedRandomMatrix((cFixed != null ? cFixed.getDataAsArray() : null),
+                        (cRandom != null ? cRandom.getDataAsArray() : null),
                         true);
             return betaFixedRandom;
         } else {
@@ -472,7 +472,7 @@ public final class PowerResourceHelper {
             return null;
         }
         NamedMatrix namedMatrix = new NamedMatrix();
-        namedMatrix.setData(matrix.getData());
+        namedMatrix.setDataFromArray(matrix.getData());
         namedMatrix.setName(name);
         namedMatrix.setColumns(matrix.getColumnDimension());
         namedMatrix.setRows(matrix.getRowDimension());
