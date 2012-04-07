@@ -38,7 +38,11 @@
 		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="restlet/2.0.10/lib/org.restlet.jar" />
 		<include name="restlet/2.0.10/lib/org.restlet.ext.xml.jar" />
+		<include name="restlet/2.0.10/lib/org.restlet.ext.json.jar" />
 	    <include name="restlet/2.0.10/lib/org.restlet.ext.servlet.jar" />
+	    <include name="restlet/2.0.10/lib/org.restlet.ext.jackson.jar" />
+	    <include name="jackson/1.9.4/lib/jackson-all-1.9.4.jar" />
+	    <include name="json/2.9/lib/json-20090211.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 		<include name="log4j/1.2.15/lib/log4j-1.2.15.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
