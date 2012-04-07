@@ -34,6 +34,7 @@ import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.PowerResult;
+import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
@@ -51,7 +52,7 @@ implements SampleSizeResource {
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design.  These will contain the total sample size
 	 */
-	public ArrayList<PowerResult> getSampleSize(StudyDesign studyDesign)
+	public PowerResultList getSampleSize(StudyDesign studyDesign)
 	{
 	    edu.ucdenver.bios.powersvc.application.PowerLogger.getInstance().info("ENTERED SAMPLE SIZE");
         if (studyDesign == null) 

@@ -22,11 +22,9 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.restlet.data.Status;
-import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -34,8 +32,7 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
-import edu.ucdenver.bios.webservice.common.domain.PowerResult;
+import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
@@ -53,7 +50,7 @@ implements DetectableDifferenceResource {
 	 * @param studyDesign study design object
 	 * @return List of power objects for the study design.  These will contain the detectable difference
 	 */
-	public ArrayList<PowerResult> getDetectableDifference(StudyDesign studyDesign)
+	public PowerResultList getDetectableDifference(StudyDesign studyDesign)
 	{
         if (studyDesign == null) 
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 

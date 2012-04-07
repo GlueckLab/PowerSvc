@@ -22,7 +22,6 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.restlet.data.Status;
@@ -34,8 +33,7 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
-import edu.ucdenver.bios.webservice.common.domain.PowerResult;
+import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
@@ -54,7 +52,7 @@ implements PowerResource {
      * @return List of power objects for the study design
      */
     @Post
-    public final ArrayList<PowerResult> getPower(final StudyDesign studyDesign) {
+    public final PowerResultList getPower(final StudyDesign studyDesign) {
         PowerLogger.getInstance().info("ENTERED POWER");
         if (studyDesign == null) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,

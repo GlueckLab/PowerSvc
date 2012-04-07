@@ -35,6 +35,7 @@ import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
+import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
@@ -52,7 +53,7 @@ implements PowerMatrixResource {
      * @param studyDesign the Study Design object
      */
     @Post
-    public ArrayList<NamedMatrix> getMatrices(StudyDesign studyDesign) {
+    public NamedMatrixList getMatrices(StudyDesign studyDesign) {
         return PowerResourceHelper.namedMatrixListFromStudyDesign(studyDesign);
     }
 	

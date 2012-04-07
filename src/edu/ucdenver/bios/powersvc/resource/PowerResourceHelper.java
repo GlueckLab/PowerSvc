@@ -22,7 +22,6 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
@@ -39,9 +38,11 @@ import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.ConfidenceInterval;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
+import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.NominalPower;
 import edu.ucdenver.bios.webservice.common.domain.PowerMethod;
 import edu.ucdenver.bios.webservice.common.domain.PowerResult;
+import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.Quantile;
 import edu.ucdenver.bios.webservice.common.domain.SampleSize;
 import edu.ucdenver.bios.webservice.common.domain.SigmaScale;
@@ -387,12 +388,12 @@ public final class PowerResourceHelper {
      * @param design study design object
      * @return
      */
-    public static ArrayList<NamedMatrix> namedMatrixListFromStudyDesign(StudyDesign studyDesign) {
+    public static NamedMatrixList namedMatrixListFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign == null) {
             return null;
         }
         // allocate a result list
-        ArrayList<NamedMatrix> matrixList = new ArrayList<NamedMatrix>();
+        NamedMatrixList matrixList = new NamedMatrixList();
         // parse the study design into matrices 
         // build design matrix
         matrixList.add(toNamedMatrix(designMatrixFromStudyDesign(studyDesign),
@@ -484,8 +485,8 @@ public final class PowerResourceHelper {
      * @param powerList GLMMPower object list
      * @return list of PowerResult objects
      */
-    public static ArrayList<PowerResult> toPowerResultList(List<Power> powerList) {
-        ArrayList<PowerResult> resultList = new ArrayList<PowerResult>();
+    public static PowerResultList toPowerResultList(List<Power> powerList) {
+        PowerResultList resultList = new PowerResultList();
         for(Power power: powerList)
         {
             resultList.add(toPowerResult((GLMMPower) power));
