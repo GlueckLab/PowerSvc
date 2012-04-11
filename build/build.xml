@@ -44,7 +44,7 @@
 	<path id="libraries">
 		<fileset refid="thirdpartylibs"/>
     	<fileset dir="${javastatsdir}">
-            <include name="JavaStatistics.jar"/>
+            <include name="edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
         </fileset>
 	</path>
 		
