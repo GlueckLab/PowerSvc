@@ -85,7 +85,7 @@
         <copy todir="${wardir}/WEB-INF/lib" flatten="true" >
             <fileset refid="thirdpartylibs" />
         	<fileset dir="${javastatsdir}">
-                <include name="JavaStatistics.jar"/>
+                <include name="edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
             </fileset>
         </copy>
     </target>
@@ -116,6 +116,7 @@
              <fileset dir="${sourcedir}" defaultexcludes="yes">
                  <include name="**/*.java"/>
             </fileset>
+          	<classpath refid="libraries"/>
             <header><![CDATA[<p><b>power service</b></p>]]></header>
             <bottom><![CDATA[<font size=1>CU Denver Biostatistic Department</font>]]></bottom>
             <link href="http://java.sun.com/javase/6/docs/api"/>
