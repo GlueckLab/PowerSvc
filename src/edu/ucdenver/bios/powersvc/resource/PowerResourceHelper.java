@@ -22,7 +22,6 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -306,8 +305,8 @@ public final class PowerResourceHelper {
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
 
         FixedRandomMatrix betaFixedRandom = 
-            new FixedRandomMatrix((betaFixed != null ? betaFixed.getDataAsArray() : null),
-                    (betaRandom != null ? betaRandom.getDataAsArray() : null),
+            new FixedRandomMatrix((betaFixed != null ? betaFixed.getData().getData() : null),
+                    (betaRandom != null ? betaRandom.getData().getData() : null),
                     false);
         return betaFixedRandom;
     }
@@ -327,8 +326,8 @@ public final class PowerResourceHelper {
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM);
 
             return 
-                new FixedRandomMatrix((cFixed != null ? cFixed.getDataAsArray() : null),
-                        (cRandom != null ? cRandom.getDataAsArray() : null),
+                new FixedRandomMatrix((cFixed != null ? cFixed.getData().getData() : null),
+                        (cRandom != null ? cRandom.getData().getData() : null),
                         true);
 
         } else {
@@ -348,20 +347,20 @@ public final class PowerResourceHelper {
                         switch (hypothesis.getType()) {
                         case MAIN_EFFECT:
                             // between subject factor of interest
-                            cFixed = ContrastHelper.mainEffect(betweenMap.get(0).getBetweenParticipantFactor(), 
+                            cFixed = ContrastHelper.mainEffectBetween(betweenMap.get(0).getBetweenParticipantFactor(), 
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case INTERACTION:
-                            cFixed = ContrastHelper.interaction(betweenMap, 
+                            cFixed = ContrastHelper.interactionBetween(betweenMap, 
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case TREND:
                             HypothesisBetweenParticipantMapping trendFactor = betweenMap.get(0);
-                            cFixed = ContrastHelper.trend(trendFactor,                                    
+                            cFixed = ContrastHelper.trendBetween(trendFactor,                                    
                                     studyDesign.getBetweenParticipantFactorList());
                         }
                     } else {
-                        cFixed = ContrastHelper.grandMean(studyDesign.getBetweenParticipantFactorList());
+                        cFixed = ContrastHelper.grandMeanBetween(studyDesign.getBetweenParticipantFactorList());
                     }
 
                     // build the random contrast if the design has a baseline covariate
@@ -372,7 +371,6 @@ public final class PowerResourceHelper {
                     }
                     return new FixedRandomMatrix((cFixed != null ? cFixed.getData() : null), 
                             (cRandom != null ? cRandom.getData() : null), true);
-
                 }
                 
                 // no hypothesis specified
@@ -396,8 +394,47 @@ public final class PowerResourceHelper {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_WITHIN_CONTRAST));
         } else {
-            return null; // TODO
+            // Guided design
+            Set<Hypothesis> hypothesisSet = studyDesign.getHypothesis();
+            if (hypothesisSet != null) {
+                // only consider the primary hypothesis at present (i.e. the first one)
+                Hypothesis hypothesis = hypothesisSet.iterator().next();
+                if (hypothesis != null) {
+                    RealMatrix withinContrast = null;
+                    // get the factor of interest
+                    List<HypothesisRepeatedMeasuresMapping> withinMap = 
+                        hypothesis.getRepeatedMeasuresMapTree();
+                    if (withinMap != null && withinMap.size() > 0) {
+                        // build the fixed part of the contrast based on the hypothesis of interest
+                        switch (hypothesis.getType()) {
+                        case MAIN_EFFECT:
+                            // between subject factor of interest
+                            withinContrast = ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(), 
+                                    studyDesign.getRepeatedMeasuresTree());
+                            break;
+                        case INTERACTION:
+                            withinContrast = ContrastHelper.interactionWithin(withinMap, 
+                                    studyDesign.getRepeatedMeasuresTree());
+                            break;
+                        case TREND:
+                            HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
+                            withinContrast = ContrastHelper.trendWithin(trendFactor,                                    
+                                    studyDesign.getRepeatedMeasuresTree());
+                        }
+                    } else {
+                        withinContrast = ContrastHelper.grandMeanWithin(studyDesign.getRepeatedMeasuresTree());
+                    }
+
+                    return withinContrast;
+                }
+                
+                // no hypothesis specified
+                return null; 
+            }
         }
+        
+        // unknown view type
+        return null; 
     }
 
     /**

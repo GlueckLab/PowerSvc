@@ -31,6 +31,9 @@ import edu.cudenver.bios.matrix.OrthogonalPolynomials;
 import edu.ucdenver.bios.webservice.common.domain.BetweenParticipantFactor;
 import edu.ucdenver.bios.webservice.common.domain.Category;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
+import edu.ucdenver.bios.webservice.common.domain.HypothesisRepeatedMeasuresMapping;
+import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
+import edu.ucdenver.bios.webservice.common.domain.Spacing;
 import edu.ucdenver.bios.webservice.common.enums.HypothesisTrendTypeEnum;
 
 /**
@@ -41,12 +44,12 @@ public class ContrastHelper {
     /* TODO: this should be moved to the JavaStats library eventually */
 
     /**
-     * 
-     * @param factorOfInterest
-     * @param factorList
+     * Create a main effect contrast for between participant factors.
+     * @param factorOfInterest factor being tested
+     * @param factorList list of all between participant effects
      * @return
      */
-    public static RealMatrix mainEffect(BetweenParticipantFactor factorOfInterest, 
+    public static RealMatrix mainEffectBetween(BetweenParticipantFactor factorOfInterest, 
             List<BetweenParticipantFactor> factorList) {
 
         // build contrast component for the effect of interest 
@@ -57,13 +60,13 @@ public class ContrastHelper {
         RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(df, 1, 1);
         RealMatrix effectContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity);
 
-        // perform a horizontal direct product across the factors with the effect of interest
+        // perform a Kronecker product across the factors with the effect of interest
         // and average contrasts for any remaining factors
         if (df > 0) {
-            RealMatrix contrast = column1s;
+            RealMatrix contrast = org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
             for(BetweenParticipantFactor factor: factorList) {
                 if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
-                    contrast = MatrixUtils.getHorizontalDirectProduct(contrast, effectContrast);
+                    contrast = MatrixUtils.getKroneckerProduct(contrast, effectContrast);
                 } else {
                     List<Category> categoryList = factor.getCategoryList();
                     if (categoryList.size() > 0) {
@@ -75,49 +78,118 @@ public class ContrastHelper {
             }
             return contrast;
         } else {
-            return ContrastHelper.grandMean(factorList);
+            return ContrastHelper.grandMeanBetween(factorList);
         }
     }
 
     /**
-     * 
-     * @param betweenMap
-     * @param factorList
-     * @return
+     * Create a main effect contrast for within participant factors.
+     * @param factorOfInterest factor being tested
+     * @param factorList additional within participant effects
+     * @return within participant contrast (U matrix)
      */
-    public static RealMatrix interaction(List<HypothesisBetweenParticipantMapping> betweenMap,
-            List<BetweenParticipantFactor> factorList) {
+    public static RealMatrix mainEffectWithin(RepeatedMeasuresNode factorOfInterest, 
+            List<RepeatedMeasuresNode> factorList) {
 
-        
-        //        
-        //        // perform a horizontal direct product across the factors with the effect of interest
-        //        // and average contrasts for any remaining factors
-        //            RealMatrix contrast = column1s;
-        //            for(BetweenParticipantFactor factor: factorList) {
-        //                if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
-        //                    contrast = MatrixUtils.getHorizontalDirectProduct(contrast, effectContrast);
-        //                } else {
-        //                    List<Category> categoryList = factor.getCategoryList();
-        //                    if (categoryList.size() > 0) {
-        //                        int dimension = categoryList.size();
-        //                        contrast = MatrixUtils.getHorizontalDirectProduct(contrast,
-        //                                MatrixUtils.getRealMatrixWithFilledValue(df, dimension, 1/(double) dimension));
-        //                    }
-        //                }
-        //            }
-        //            return contrast;
-        //        } else {
-        return ContrastHelper.grandMean(factorList);
-        //        }
+        // build contrast component for the effect of interest 
+        int levels = factorOfInterest.getNumberOfMeasurements();
+        int df = levels-1;
+        RealMatrix negIdentity = 
+            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
+        RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(df, 1, 1);
+        RealMatrix effectContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity).transpose();
+
+        // perform a kronecker product across the factors with the effect of interest
+        // and average contrasts for any remaining factors
+        if (df > 0) {
+            RealMatrix contrast = org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+            for(RepeatedMeasuresNode factor: factorList) {
+                if (factor.getDimension().equals(factorOfInterest.getDimension())) {
+                    contrast = MatrixUtils.getKroneckerProduct(contrast, effectContrast);
+                } else {
+                    int size = factor.getNumberOfMeasurements();
+                    if (size > 0) {
+                        contrast = MatrixUtils.getKroneckerProduct(contrast,
+                                MatrixUtils.getRealMatrixWithFilledValue(size, 1, 1/(double) size));
+                    }
+                }
+            }
+            return contrast;
+        } else {
+            return ContrastHelper.grandMeanWithin(factorList);
+        }
     }
 
     /**
-     * 
-     * @param factorOfInterestMap
-     * @param factorList
-     * @return
+     * Create an interaction contrast for between participant effects
+     * @param betweenMap list of all between participant effects being tested
+     * @param factorList list of all between participant effects
+     * @return between participant interaction contrast (C matrix)
      */
-    public static RealMatrix trend(HypothesisBetweenParticipantMapping factorOfInterestMap, 
+    public static RealMatrix interactionBetween(List<HypothesisBetweenParticipantMapping> betweenMap,
+            List<BetweenParticipantFactor> factorList) {
+        RealMatrix contrast = 
+            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+        for(BetweenParticipantFactor factor: factorList) {
+
+            HypothesisBetweenParticipantMapping factorMapping = 
+                betweenFactorInTestList(factor, betweenMap);
+            if (factorMapping != null) {
+                // create even spacing
+                int levels = factor.getCategoryList().size();
+                double[] spacing = new double[levels];
+                for(int i = 0; i < levels; i++) { spacing[i] = i; }
+                contrast = MatrixUtils.getKroneckerProduct(contrast,
+                        getTrendContrast(spacing, factorMapping.getType(), true));
+            } else {
+                List<Category> categoryList = factor.getCategoryList();
+                if (categoryList.size() > 0) {
+                    int dimension = categoryList.size();
+                    contrast = MatrixUtils.getKroneckerProduct(contrast,
+                            MatrixUtils.getRealMatrixWithFilledValue(1, dimension, 1/(double) dimension));
+                }
+            }
+        }
+        return contrast;
+    }
+
+    /**
+     * Create an interaction contrast for between participant effects
+     * @param betweenMap list of all between participant effects being tested
+     * @param factorList list of all between participant effects
+     * @return between participant interaction contrast (C matrix)
+     */
+    public static RealMatrix interactionWithin(List<HypothesisRepeatedMeasuresMapping> withinMap,
+            List<RepeatedMeasuresNode> factorList) {
+        RealMatrix contrast = 
+            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+        for(RepeatedMeasuresNode factor: factorList) {
+
+            HypothesisRepeatedMeasuresMapping factorMapping = 
+                withinFactorInTestList(factor, withinMap);
+            if (factorMapping != null) {
+                List<Spacing> spacingList = factorMapping.getRepeatedMeasuresNode().getSpacingList();
+                double[] spacingArray = new double[spacingList.size()];
+                for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
+                contrast = MatrixUtils.getKroneckerProduct(contrast,
+                        getTrendContrast(spacingArray, 
+                                factorMapping.getType(), false));
+            } else {
+                int size = factor.getNumberOfMeasurements();
+                contrast = MatrixUtils.getKroneckerProduct(contrast,
+                        MatrixUtils.getRealMatrixWithFilledValue(size, 1, 1/(double) size));
+            }
+        }
+        return contrast;
+    }
+
+    /**
+     * Create a trend test fpr the specified factor of interest
+     * @param factorOfInterestMap factor of interest plus trend type information
+     * @param factorList list of all between participant factors
+     * @return trend contrast
+     */
+    public static RealMatrix trendBetween(HypothesisBetweenParticipantMapping factorOfInterestMap, 
             List<BetweenParticipantFactor> factorList) {
 
         // build contrast component for the effect of interest 
@@ -130,33 +202,74 @@ public class ContrastHelper {
             for(int i = 0; i < levels; i++) { spacing[i] = i; }
             RealMatrix trendContrast = getTrendContrast(spacing, trendType, true);
 
-            // horizontal direct product the trend contrast with average contrasts for remaining
+            // Kronecker product the trend contrast with average contrasts for remaining
             // factors
-            RealMatrix contrast = MatrixUtils.getRealMatrixWithFilledValue(levels, 1, 1);
+            RealMatrix contrast = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 1);
             int df = trendContrast.getRowDimension();
             for(BetweenParticipantFactor factor: factorList) {
                 if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
-                    contrast = MatrixUtils.getHorizontalDirectProduct(contrast, trendContrast);
+                    contrast = MatrixUtils.getKroneckerProduct(contrast, trendContrast);
                 } else {
                     List<Category> categoryList = factor.getCategoryList();
                     if (categoryList.size() > 0) {
                         int dimension = categoryList.size();
-                        contrast = MatrixUtils.getHorizontalDirectProduct(contrast,
-                                MatrixUtils.getRealMatrixWithFilledValue(df, dimension, 1/(double) dimension));
+                        contrast = MatrixUtils.getKroneckerProduct(contrast,
+                                MatrixUtils.getRealMatrixWithFilledValue(1, dimension, 1/(double) dimension));
                     }
                 }
             }
             return contrast;
         } else {
-            return ContrastHelper.grandMean(factorList);
+            return ContrastHelper.grandMeanBetween(factorList);
         }
     }
 
     /**
-     * 
-     * @param dimension
-     * @param transpose
-     * @return
+     * Create a trend test fpr the specified within participant of interest
+     * @param factorOfInterestMap factor of interest plus trend type information
+     * @param factorList list of all within participant factors
+     * @return trend contrast
+     */
+    public static RealMatrix trendWithin(HypothesisRepeatedMeasuresMapping factorOfInterestMap, 
+            List<RepeatedMeasuresNode> factorList) {
+
+        // build contrast component for the effect of interest 
+        RepeatedMeasuresNode factorOfInterest = factorOfInterestMap.getRepeatedMeasuresNode();
+        HypothesisTrendTypeEnum trendType = factorOfInterestMap.getType();
+        int levels = factorOfInterest.getNumberOfMeasurements();
+        if (levels > 1) {
+            List<Spacing> spacingList = factorOfInterest.getSpacingList();
+            double[] spacingArray = new double[spacingList.size()];
+            for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
+            RealMatrix trendContrast = getTrendContrast(spacingArray, trendType, true);
+
+            // horizontal direct product the trend contrast with average contrasts for remaining
+            // factors
+            RealMatrix contrast = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 1);
+            int df = trendContrast.getRowDimension();
+            for(RepeatedMeasuresNode factor: factorList) {
+                if (factor.getDimension().equals(factorOfInterest.getDimension())) {
+                    contrast = MatrixUtils.getKroneckerProduct(contrast, trendContrast);
+                } else {
+                    int size = factor.getNumberOfMeasurements();
+                    if (size > 0) {
+                        contrast = MatrixUtils.getKroneckerProduct(contrast,
+                                MatrixUtils.getRealMatrixWithFilledValue(1, size, 1/(double) size));
+                    }
+                }
+            }
+            return contrast;
+        } else {
+            return ContrastHelper.grandMeanWithin(factorList);
+        }
+    }
+    
+    
+    /**
+     * Calculate the grand mean contrast
+     * @param dimension size of contrast
+     * @param transpose if true, return the transpose
+     * @return grand mean contrast
      */
     public static RealMatrix grandMean(int dimension, boolean transpose) {
         if (transpose) {
@@ -167,11 +280,11 @@ public class ContrastHelper {
     }
 
     /**
-     * 
-     * @param factorList
-     * @return
+     * Create grand mean contrast for between participant effects
+     * @param factorList list of all between participant effects
+     * @return grand mean contrast
      */
-    public static RealMatrix grandMean(List<BetweenParticipantFactor> factorList) {
+    public static RealMatrix grandMeanBetween(List<BetweenParticipantFactor> factorList) {
         // computes the grand mean across the factors
         int dimension = 1;
         for(BetweenParticipantFactor factor: factorList) {
@@ -182,13 +295,32 @@ public class ContrastHelper {
         }
         return MatrixUtils.getRealMatrixWithFilledValue(1, dimension, 1/(double) dimension);
     }
-    
+
     /**
-     * 
-     * @param spacing
-     * @param trendType
-     * @param transpose
-     * @return
+     * Create grand mean contrast for within  participant effects
+     * @param factorList list of all within participant effects
+     * @return grand mean contrast
+     */
+    public static RealMatrix grandMeanWithin(List<RepeatedMeasuresNode> factorList) {
+        // computes the grand mean across the factors
+        int dimension = 1;
+        if (factorList != null) {
+            for(RepeatedMeasuresNode factor: factorList) {
+                int size = factor.getNumberOfMeasurements();
+                if (size > 0) {
+                    dimension *= size;
+                }
+            }
+        }
+        return MatrixUtils.getRealMatrixWithFilledValue(1, dimension, 1/(double) dimension);
+    }
+
+    /**
+     * Create a trend contrast of the specified type
+     * @param spacing list of integer positions representing spacing of measurements
+     * @param trendType type of trend contrast
+     * @param transpose if true, return the transpose of the contrast
+     * @return trend contrast
      */
     private static RealMatrix getTrendContrast(double[] spacing, HypothesisTrendTypeEnum trendType, 
             boolean transpose) {
@@ -232,6 +364,38 @@ public class ContrastHelper {
         }
         if (transpose) trendContrast = trendContrast.transpose();
         return trendContrast;
+    }
+
+    /**
+     * Determine if the list of factors being tested contains the specified factor
+     * @param factor
+     * @param testFactorList
+     * @return
+     */
+    private static HypothesisBetweenParticipantMapping betweenFactorInTestList(BetweenParticipantFactor factor, 
+            List<HypothesisBetweenParticipantMapping> testFactorList) {
+        for(HypothesisBetweenParticipantMapping testFactor: testFactorList) {
+            if (factor.getPredictorName().equals(testFactor.getBetweenParticipantFactor().getPredictorName())) {
+                return testFactor;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Determine if the list of factors being tested contains the specified factor
+     * @param factor
+     * @param testFactorList
+     * @return
+     */
+    private static HypothesisRepeatedMeasuresMapping withinFactorInTestList(RepeatedMeasuresNode factor, 
+            List<HypothesisRepeatedMeasuresMapping> testFactorList) {
+        for(HypothesisRepeatedMeasuresMapping testFactor: testFactorList) {
+            if (factor.getDimension().equals(testFactor.getRepeatedMeasuresNode().getDimension())) {
+                return testFactor;
+            }
+        }
+        return null;
     }
 
 }
