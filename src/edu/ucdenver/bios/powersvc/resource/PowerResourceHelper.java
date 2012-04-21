@@ -22,21 +22,31 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.log4j.Logger;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerConstants;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
+import edu.ucdenver.bios.webservice.common.domain.BetweenParticipantFactor;
+import edu.ucdenver.bios.webservice.common.domain.Category;
 import edu.ucdenver.bios.webservice.common.domain.ConfidenceInterval;
+import edu.ucdenver.bios.webservice.common.domain.ConfidenceIntervalDescription;
+import edu.ucdenver.bios.webservice.common.domain.Hypothesis;
+import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
+import edu.ucdenver.bios.webservice.common.domain.HypothesisRepeatedMeasuresMapping;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.NominalPower;
@@ -144,6 +154,20 @@ public final class PowerResourceHelper {
         } else {
             params.setSigmaError(sigmaErrorMatrixFromStudyDesign(studyDesign));
             params.addPowerMethod(GLMMPowerParameters.PowerMethod.CONDITIONAL_POWER);
+
+            // add confidence intervals if specified
+            ConfidenceIntervalDescription CIdescr = studyDesign.getConfidenceIntervalDescriptions();
+            if (CIdescr != null) {
+                params.setAlphaLowerConfidenceLimit(CIdescr.getLowerTrailProbability());
+                params.setAlphaUpperConfidenceLimit(CIdescr.getUpperTrailProbability());
+                params.setDesignMatrixRankForEstimates(CIdescr.getRankOfDesignMatrix());
+                params.setSampleSizeForEstimates(CIdescr.getSampleSize());
+                if (CIdescr.isBetaFixed() && !CIdescr.isSigmaFixed()) {
+                    params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);
+                } else if (!CIdescr.isBetaFixed() && !CIdescr.isSigmaFixed()) {
+                    params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_SIGMA_ESTIMATED);
+                }
+            }
         }
 
         return params;
@@ -247,14 +271,25 @@ public final class PowerResourceHelper {
      */
     private static RealMatrix designMatrixFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
+            // matrix based design
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_DESIGN));
         } else {
-            // TODO
-            // determine dimensions
-            int columns = 1;
-            int rows = 1;
+            /* For Guided study designs, we assume a cell means coding.  Thus, the design matrix is 
+             * simply an identity matrix with dimension equal to the product of the number of levels
+             * of each between subject factor
+             */
+            int dimension = 1;
+            // calculate the product of the #levels of each between participant factor
+            List<BetweenParticipantFactor> factors = studyDesign.getBetweenParticipantFactorList();
+            for(BetweenParticipantFactor factor: factors) {
+                List<Category> categoryList = factor.getCategoryList();
+                if (categoryList != null) {
+                    dimension *= categoryList.size();
+                }
+            }
             // create the design matrix
-            RealMatrix designEssenceMatrix = new Array2DRowRealMatrix(rows, columns);
+            RealMatrix designEssenceMatrix = 
+                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(dimension);
             return designEssenceMatrix;
         }
     }
@@ -265,20 +300,16 @@ public final class PowerResourceHelper {
      * @return fixed/random beta matrix
      */
     private static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
-        if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
-            NamedMatrix betaFixed = 
-                studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
-            NamedMatrix betaRandom = 
-                studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
+        NamedMatrix betaFixed = 
+            studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
+        NamedMatrix betaRandom = 
+            studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
 
-            FixedRandomMatrix betaFixedRandom = 
-                new FixedRandomMatrix((betaFixed != null ? betaFixed.getDataAsArray() : null),
-                        (betaRandom != null ? betaRandom.getDataAsArray() : null),
-                        false);
-            return betaFixedRandom;
-        } else {
-            return null; // TODO
-        }
+        FixedRandomMatrix betaFixedRandom = 
+            new FixedRandomMatrix((betaFixed != null ? betaFixed.getDataAsArray() : null),
+                    (betaRandom != null ? betaRandom.getDataAsArray() : null),
+                    false);
+        return betaFixedRandom;
     }
 
     /**
@@ -289,20 +320,71 @@ public final class PowerResourceHelper {
      */
     private static FixedRandomMatrix betweenParticipantContrastFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
+            // matrix based design
             NamedMatrix cFixed = 
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST);
             NamedMatrix cRandom = 
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM);
 
-            FixedRandomMatrix betaFixedRandom = 
+            return 
                 new FixedRandomMatrix((cFixed != null ? cFixed.getDataAsArray() : null),
                         (cRandom != null ? cRandom.getDataAsArray() : null),
                         true);
-            return betaFixedRandom;
+
         } else {
-            return null; // TODO
+            // Guided design
+            Set<Hypothesis> hypothesisSet = studyDesign.getHypothesis();
+            if (hypothesisSet != null) {
+                // only consider the primary hypothesis at present (i.e. the first one)
+                Hypothesis hypothesis = hypothesisSet.iterator().next();
+                if (hypothesis != null) {
+                    RealMatrix cFixed = null;
+                    RealMatrix cRandom = null;
+                    // get the factor of interest
+                    List<HypothesisBetweenParticipantMapping> betweenMap = 
+                        hypothesis.getBetweenParticipantFactorMapList();
+                    if (betweenMap.size() > 0) {
+                        // build the fixed part of the contrast based on the hypothesis of interest
+                        switch (hypothesis.getType()) {
+                        case MAIN_EFFECT:
+                            // between subject factor of interest
+                            cFixed = ContrastHelper.mainEffect(betweenMap.get(0).getBetweenParticipantFactor(), 
+                                    studyDesign.getBetweenParticipantFactorList());
+                            break;
+                        case INTERACTION:
+                            cFixed = ContrastHelper.interaction(betweenMap, 
+                                    studyDesign.getBetweenParticipantFactorList());
+                            break;
+                        case TREND:
+                            HypothesisBetweenParticipantMapping trendFactor = betweenMap.get(0);
+                            cFixed = ContrastHelper.trend(trendFactor,                                    
+                                    studyDesign.getBetweenParticipantFactorList());
+                        }
+                    } else {
+                        cFixed = ContrastHelper.grandMean(studyDesign.getBetweenParticipantFactorList());
+                    }
+
+                    // build the random contrast if the design has a baseline covariate
+                    if (studyDesign.isGaussianCovariate()) {
+                        if (cFixed != null) {
+                            cRandom = MatrixUtils.getRealMatrixWithFilledValue(cFixed.getRowDimension(), 1, 0);
+                        }
+                    }
+                    return new FixedRandomMatrix((cFixed != null ? cFixed.getData() : null), 
+                            (cRandom != null ? cRandom.getData() : null), true);
+
+                }
+                
+                // no hypothesis specified
+                return null; 
+            }
         }
+        
+        // unknown view type
+        return null; 
     }
+
+
 
     /**
      * Create the within participant contrast (U matrix)
