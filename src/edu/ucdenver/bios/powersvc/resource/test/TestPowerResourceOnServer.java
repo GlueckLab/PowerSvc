@@ -29,10 +29,10 @@ import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 public class TestPowerResourceOnServer extends TestCase {
 
     private static final String HOST_PORT = "localhost:8080";
-    private static final String POWER_URI = "http://" + HOST_PORT + "/power/power";
-    private static final String SAMPLE_SIZE_URI = "http://" + HOST_PORT + "/power/samplesize";
-    private static final String DIFFERENCE_URI = "http://" + HOST_PORT + "/power/difference";
-    private static final String MATRIX_URI = "http://" + HOST_PORT + "/power/matrix";
+    private static final String POWER_URI = "http://" + HOST_PORT + "/power2/power";
+    private static final String SAMPLE_SIZE_URI = "http://" + HOST_PORT + "/power2/samplesize";
+    private static final String DIFFERENCE_URI = "http://" + HOST_PORT + "/power2/difference";
+    private static final String MATRIX_URI = "http://" + HOST_PORT + "/power2/matrix";
     
     /**
      * Calculate power for a two-sample t test

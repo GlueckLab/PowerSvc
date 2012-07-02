@@ -22,6 +22,7 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -41,8 +42,10 @@ import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.BetweenParticipantFactor;
 import edu.ucdenver.bios.webservice.common.domain.Category;
+import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
 import edu.ucdenver.bios.webservice.common.domain.ConfidenceInterval;
 import edu.ucdenver.bios.webservice.common.domain.ConfidenceIntervalDescription;
+import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.Hypothesis;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisRepeatedMeasuresMapping;
@@ -53,6 +56,7 @@ import edu.ucdenver.bios.webservice.common.domain.PowerMethod;
 import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.Quantile;
+import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
 import edu.ucdenver.bios.webservice.common.domain.SampleSize;
 import edu.ucdenver.bios.webservice.common.domain.SigmaScale;
 import edu.ucdenver.bios.webservice.common.domain.StatisticalTest;
@@ -131,7 +135,9 @@ public final class PowerResourceHelper {
         // build the within subject contrast
         params.setWithinSubjectContrast(withinParticipantContrastFromStudyDesign(studyDesign));
         // build theta null matrix
-        params.setTheta(thetaNullMatrixFromStudyDesign(studyDesign));
+        params.setTheta(thetaNullMatrixFromStudyDesign(studyDesign, 
+                params.getBetweenSubjectContrast(),
+                params.getWithinSubjectContrast()));
         // add matrices for either GLMM(F) or GLMM(F,g) designs
         if (studyDesign.isGaussianCovariate()) {
             params.setSigmaOutcome(sigmaOutcomesMatrixFromStudyDesign(studyDesign));
@@ -157,8 +163,8 @@ public final class PowerResourceHelper {
             // add confidence intervals if specified
             ConfidenceIntervalDescription CIdescr = studyDesign.getConfidenceIntervalDescriptions();
             if (CIdescr != null) {
-                params.setAlphaLowerConfidenceLimit(CIdescr.getLowerTrailProbability());
-                params.setAlphaUpperConfidenceLimit(CIdescr.getUpperTrailProbability());
+                params.setAlphaLowerConfidenceLimit(CIdescr.getLowerTailProbability());
+                params.setAlphaUpperConfidenceLimit(CIdescr.getUpperTailProbability());
                 params.setDesignMatrixRankForEstimates(CIdescr.getRankOfDesignMatrix());
                 params.setSampleSizeForEstimates(CIdescr.getSampleSize());
                 if (CIdescr.isBetaFixed() && !CIdescr.isSigmaFixed()) {
@@ -299,15 +305,32 @@ public final class PowerResourceHelper {
      * @return fixed/random beta matrix
      */
     private static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
+        double[][] betaFixedData = null;
+        double[][] betaRandomData = null;
+        
         NamedMatrix betaFixed = 
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
         NamedMatrix betaRandom = 
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
-
+        // get the beta information from the study design matrices
+        if (betaFixed != null) {
+            betaFixedData = betaFixed.getData().getData();
+        }
+        if (betaRandom != null) {
+            betaRandomData = betaRandom.getData().getData();
+        }
+        // for guided mode designs, we need to adjust for clustering
+        if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.GUIDED_MODE) {
+            List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
+            if (clusterNodeList != null) {
+                for(ClusterNode node: clusterNodeList) {
+                    // TODO: finish!
+                }
+            }
+        }
+        
         FixedRandomMatrix betaFixedRandom = 
-            new FixedRandomMatrix((betaFixed != null ? betaFixed.getData().getData() : null),
-                    (betaRandom != null ? betaRandom.getData().getData() : null),
-                    false);
+            new FixedRandomMatrix(betaFixedData, betaRandomData, false);
         return betaFixedRandom;
     }
 
@@ -326,9 +349,9 @@ public final class PowerResourceHelper {
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM);
 
             return 
-                new FixedRandomMatrix((cFixed != null ? cFixed.getData().getData() : null),
-                        (cRandom != null ? cRandom.getData().getData() : null),
-                        true);
+            new FixedRandomMatrix((cFixed != null ? cFixed.getData().getData() : null),
+                    (cRandom != null ? cRandom.getData().getData() : null),
+                    true);
 
         } else {
             // Guided design
@@ -372,12 +395,12 @@ public final class PowerResourceHelper {
                     return new FixedRandomMatrix((cFixed != null ? cFixed.getData() : null), 
                             (cRandom != null ? cRandom.getData() : null), true);
                 }
-                
+
                 // no hypothesis specified
                 return null; 
             }
         }
-        
+
         // unknown view type
         return null; 
     }
@@ -427,12 +450,12 @@ public final class PowerResourceHelper {
 
                     return withinContrast;
                 }
-                
+
                 // no hypothesis specified
                 return null; 
             }
         }
-        
+
         // unknown view type
         return null; 
     }
@@ -446,7 +469,28 @@ public final class PowerResourceHelper {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_ERROR));
         } else {
-            return null; // TODO
+            // guided mode, so we need to decode the covariance objects
+            List<RepeatedMeasuresNode> rmNodeList = studyDesign.getRepeatedMeasuresTree();
+            ArrayList<RealMatrix> kroneckerMatrixList = new ArrayList<RealMatrix>();
+            if (rmNodeList != null) {
+                for(RepeatedMeasuresNode rmNode: rmNodeList) {
+                    Covariance covariance = studyDesign.getCovarianceFromSet(rmNode.getDimension());
+                    if (covariance != null) {
+                        RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance);
+                        if (kroneckerMatrix != null) {
+                            kroneckerMatrixList.add(kroneckerMatrix);
+                        } else {
+                            throw new IllegalArgumentException("Invalid covariance information for factor: " + 
+                                    rmNode.getDimension());
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Missing covariance information for factor: " + 
+                                rmNode.getDimension());
+                    }
+                }
+            }
+            
+            return MatrixUtils.getKroneckerProduct(kroneckerMatrixList);
         }
     }
 
@@ -469,11 +513,7 @@ public final class PowerResourceHelper {
      * @return sigma outcomes/covariate matrix
      */
     private static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
-        if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
-            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN));
-        } else {
-            return null; // TODO
-        }
+        return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN));
     }
 
     /**
@@ -482,11 +522,7 @@ public final class PowerResourceHelper {
      * @return sigma covariate matrix
      */
     private static RealMatrix sigmaCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
-        if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
-            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_GAUSSIAN));
-        } else {
-            return null; // TODO
-        }
+        return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_GAUSSIAN));
     }
 
     /**
@@ -494,11 +530,21 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return theta null matrix
      */
-    private static RealMatrix thetaNullMatrixFromStudyDesign(StudyDesign studyDesign) {
+    private static RealMatrix thetaNullMatrixFromStudyDesign(StudyDesign studyDesign,
+            FixedRandomMatrix C, RealMatrix U) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_THETA_NULL));
         } else {
-            return null; // TODO
+            RealMatrix thetaNull = 
+                toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_THETA_NULL));
+            if (thetaNull == null) {
+                if (C != null && C.getFixedMatrix() != null && U != null) {
+                    int rows = C.getFixedMatrix().getRowDimension();
+                    int columns = U.getColumnDimension();
+                    thetaNull = MatrixUtils.getRealMatrixWithFilledValue(rows, columns, 0);
+                } 
+            }
+            return thetaNull; 
         }
     }
 
@@ -515,22 +561,27 @@ public final class PowerResourceHelper {
         NamedMatrixList matrixList = new NamedMatrixList();
         // parse the study design into matrices 
         // build design matrix
-        matrixList.add(toNamedMatrix(designMatrixFromStudyDesign(studyDesign),
-                PowerConstants.MATRIX_DESIGN));
+        NamedMatrix X = toNamedMatrix(designMatrixFromStudyDesign(studyDesign),
+                PowerConstants.MATRIX_DESIGN);
+        if (X != null) matrixList.add(X);
         // build beta matrix
         FixedRandomMatrix beta = betaMatrixFromStudyDesign(studyDesign);
-        matrixList.add(toNamedMatrix(beta.getFixedMatrix(), PowerConstants.MATRIX_BETA));
-        if (studyDesign.isGaussianCovariate()) {
-            matrixList.add(toNamedMatrix(beta.getRandomMatrix(), 
-                    PowerConstants.MATRIX_BETA_RANDOM));
+        if (beta != null) {
+            matrixList.add(toNamedMatrix(beta.getFixedMatrix(), PowerConstants.MATRIX_BETA));
+            if (studyDesign.isGaussianCovariate()) {
+                matrixList.add(toNamedMatrix(beta.getRandomMatrix(), 
+                        PowerConstants.MATRIX_BETA_RANDOM));
+            }
         }
         // build the between subject contrast
         FixedRandomMatrix C = betweenParticipantContrastFromStudyDesign(studyDesign);
-        matrixList.add(toNamedMatrix(C.getFixedMatrix(), 
-                PowerConstants.MATRIX_BETWEEN_CONTRAST));
-        if (studyDesign.isGaussianCovariate()) {
-            matrixList.add(toNamedMatrix(C.getRandomMatrix(), 
-                    PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM));
+        if (C != null) {
+            matrixList.add(toNamedMatrix(C.getFixedMatrix(), 
+                    PowerConstants.MATRIX_BETWEEN_CONTRAST));
+            if (studyDesign.isGaussianCovariate()) {
+                matrixList.add(toNamedMatrix(C.getRandomMatrix(), 
+                        PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM));
+            }
         }
 
         // build the within subject contrast
@@ -539,19 +590,31 @@ public final class PowerResourceHelper {
             matrixList.add(toNamedMatrix(U, PowerConstants.MATRIX_WITHIN_CONTRAST));
         }
         // build theta null matrix
-        matrixList.add(toNamedMatrix(thetaNullMatrixFromStudyDesign(studyDesign),
-                PowerConstants.MATRIX_THETA_NULL));
+        NamedMatrix thetaNull = toNamedMatrix(thetaNullMatrixFromStudyDesign(studyDesign, C, U),
+                PowerConstants.MATRIX_THETA_NULL);
+        matrixList.add(thetaNull);
+
         // add matrices for either GLMM(F) or GLMM(F,g) designs
         if (studyDesign.isGaussianCovariate()) {
-            matrixList.add(toNamedMatrix(sigmaOutcomesMatrixFromStudyDesign(studyDesign),
-                    PowerConstants.MATRIX_SIGMA_OUTCOME));
-            matrixList.add(toNamedMatrix(sigmaCovariateMatrixFromStudyDesign(studyDesign),
-                    PowerConstants.MATRIX_SIGMA_GAUSSIAN));
-            matrixList.add(toNamedMatrix(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign),
-                    PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+            NamedMatrix sigmaY = 
+                toNamedMatrix(sigmaOutcomesMatrixFromStudyDesign(studyDesign),
+                        PowerConstants.MATRIX_SIGMA_OUTCOME);
+            if (sigmaY != null) matrixList.add(sigmaY);
+
+            NamedMatrix sigmaG =
+                toNamedMatrix(sigmaCovariateMatrixFromStudyDesign(studyDesign),
+                        PowerConstants.MATRIX_SIGMA_GAUSSIAN);
+            if (sigmaG != null) matrixList.add(sigmaG);
+
+            NamedMatrix sigmaYG = 
+                toNamedMatrix(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign),
+                        PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN);
+            if (sigmaYG != null) matrixList.add(sigmaYG);
         } else {
-            matrixList.add(toNamedMatrix(sigmaErrorMatrixFromStudyDesign(studyDesign),
-                    PowerConstants.MATRIX_SIGMA_ERROR));
+            NamedMatrix sigmaE = 
+                toNamedMatrix(sigmaErrorMatrixFromStudyDesign(studyDesign),
+                        PowerConstants.MATRIX_SIGMA_ERROR);
+            if (sigmaE != null) matrixList.add(sigmaE);
         }
         return matrixList;
     }

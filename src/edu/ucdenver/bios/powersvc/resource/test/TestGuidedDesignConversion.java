@@ -197,8 +197,8 @@ public class TestGuidedDesignConversion extends TestCase {
         x3.setCategoryList(x3Cat);
         
         factorList.add(x1);
-        factorList.add(x2);
-        factorList.add(x3);
+//        factorList.add(x2);
+//        factorList.add(x3);
         studyDesign.setBetweenParticipantFactorList(factorList);
         
         // build the hypotheses
@@ -207,7 +207,7 @@ public class TestGuidedDesignConversion extends TestCase {
         hypothesis.setType(HypothesisTypeEnum.TREND);
         ArrayList<HypothesisBetweenParticipantMapping> map = new ArrayList<HypothesisBetweenParticipantMapping>();
         HypothesisBetweenParticipantMapping x1Map = new HypothesisBetweenParticipantMapping();
-        x1Map.setType(HypothesisTrendTypeEnum.LINEAR);
+        x1Map.setType(HypothesisTrendTypeEnum.ALL_POYNOMIAL);
         x1Map.setBetweenParticipantFactor(x1);
         map.add(x1Map);
 

@@ -32,7 +32,7 @@ public final class PowerConstants {
     /** Private constructor ensures this class cannot be instantiated. */
     private PowerConstants() { }
     /** Current version. */
-    public static final String VERSION = "2.0.0";
+    public static final String VERSION = "2.0.0beta";
 
     /** Maximum allowed simulation size. */
     public static final int MAX_SIMULATION_SIZE = 100000;
