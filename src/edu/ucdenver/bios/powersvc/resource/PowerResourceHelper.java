@@ -489,6 +489,14 @@ public final class PowerResourceHelper {
                     }
                 }
             }
+            // lastly, we need to add the covariance of responses
+            Covariance covariance = studyDesign.getCovarianceFromSet("Responses");
+            RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance);
+            if (kroneckerMatrix != null) {
+                kroneckerMatrixList.add(kroneckerMatrix);
+            } else {
+                throw new IllegalArgumentException("Invalid covariance information for response variables");
+            }
             
             return MatrixUtils.getKroneckerProduct(kroneckerMatrixList);
         }
