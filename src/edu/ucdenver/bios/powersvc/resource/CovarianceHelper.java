@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.ucdenver.bios.webservice.common.domain.Blob2DArray;
 import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
 import edu.ucdenver.bios.webservice.common.domain.ResponseNode;
@@ -14,6 +15,13 @@ import edu.ucdenver.bios.webservice.common.domain.StandardDeviation;
 
 public class CovarianceHelper {
 
+    /**
+     * Convert a covariance object into a RealMatrix.
+     * @param covariance Covariance domain object
+     * @param rmNode the repeated measures information associated
+     * with the covariance object
+     * @return covariance as a RealMatrix
+     */
     public static RealMatrix covarianceToRealMatrix(Covariance covariance, 
             RepeatedMeasuresNode rmNode) {
         if (covariance.getColumns() != covariance.getRows()) {
@@ -31,112 +39,110 @@ public class CovarianceHelper {
                 intSpacingList.add(i);
             }
         }
-        
+
+        // create a covariance matrix based on the Covariance domain object
         RealMatrix covarianceData = null;
-        List<StandardDeviation> stddevList = covariance.getStandardDeviationList();
-
-        if (stddevList != null && stddevList.size() > 0) {
-            if (covariance.getRho() != Double.NaN && 
-                    covariance.getDelta() != Double.NaN) {
-                // indicates Lear correlation
-                covarianceData = buildLearCovariance(covariance.getRows(), 
-                        covariance.getColumns(), stddevList.get(0),
-                        covariance.getRho(), covariance.getDelta(),
-                        intSpacingList);
-                double stddev = stddevList.get(0).getValue();
-                covarianceData = covarianceData.scalarMultiply(stddev * stddev);
-
-            } else if (stddevList.size() == covariance.getRows()) {
-                // indicates structured correlation, so we convert to a covariance matrix
+        switch (covariance.getType()) {
+        case LEAR_CORRELATION:
+            /* LEAR correlation model.  Should have a standard deviation, 
+             * rho, and delta specified */
+            covarianceData = buildLearCovariance(covariance, intSpacingList);
+            break;
+        case UNSTRUCTURED_CORRELATION:
+            // indicates structured correlation, so we convert to a covariance matrix
+            covarianceData = buildCovarianceFromCorrelation(covariance);
+            break;
+        case UNSTRUCTURED_COVARIANCE:
+            // unstructured covariance, so simply extract the data
+            Blob2DArray blob = covariance.getBlob();
+            if (blob != null) {
                 covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
-                for(int row = 0; row < covariance.getRows(); row++) {
-                    for(int col = 0; col < covariance.getColumns(); col++) {
-                        double value = covarianceData.getEntry(row, col);
-                        if (row == col) {
-                            double stddev = stddevList.get(row).getValue();
-                            covarianceData.setEntry(row, col, stddev*stddev);
-                        } else {
-                            double stddevRow = stddevList.get(row).getValue();
-                            double stddevCol = stddevList.get(col).getValue();
-                            covarianceData.setEntry(row, col, 
-                                    stddevRow*stddevRow*stddevCol*stddevCol);
-                        } 
-                    }
-                }
             }
-
-        } else {
-            // unstructured covariance
-            covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+            break;
         }
         return covarianceData;
 
     }
-    
-    
+
+    /**
+     * Create a covariance matrix for responses
+     * @param covariance
+     * @param responsesList
+     * @return
+     */
     public static RealMatrix covarianceToRealMatrix(Covariance covariance, 
             List<ResponseNode> responsesList) {
         if (covariance.getColumns() != covariance.getRows()) {
             throw new IllegalArgumentException("Non-square covariance matrix");
         }
 
-        // convert the spacing list to integers
+        // create equal spacing across the responses
         ArrayList<Integer> intSpacingList = new ArrayList<Integer>();
-        if (rmNode.getSpacingList() != null) {
-            for(Spacing spacingValue: rmNode.getSpacingList()) {
-                intSpacingList.add(spacingValue.getValue());
-            }
-        } else {
-            for(int i = 0; i < rmNode.getNumberOfMeasurements(); i++) {
-                intSpacingList.add(i);
-            }
+        for(int i = 0; i < responsesList.size(); i++) {
+            intSpacingList.add(i);
         }
-        
+
+        // create a covariance matrix based on the Covariance domain object
         RealMatrix covarianceData = null;
-        List<StandardDeviation> stddevList = covariance.getStandardDeviationList();
-
-        if (stddevList != null && stddevList.size() > 0) {
-            if (covariance.getRho() != Double.NaN && 
-                    covariance.getDelta() != Double.NaN) {
-                // indicates Lear correlation
-                covarianceData = buildLearCovariance(covariance.getRows(), 
-                        covariance.getColumns(), stddevList.get(0),
-                        covariance.getRho(), covariance.getDelta(),
-                        intSpacingList);
-                double stddev = stddevList.get(0).getValue();
-                covarianceData = covarianceData.scalarMultiply(stddev * stddev);
-
-            } else if (stddevList.size() == covariance.getRows()) {
-                // indicates structured correlation, so we convert to a covariance matrix
+        switch (covariance.getType()) {
+        case LEAR_CORRELATION:
+            /* LEAR correlation model.  Should have a standard deviation, 
+             * rho, and delta specified */
+            covarianceData = buildLearCovariance(covariance, intSpacingList);
+            break;
+        case UNSTRUCTURED_CORRELATION:
+            // indicates structured correlation, so we convert to a covariance matrix
+            covarianceData = buildCovarianceFromCorrelation(covariance);
+            break;
+        case UNSTRUCTURED_COVARIANCE:
+            // unstructured covariance, so simply extract the data
+            Blob2DArray blob = covariance.getBlob();
+            if (blob != null) {
                 covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
-                for(int row = 0; row < covariance.getRows(); row++) {
-                    for(int col = 0; col < covariance.getColumns(); col++) {
-                        double value = covarianceData.getEntry(row, col);
-                        if (row == col) {
-                            double stddev = stddevList.get(row).getValue();
-                            covarianceData.setEntry(row, col, stddev*stddev);
-                        } else {
-                            double stddevRow = stddevList.get(row).getValue();
-                            double stddevCol = stddevList.get(col).getValue();
-                            covarianceData.setEntry(row, col, 
-                                    stddevRow*stddevRow*stddevCol*stddevCol);
-                        } 
-                    }
-                }
             }
-
-        } else {
-            // unstructured covariance
-            covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+            break;
         }
         return covarianceData;
-
     }
-    
-    
+
+    /**
+     * Convert a correlation into a covariance matrix
+     * @param covariance
+     * @return
+     */
+    private static RealMatrix buildCovarianceFromCorrelation(Covariance covariance) {
+        RealMatrix covarianceData = null;
+        Blob2DArray blob = covariance.getBlob();
+
+        if (blob != null && blob.getData() != null) {
+            covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+            List<StandardDeviation> stddevList = covariance.getStandardDeviationList();
+            /* For each diagonal cell, square the standard deviation
+             * For each off-diagonal cell, use formula
+             * covariance = correlation * sqrt (var1 * var2) 
+             */
+            for(int row = 0; row < covariance.getRows(); row++) {
+                for(int col = 0; col < covariance.getColumns(); col++) {
+                    double value = covarianceData.getEntry(row, col);
+                    if (row == col) {
+                        double stddev = stddevList.get(row).getValue();
+                        covarianceData.setEntry(row, col, stddev*stddev);
+                    } else {
+                        double stddevRow = stddevList.get(row).getValue();
+                        double stddevCol = stddevList.get(col).getValue();
+                        covarianceData.setEntry(row, col, 
+                                stddevRow*stddevRow*stddevCol*stddevCol);
+                    } 
+                }
+            }
+        }
+        return covarianceData;
+    }
+
+
     /**
      * Create a Lear covariance matrix
-     * @param rows row dimension
+     * @param covariance Covariance domain object
      * @param columns column dimension
      * @param stddev standard deviation
      * @param rho correlation for observations 1 unit apart
@@ -144,26 +150,37 @@ public class CovarianceHelper {
      * @param spacingList spacing list
      * @return RealMatrix containing the Lear covariance
      */
-    private static RealMatrix buildLearCovariance(int rows, int columns, StandardDeviation stddev,
-            double rho, double delta, List<Integer> intSpacingList) {
+    private static RealMatrix buildLearCovariance(Covariance covariance,
+            List<Integer> intSpacingList) {
+        RealMatrix covarianceData = null;
+        int rows = covariance.getRows();
+        int columns = covariance.getColumns();
+        List<StandardDeviation> stddevList = covariance.getStandardDeviationList();
+        // make sure everything is valid
+        if (stddevList != null && stddevList.size() > 0 &&
+                covariance.getRho() != Double.NaN &&
+                covariance.getDelta() != Double.NaN &&
+                covariance.getDelta() >= 0) {
 
-        LearCorrelation lear = new LearCorrelation(intSpacingList);
-        
-        double[][] data = new double[rows][columns];
-        
-        for(int row = 0; row < rows; row++) {
-            for(int col = row; col < columns; col++) {
-                if (row == col) {
-                    data[row][col] = stddev.getValue() * stddev.getValue();
-                } else {
-                    data[row][col] = lear.getRho(row, col, rho, delta);
+            LearCorrelation lear = new LearCorrelation(intSpacingList);
+            StandardDeviation stddev = stddevList.get(0);
+
+            double[][] data = new double[rows][columns];
+
+            for(int row = 0; row < rows; row++) {
+                for(int col = row; col < columns; col++) {
+                    if (row == col) {
+                        data[row][col] = stddev.getValue() * stddev.getValue();
+                    } else {
+                        data[row][col] = lear.getRho(row, col, covariance.getRho(), covariance.getDelta());
+                    }
                 }
             }
+
+            covarianceData =  new Array2DRowRealMatrix(data);
         }
-        
-        return new Array2DRowRealMatrix(data);
+        return covarianceData;
     }
- 
-    
-    
+
+
 }

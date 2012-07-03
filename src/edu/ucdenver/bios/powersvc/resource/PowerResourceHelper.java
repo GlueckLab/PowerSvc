@@ -493,7 +493,7 @@ public final class PowerResourceHelper {
             // lastly, we need to add the covariance of responses
             Covariance covariance = studyDesign.getCovarianceFromSet("Responses");
             RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance, 
-                    );
+                    studyDesign.getResponseList());
             if (kroneckerMatrix != null) {
                 kroneckerMatrixList.add(kroneckerMatrix);
             } else {
@@ -513,7 +513,7 @@ public final class PowerResourceHelper {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_OUTCOME));
         } else {
-            return null; // TODO
+            return sigmaErrorMatrixFromStudyDesign(studyDesign);
         }
     }
 
@@ -523,7 +523,13 @@ public final class PowerResourceHelper {
      * @return sigma outcomes/covariate matrix
      */
     private static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
-        return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+        if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
+            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
+                    MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+        } else {
+            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
+                    MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+        }
     }
 
     /**
