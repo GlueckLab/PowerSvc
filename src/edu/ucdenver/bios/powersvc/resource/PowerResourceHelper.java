@@ -476,7 +476,8 @@ public final class PowerResourceHelper {
                 for(RepeatedMeasuresNode rmNode: rmNodeList) {
                     Covariance covariance = studyDesign.getCovarianceFromSet(rmNode.getDimension());
                     if (covariance != null) {
-                        RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance);
+                        RealMatrix kroneckerMatrix = 
+                                CovarianceHelper.covarianceToRealMatrix(covariance, rmNode);
                         if (kroneckerMatrix != null) {
                             kroneckerMatrixList.add(kroneckerMatrix);
                         } else {
@@ -491,7 +492,8 @@ public final class PowerResourceHelper {
             }
             // lastly, we need to add the covariance of responses
             Covariance covariance = studyDesign.getCovarianceFromSet("Responses");
-            RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance);
+            RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance, 
+                    );
             if (kroneckerMatrix != null) {
                 kroneckerMatrixList.add(kroneckerMatrix);
             } else {
