@@ -51,6 +51,5 @@ public final class PowerConstants {
     public static final String MATRIX_SIGMA_GAUSSIAN = "sigmaGaussianRandom";
     public static final String MATRIX_SIGMA_OUTCOME = "sigmaOutcome";
     public static final String MATRIX_SIGMA_OUTCOME_GAUSSIAN = "sigmaOutcomeGaussianRandom";
-    
-
+    public static final String RESPONSES_COVARIANCE_LABEL = "__RESPONSE_COVARIANCE__";
 }

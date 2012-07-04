@@ -42,23 +42,25 @@ public class CovarianceHelper {
 
         // create a covariance matrix based on the Covariance domain object
         RealMatrix covarianceData = null;
-        switch (covariance.getType()) {
-        case LEAR_CORRELATION:
-            /* LEAR correlation model.  Should have a standard deviation, 
-             * rho, and delta specified */
-            covarianceData = buildLearCovariance(covariance, intSpacingList);
-            break;
-        case UNSTRUCTURED_CORRELATION:
-            // indicates structured correlation, so we convert to a covariance matrix
-            covarianceData = buildCovarianceFromCorrelation(covariance);
-            break;
-        case UNSTRUCTURED_COVARIANCE:
-            // unstructured covariance, so simply extract the data
-            Blob2DArray blob = covariance.getBlob();
-            if (blob != null) {
-                covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+        if (covariance.getType() != null) {
+            switch (covariance.getType()) {
+            case LEAR_CORRELATION:
+                /* LEAR correlation model.  Should have a standard deviation, 
+                 * rho, and delta specified */
+                covarianceData = buildLearCovariance(covariance, intSpacingList);
+                break;
+            case UNSTRUCTURED_CORRELATION:
+                // indicates structured correlation, so we convert to a covariance matrix
+                covarianceData = buildCovarianceFromCorrelation(covariance);
+                break;
+            case UNSTRUCTURED_COVARIANCE:
+                // unstructured covariance, so simply extract the data
+                Blob2DArray blob = covariance.getBlob();
+                if (blob != null) {
+                    covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+                }
+                break;
             }
-            break;
         }
         return covarianceData;
 
@@ -72,8 +74,14 @@ public class CovarianceHelper {
      */
     public static RealMatrix covarianceToRealMatrix(Covariance covariance, 
             List<ResponseNode> responsesList) {
+        if (covariance == null) {
+            throw new IllegalArgumentException("Missing covariance for response variables");
+        }
         if (covariance.getColumns() != covariance.getRows()) {
             throw new IllegalArgumentException("Non-square covariance matrix");
+        }
+        if (responsesList == null) {
+            throw new IllegalArgumentException("No response variables specified");
         }
 
         // create equal spacing across the responses
@@ -84,23 +92,25 @@ public class CovarianceHelper {
 
         // create a covariance matrix based on the Covariance domain object
         RealMatrix covarianceData = null;
-        switch (covariance.getType()) {
-        case LEAR_CORRELATION:
-            /* LEAR correlation model.  Should have a standard deviation, 
-             * rho, and delta specified */
-            covarianceData = buildLearCovariance(covariance, intSpacingList);
-            break;
-        case UNSTRUCTURED_CORRELATION:
-            // indicates structured correlation, so we convert to a covariance matrix
-            covarianceData = buildCovarianceFromCorrelation(covariance);
-            break;
-        case UNSTRUCTURED_COVARIANCE:
-            // unstructured covariance, so simply extract the data
-            Blob2DArray blob = covariance.getBlob();
-            if (blob != null) {
-                covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+        if (covariance.getType() != null) {
+            switch (covariance.getType()) {
+            case LEAR_CORRELATION:
+                /* LEAR correlation model.  Should have a standard deviation, 
+                 * rho, and delta specified */
+                covarianceData = buildLearCovariance(covariance, intSpacingList);
+                break;
+            case UNSTRUCTURED_CORRELATION:
+                // indicates structured correlation, so we convert to a covariance matrix
+                covarianceData = buildCovarianceFromCorrelation(covariance);
+                break;
+            case UNSTRUCTURED_COVARIANCE:
+                // unstructured covariance, so simply extract the data
+                Blob2DArray blob = covariance.getBlob();
+                if (blob != null) {
+                    covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+                }
+                break;
             }
-            break;
         }
         return covarianceData;
     }

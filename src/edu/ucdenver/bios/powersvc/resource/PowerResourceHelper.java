@@ -41,6 +41,7 @@ import edu.ucdenver.bios.powersvc.application.PowerConstants;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.BetweenParticipantFactor;
+import edu.ucdenver.bios.webservice.common.domain.Blob2DArray;
 import edu.ucdenver.bios.webservice.common.domain.Category;
 import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
 import edu.ucdenver.bios.webservice.common.domain.ConfidenceInterval;
@@ -307,6 +308,7 @@ public final class PowerResourceHelper {
     private static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
         double[][] betaFixedData = null;
         double[][] betaRandomData = null;
+        int rows = 0;
         
         NamedMatrix betaFixed = 
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
@@ -315,6 +317,7 @@ public final class PowerResourceHelper {
         // get the beta information from the study design matrices
         if (betaFixed != null) {
             betaFixedData = betaFixed.getData().getData();
+            rows = betaFixed.getRows();
         }
         if (betaRandom != null) {
             betaRandomData = betaRandom.getData().getData();
@@ -322,10 +325,28 @@ public final class PowerResourceHelper {
         // for guided mode designs, we need to adjust for clustering
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.GUIDED_MODE) {
             List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
-            if (clusterNodeList != null) {
+            if (clusterNodeList != null && clusterNodeList.size() > 0) {
+                int totalColumns = 1;
                 for(ClusterNode node: clusterNodeList) {
-                    // TODO: finish!
+                    totalColumns *= node.getGroupSize();
                 }
+                
+                // direct product the beta matrix with a matrix of ones to 
+                // generate the proper dimensions for a cluster sample
+                RealMatrix oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(rows, totalColumns, 1);
+                RealMatrix betaFixedMatrix = new Array2DRowRealMatrix(betaFixedData);
+                betaFixedMatrix = MatrixUtils.getHorizontalDirectProduct(betaFixedMatrix, oneMatrix);
+                // reset the data
+                betaFixedData = betaFixedMatrix.getData();
+                
+                // now repeat for the beta random matrix
+                if (betaRandom != null) {
+                    oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(1, totalColumns, 1);
+                    RealMatrix betaRandomMatrix = new Array2DRowRealMatrix(betaRandomData);
+                    betaRandomMatrix = MatrixUtils.getHorizontalDirectProduct(betaRandomMatrix, oneMatrix);
+                    // reset the data
+                    betaRandomData = betaRandomMatrix.getData();
+                } 
             }
         }
         
@@ -365,7 +386,7 @@ public final class PowerResourceHelper {
                     // get the factor of interest
                     List<HypothesisBetweenParticipantMapping> betweenMap = 
                         hypothesis.getBetweenParticipantFactorMapList();
-                    if (betweenMap.size() > 0) {
+                    if (betweenMap != null && betweenMap.size() > 0) {
                         // build the fixed part of the contrast based on the hypothesis of interest
                         switch (hypothesis.getType()) {
                         case MAIN_EFFECT:
@@ -491,7 +512,8 @@ public final class PowerResourceHelper {
                 }
             }
             // lastly, we need to add the covariance of responses
-            Covariance covariance = studyDesign.getCovarianceFromSet("Responses");
+            Covariance covariance = studyDesign.getCovarianceFromSet(
+                    PowerConstants.RESPONSES_COVARIANCE_LABEL);
             RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance, 
                     studyDesign.getResponseList());
             if (kroneckerMatrix != null) {
@@ -648,7 +670,10 @@ public final class PowerResourceHelper {
     public static RealMatrix toRealMatrix(final NamedMatrix namedMatrix) {
         RealMatrix realMatrix = null;
         if (namedMatrix != null) {
-            realMatrix = new Array2DRowRealMatrix(namedMatrix.getData().getData());
+            Blob2DArray blob = namedMatrix.getData();
+            if (blob != null) {
+                realMatrix = new Array2DRowRealMatrix(blob.getData());
+            }
         }
         return realMatrix;
     }
