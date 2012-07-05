@@ -312,7 +312,7 @@ public class ContrastHelper {
                 }
             }
         }
-        return MatrixUtils.getRealMatrixWithFilledValue(1, dimension, 1/(double) dimension);
+        return MatrixUtils.getRealMatrixWithFilledValue(dimension, 1, 1/(double) dimension);
     }
 
     /**

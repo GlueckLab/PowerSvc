@@ -125,24 +125,26 @@ public class CovarianceHelper {
         Blob2DArray blob = covariance.getBlob();
 
         if (blob != null && blob.getData() != null) {
-            covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
             List<StandardDeviation> stddevList = covariance.getStandardDeviationList();
-            /* For each diagonal cell, square the standard deviation
-             * For each off-diagonal cell, use formula
-             * covariance = correlation * sqrt (var1 * var2) 
-             */
-            for(int row = 0; row < covariance.getRows(); row++) {
-                for(int col = 0; col < covariance.getColumns(); col++) {
-                    double value = covarianceData.getEntry(row, col);
-                    if (row == col) {
-                        double stddev = stddevList.get(row).getValue();
-                        covarianceData.setEntry(row, col, stddev*stddev);
-                    } else {
-                        double stddevRow = stddevList.get(row).getValue();
-                        double stddevCol = stddevList.get(col).getValue();
-                        covarianceData.setEntry(row, col, 
-                                stddevRow*stddevRow*stddevCol*stddevCol);
-                    } 
+            if (stddevList.size() == covariance.getRows()) {
+                covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+                /* For each diagonal cell, square the standard deviation
+                 * For each off-diagonal cell, use formula
+                 * covariance = correlation * sqrt (var1 * var2) 
+                 */
+                for(int row = 0; row < covariance.getRows(); row++) {
+                    for(int col = 0; col < covariance.getColumns(); col++) {
+                        double value = covarianceData.getEntry(row, col);
+                        if (row == col) {
+                            double stddev = stddevList.get(row).getValue();
+                            covarianceData.setEntry(row, col, stddev*stddev);
+                        } else {
+                            double stddevRow = stddevList.get(row).getValue();
+                            double stddevCol = stddevList.get(col).getValue();
+                            covarianceData.setEntry(row, col, 
+                                    stddevRow*stddevRow*stddevCol*stddevCol);
+                        } 
+                    }
                 }
             }
         }
@@ -182,7 +184,10 @@ public class CovarianceHelper {
                     if (row == col) {
                         data[row][col] = stddev.getValue() * stddev.getValue();
                     } else {
-                        data[row][col] = lear.getRho(row, col, covariance.getRho(), covariance.getDelta());
+                        double value = (lear.getRho(row, col, covariance.getRho(), covariance.getDelta()) *
+                                stddev.getValue() * stddev.getValue());
+                        data[row][col] = value;
+                        data[col][row] = value;
                     }
                 }
             }

@@ -469,6 +469,26 @@ public final class PowerResourceHelper {
                         withinContrast = ContrastHelper.grandMeanWithin(studyDesign.getRepeatedMeasuresTree());
                     }
 
+                    // expand rows if clustering is present
+                    if (withinContrast != null) {
+                        List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
+                        if (clusterNodeList != null && clusterNodeList.size() > 0) {
+                            int totalRows = 1;
+                            for(ClusterNode node: clusterNodeList) {
+                                totalRows *= node.getGroupSize();
+                            }
+
+                            // direct product the U matrix with a matrix of ones to 
+                            // generate the proper dimensions for a cluster sample
+                            RealMatrix oneMatrix = 
+                                MatrixUtils.getRealMatrixWithFilledValue(withinContrast.getColumnDimension(),
+                                        totalRows, 1);
+                            withinContrast = MatrixUtils.getHorizontalDirectProduct(withinContrast.transpose(), 
+                                    oneMatrix).transpose();
+
+                        }
+                    }
+                    
                     return withinContrast;
                 }
 
@@ -491,8 +511,35 @@ public final class PowerResourceHelper {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_ERROR));
         } else {
             // guided mode, so we need to decode the covariance objects
-            List<RepeatedMeasuresNode> rmNodeList = studyDesign.getRepeatedMeasuresTree();
+            // first, allocate a list of matrices to build the overall kronecker covariance
             ArrayList<RealMatrix> kroneckerMatrixList = new ArrayList<RealMatrix>();
+            
+            // add covariance information for clustering
+            List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
+            if (clusterNodeList != null) {
+                for(ClusterNode clusterNode: clusterNodeList) {
+                    int rows = clusterNode.getGroupSize();
+                    int columns = rows;
+                    double rho = clusterNode.getIntraClusterCorrelation();
+                    // build a compound symmetric matrix
+                    double[][] data = new double[rows][columns];
+                    for(int row = 0; row < rows; row++) {
+                        for(int col = row; col < columns; col++) {
+                            if (row == col) {
+                                data[row][col] = 1;
+                            } else {
+                                data[row][col] = rho;
+                                data[col][row] = rho;
+                            }
+                        }
+                    }
+                    // add the matrix to the kronecker product list
+                    kroneckerMatrixList.add(new Array2DRowRealMatrix(data));
+                }
+            }
+            
+            // add covariance for repeated measures
+            List<RepeatedMeasuresNode> rmNodeList = studyDesign.getRepeatedMeasuresTree();
             if (rmNodeList != null) {
                 for(RepeatedMeasuresNode rmNode: rmNodeList) {
                     Covariance covariance = studyDesign.getCovarianceFromSet(rmNode.getDimension());
