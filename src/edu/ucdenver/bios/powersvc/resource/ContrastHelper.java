@@ -328,7 +328,7 @@ public class ContrastHelper {
         // get all possible polynomial trends
         RealMatrix allTrendContrast = 
             OrthogonalPolynomials.orthogonalPolynomialCoefficients(spacing, 
-                    Math.min(3,levels-1));
+                    levels-1);
         // select a subset of the polynomial trends based on the hypothesis of interest
         RealMatrix trendContrast = null;
         switch (trendType) {

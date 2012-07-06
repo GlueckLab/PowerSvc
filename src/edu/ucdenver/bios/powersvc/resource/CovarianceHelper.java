@@ -142,7 +142,7 @@ public class CovarianceHelper {
                             double stddevRow = stddevList.get(row).getValue();
                             double stddevCol = stddevList.get(col).getValue();
                             covarianceData.setEntry(row, col, 
-                                    stddevRow*stddevRow*stddevCol*stddevCol);
+                                    value * Math.sqrt(stddevRow*stddevRow*stddevCol*stddevCol));
                         } 
                     }
                 }
