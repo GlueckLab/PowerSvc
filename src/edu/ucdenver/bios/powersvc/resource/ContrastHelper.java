@@ -241,7 +241,7 @@ public class ContrastHelper {
             List<Spacing> spacingList = factorOfInterest.getSpacingList();
             double[] spacingArray = new double[spacingList.size()];
             for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
-            RealMatrix trendContrast = getTrendContrast(spacingArray, trendType, true);
+            RealMatrix trendContrast = getTrendContrast(spacingArray, trendType, false);
 
             // horizontal direct product the trend contrast with average contrasts for remaining
             // factors
@@ -362,8 +362,11 @@ public class ContrastHelper {
             }
             break;
         }
-        if (transpose) trendContrast = trendContrast.transpose();
-        return trendContrast;
+        if (transpose) {
+            return trendContrast.transpose();
+        } else {
+            return trendContrast;
+        }
     }
 
     /**
