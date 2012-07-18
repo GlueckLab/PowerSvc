@@ -19,11 +19,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  -->
-<project name="power" default="test">
+<project name="power2" default="test">
 	<property environment="env"/>
 	<property name="version" value="2.0.0" />
 	<property name="catalina.home" value="${env.CATALINA_HOME}" />
-    <property name="svc.name" value="power" />
+    <property name="svc.name" value="power2" />
     <property name="war.dir" value="${basedir}/war" />
     <property name="source.dir" value="${basedir}/../src" />
     <property name="bin.dir" value="${basedir}/bin" />
@@ -53,7 +53,7 @@
 	<path id="libraries">
 		<fileset refid="thirdpartylibs"/>
     	<fileset dir="${javastats.dir}">
-            <include name="edu.ucdenver.bios.javastatistics-2.0.0.jar"/>
+            <include name="edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
         </fileset>
     	<fileset dir="${webservicecommon.dir}">
             <include name="edu.ucdenver.bios.webservice.common-1.0.0.jar"/>
@@ -100,7 +100,7 @@
         <copy todir="${war.dir}/WEB-INF/lib" flatten="true" >
             <fileset refid="thirdpartylibs" />
         	<fileset dir="${javastats.dir}">
-                <include name="edu.ucdenver.bios.javastatistics-2.0.0.jar"/>
+                <include name="edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
             </fileset>
         	<fileset dir="${webservicecommon.dir}">
                 <include name="edu.ucdenver.bios.webservice.common-1.0.0.jar"/>
@@ -144,12 +144,10 @@
         <junit printsummary="yes" haltonfailure="yes" showoutput="true" fork="true">
             <classpath>
               <path refid="libraries" />
-              <pathelement location="${wardir}/WEB-INF/classes"/>
+              <pathelement location="${war.dir}/WEB-INF/classes"/>
             </classpath>
             <formatter type="plain" />
-  		  <test name="edu.cudenver.bios.powersvc.test.TestParsing" haltonfailure="no">
-  		  </test>
-  		  <test name="edu.cudenver.bios.powersvc.test.TestRepresentation" haltonfailure="no">
+  		  <test name="edu.ucdenver.bios.powersvc.resource.test.TestGuidedDesignConversion" haltonfailure="no">
   		  </test>
         </junit>
     </target>
