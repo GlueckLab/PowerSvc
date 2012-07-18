@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,40 +17,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
-package edu.cudenver.bios.powersvc.application;
+package edu.ucdenver.bios.powersvc.resource;
 
-import org.apache.log4j.Logger;
+import org.restlet.resource.Post;
+
+import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
+import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Singleton Log4J wrapper class
- * 
+ * Main interface for calculating power, sample size, and
+ * detectable difference.
  * @author Sarah Kreidler
+ *
  */
-public class PowerLogger
-{
-    private static Logger instance = null;
-
+public interface PowerMatrixResource {
+    
     /**
-     * Create a new logging object
+     * Get matrices used in the power calculation for a "guided" study design
      */
-    private PowerLogger() 
-    {
-    }
-
-    /**
-     * Create a single instance of a logging class
-     * @return Logger object
-     */
-    public static Logger getInstance() 
-    {
-        if (instance == null) 
-        {
-            instance = Logger.getLogger("edu.cudenver.bios.powersvc.Power");
-        }
-
-        return instance;
-    }
+    @Post
+    NamedMatrixList getMatrices(StudyDesign studyDesign);
 }
-

@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,39 +17,42 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
-package edu.cudenver.bios.powersvc.application;
+package edu.ucdenver.bios.powersvc.application;
 
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
-import edu.cudenver.bios.powersvc.resource.DefaultResource;
-import edu.cudenver.bios.powersvc.resource.DetecableDifferenceResource;
-import edu.cudenver.bios.powersvc.resource.PowerResource;
-import edu.cudenver.bios.powersvc.resource.SampleSizeResource;
-import edu.cudenver.bios.powersvc.resource.SimulationResource;
-import edu.cudenver.bios.powersvc.resource.test.FTestResource;
+import edu.ucdenver.bios.powersvc.resource.DefaultResource;
+import edu.ucdenver.bios.powersvc.resource.DetectableDifferenceServerResource;
+import edu.ucdenver.bios.powersvc.resource.PowerMatrixServerResource;
+import edu.ucdenver.bios.powersvc.resource.PowerServerResource;
+import edu.ucdenver.bios.powersvc.resource.SampleSizeServerResource;
+import edu.ucdenver.bios.powersvc.resource.test.FTestResource;
 
 /**
  * Main Restlet application class for the Power Service.
  * Defines URI mappings to the appropriate power,
  * sample size, or detectable difference resource
- * 
+ *
  * @author Sarah Kreidler
  */
-public class PowerApplication extends Application
-{   
+public class PowerApplication extends Application {
+
     /**
      * Class which dispatches http requests to the appropriate
      * handler class for the power service.
-     * 
-     * @param parentContext
+     *
+     * @param parentContext servlet context
+     * @throws Exception Thrown when Restlet fails to create an instance
+     * of the power application.
      */
-    public PowerApplication(Context parentContext) throws Exception
-    {
+    public PowerApplication(final Context parentContext)
+    throws Exception {
         super(parentContext);
 
         PowerLogger.getInstance().info("Statistical power service starting.");
@@ -57,29 +60,28 @@ public class PowerApplication extends Application
 
     /**
      * Define URI mappings for incoming power, sample size,
-     * and detectable difference requests
+     * and detectable difference requests.
+     * @return Restlet object
      */
     @Override
-    public Restlet createInboundRoot() 
-    {
-        // Create a router Restlet that routes each call to a new instance of Resource.
+    public final Restlet createInboundRoot() {
+        // Create a router Restlet that routes each call to a new instance
+        // of Resource.
         Router router = new Router(getContext());
         // Defines only one default route, self-identifies server
         router.attachDefault(DefaultResource.class);
 
         /* attributes of power resources */
-        // Power calculation resource 
-        router.attach("/power", PowerResource.class);
-        // Sample size resource
-        router.attach("/samplesize", SampleSizeResource.class);
-        // Detectable difference resource
-        router.attach("/difference", DetecableDifferenceResource.class);
-        // power simulation resource
-        router.attach("/simulation", SimulationResource.class);
+        // Power, sample size, and detectable difference  calculation resource
+        router.attach("/power", PowerServerResource.class);
+        router.attach("/samplesize", SampleSizeServerResource.class);
+        router.attach("/difference", DetectableDifferenceServerResource.class);
+        router.attach("/matrix", PowerMatrixServerResource.class);
         
-        // unit test resource - easier to collaborate with remote testers this way
+        // unit test resource - easier to collaborate with remote testers
+        //this way
         router.attach("/testf", FTestResource.class);
-        
+
         return router;
     }
 }

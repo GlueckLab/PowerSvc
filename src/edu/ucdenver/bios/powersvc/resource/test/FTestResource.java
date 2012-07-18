@@ -19,7 +19,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package edu.cudenver.bios.powersvc.resource.test;
+package edu.ucdenver.bios.powersvc.resource.test;
 
 import java.io.IOException;
 
@@ -32,8 +32,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
-import edu.cudenver.bios.powersvc.application.PowerLogger;
-import edu.cudenver.bios.powersvc.representation.ErrorXMLRepresentation;
+import edu.ucdenver.bios.powersvc.application.PowerLogger;
 
 /**
  * Resource exposing some unit test functionality.
@@ -127,8 +126,8 @@ public class FTestResource extends ServerResource
         catch (IOException ioe)
         {
             PowerLogger.getInstance().error(ioe.getMessage());
-            try { result = new ErrorXMLRepresentation(ioe.getMessage());
-            } catch (IOException e) {}
+//            try { result = new ErrorXMLRepresentation(ioe.getMessage());
+//            } catch (IOException e) {}
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
         }
         catch (NumberFormatException nfe)
