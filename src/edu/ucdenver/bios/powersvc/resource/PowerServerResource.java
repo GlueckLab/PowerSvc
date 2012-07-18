@@ -53,7 +53,6 @@ implements PowerResource {
      */
     @Post
     public final PowerResultList getPower(final StudyDesign studyDesign) {
-        PowerLogger.getInstance().info("ENTERED POWER");
         if (studyDesign == null) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
             "Invalid study design");

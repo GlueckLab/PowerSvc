@@ -1,3 +1,24 @@
+/*
+ * Power Service for the GLIMMPSE Software System.  Processes
+ * incoming HTTP requests for power, sample size, and detectable
+ * difference
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.ucdenver.bios.powersvc.resource.test;
 
 import java.util.ArrayList;
@@ -9,16 +30,20 @@ import edu.ucdenver.bios.powersvc.resource.PowerResourceHelper;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.BetweenParticipantFactor;
 import edu.ucdenver.bios.webservice.common.domain.Category;
+import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.Hypothesis;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.NominalPower;
+import edu.ucdenver.bios.webservice.common.domain.ResponseNode;
 import edu.ucdenver.bios.webservice.common.domain.SampleSize;
 import edu.ucdenver.bios.webservice.common.domain.SigmaScale;
+import edu.ucdenver.bios.webservice.common.domain.StandardDeviation;
 import edu.ucdenver.bios.webservice.common.domain.StatisticalTest;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.domain.TypeIError;
+import edu.ucdenver.bios.webservice.common.enums.CovarianceTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.HypothesisTrendTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.HypothesisTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.SolutionTypeEnum;
@@ -30,7 +55,13 @@ public class TestGuidedDesignConversion extends TestCase {
 
     
     public void testMatrixDesign() {
-
+        StudyDesign design = buildUnivariateMatrixDesign(SolutionTypeEnum.POWER);
+        
+        NamedMatrixList matrixList = PowerResourceHelper.namedMatrixListFromStudyDesign(design);
+        
+        for(NamedMatrix matrix: matrixList) {
+            printNamedMatrix(matrix);
+        }
     }
 
     public void testUnviariateGuidedDesign() {
@@ -231,14 +262,23 @@ public class TestGuidedDesignConversion extends TestCase {
         beta.setColumns(1);
         studyDesign.setNamedMatrix(beta);
 
-        // build sigma matrix
-        double [][] sigmaData = {{1}};
-        NamedMatrix sigmaError = new NamedMatrix(PowerConstants.MATRIX_SIGMA_ERROR);
-        sigmaError.setDataFromArray(sigmaData);
-        sigmaError.setRows(1);
-        sigmaError.setColumns(1);
-        studyDesign.setNamedMatrix(sigmaError);
+        // build response variables list
+        ArrayList<ResponseNode> responseList = new ArrayList<ResponseNode>();
+        responseList.add(new ResponseNode("outcome"));
+        studyDesign.setResponseList(responseList);
         
+        // build covariance
+        Covariance covar = new Covariance();
+        covar.setType(CovarianceTypeEnum.UNSTRUCTURED_CORRELATION);
+        covar.setName(PowerConstants.RESPONSES_COVARIANCE_LABEL);
+        ArrayList<StandardDeviation> stdDevList = new ArrayList<StandardDeviation>();
+        stdDevList.add(new StandardDeviation(2));
+        double [][] sigmaData = {{1}};
+        covar.setRows(1);
+        covar.setColumns(1);
+        covar.setBlobFromArray(sigmaData);
+        covar.setStandardDeviationList(stdDevList);
+        studyDesign.addCovariance(covar);
         return studyDesign;
     }
     

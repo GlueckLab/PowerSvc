@@ -596,8 +596,25 @@ public final class PowerResourceHelper {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
         } else {
-            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
+            RealMatrix sigmaYG = toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+            if (sigmaYG != null) {
+                List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
+                if (clusterNodeList != null && clusterNodeList.size() > 0) {
+                    int totalRows = 1;
+                    for(ClusterNode node: clusterNodeList) {
+                        totalRows *= node.getGroupSize();
+                    }
+                    
+                    // direct product the sigmaYG matrix with a matrix of ones to 
+                    // generate the proper dimensions for a cluster sample
+                    RealMatrix oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(1,totalRows, 1);
+                    RealMatrix sigmaYGTranspose = 
+                            MatrixUtils.getHorizontalDirectProduct(sigmaYG.transpose(), oneMatrix);
+                    sigmaYG = sigmaYGTranspose.transpose();
+                }
+            }
+            return sigmaYG;
         }
     }
 

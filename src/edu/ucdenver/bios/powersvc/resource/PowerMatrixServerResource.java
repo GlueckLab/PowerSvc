@@ -22,21 +22,10 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.restlet.data.Status;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import edu.cudenver.bios.power.GLMMPowerCalculator;
-import edu.cudenver.bios.power.Power;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.ucdenver.bios.powersvc.application.PowerLogger;
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
-import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
@@ -56,9 +45,4 @@ implements PowerMatrixResource {
     public NamedMatrixList getMatrices(StudyDesign studyDesign) {
         return PowerResourceHelper.namedMatrixListFromStudyDesign(studyDesign);
     }
-	
-
-
-
-
 }

@@ -340,7 +340,7 @@ public class ContrastHelper {
             break;
         case CHANGE_FROM_BASELINE:
             trendContrast = MatrixUtils.getRealMatrixWithFilledValue(levels, 1, 0);
-            trendContrast.setEntry(0, 0, -1);
+            trendContrast.setEntry(0, 0, 1);
             trendContrast.setEntry(levels-1, 0, -1);
             break;
         case ALL_POYNOMIAL:

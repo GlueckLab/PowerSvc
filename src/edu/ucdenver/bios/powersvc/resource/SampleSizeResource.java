@@ -22,11 +22,8 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
 import org.restlet.resource.Post;
-import edu.cudenver.bios.power.GLMMPower;
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
-import edu.ucdenver.bios.webservice.common.domain.PowerResult;
+
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 

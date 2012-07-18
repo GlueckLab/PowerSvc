@@ -22,7 +22,6 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.restlet.data.Status;
@@ -33,7 +32,6 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
-import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
@@ -54,7 +52,6 @@ implements SampleSizeResource {
 	 */
 	public PowerResultList getSampleSize(StudyDesign studyDesign)
 	{
-	    edu.ucdenver.bios.powersvc.application.PowerLogger.getInstance().info("ENTERED SAMPLE SIZE");
         if (studyDesign == null) 
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
                     "Invalid study design");
