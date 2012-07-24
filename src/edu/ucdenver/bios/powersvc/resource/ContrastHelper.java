@@ -343,7 +343,7 @@ public class ContrastHelper {
             trendContrast.setEntry(0, 0, 1);
             trendContrast.setEntry(levels-1, 0, -1);
             break;
-        case ALL_POYNOMIAL:
+        case ALL_POLYNOMIAL:
             trendContrast = allTrendContrast;
             break;
         case LINEAR:

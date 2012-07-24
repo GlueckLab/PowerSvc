@@ -238,7 +238,7 @@ public class TestGuidedDesignConversion extends TestCase {
         hypothesis.setType(HypothesisTypeEnum.TREND);
         ArrayList<HypothesisBetweenParticipantMapping> map = new ArrayList<HypothesisBetweenParticipantMapping>();
         HypothesisBetweenParticipantMapping x1Map = new HypothesisBetweenParticipantMapping();
-        x1Map.setType(HypothesisTrendTypeEnum.ALL_POYNOMIAL);
+        x1Map.setType(HypothesisTrendTypeEnum.ALL_POLYNOMIAL);
         x1Map.setBetweenParticipantFactor(x1);
         map.add(x1Map);
 
