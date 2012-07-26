@@ -453,8 +453,10 @@ public final class PowerResourceHelper {
                         switch (hypothesis.getType()) {
                         case MAIN_EFFECT:
                             // between subject factor of interest
-                            withinContrast = ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(), 
-                                    studyDesign.getRepeatedMeasuresTree());
+                            withinContrast = 
+                                ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(), 
+                                    studyDesign.getRepeatedMeasuresTree(),
+                                    studyDesign.getResponseList());
                             break;
                         case INTERACTION:
                             withinContrast = ContrastHelper.interactionWithin(withinMap, 
@@ -463,10 +465,13 @@ public final class PowerResourceHelper {
                         case TREND:
                             HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
                             withinContrast = ContrastHelper.trendWithin(trendFactor,                                    
-                                    studyDesign.getRepeatedMeasuresTree());
+                                    studyDesign.getRepeatedMeasuresTree(),
+                                    studyDesign.getResponseList());
                         }
                     } else {
-                        withinContrast = ContrastHelper.grandMeanWithin(studyDesign.getRepeatedMeasuresTree());
+                        withinContrast = 
+                                ContrastHelper.grandMeanWithin(studyDesign.getRepeatedMeasuresTree(),
+                                        studyDesign.getResponseList());
                     }
 
                     // expand rows if clustering is present

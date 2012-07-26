@@ -33,6 +33,7 @@ import edu.ucdenver.bios.webservice.common.domain.Category;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisRepeatedMeasuresMapping;
 import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
+import edu.ucdenver.bios.webservice.common.domain.ResponseNode;
 import edu.ucdenver.bios.webservice.common.domain.Spacing;
 import edu.ucdenver.bios.webservice.common.enums.HypothesisTrendTypeEnum;
 
@@ -89,7 +90,8 @@ public class ContrastHelper {
      * @return within participant contrast (U matrix)
      */
     public static RealMatrix mainEffectWithin(RepeatedMeasuresNode factorOfInterest, 
-            List<RepeatedMeasuresNode> factorList) {
+            List<RepeatedMeasuresNode> factorList,
+            List<ResponseNode> responseList) {
 
         // build contrast component for the effect of interest 
         int levels = factorOfInterest.getNumberOfMeasurements();
@@ -116,7 +118,7 @@ public class ContrastHelper {
             }
             return contrast;
         } else {
-            return ContrastHelper.grandMeanWithin(factorList);
+            return ContrastHelper.grandMeanWithin(factorList, responseList);
         }
     }
 
@@ -231,7 +233,8 @@ public class ContrastHelper {
      * @return trend contrast
      */
     public static RealMatrix trendWithin(HypothesisRepeatedMeasuresMapping factorOfInterestMap, 
-            List<RepeatedMeasuresNode> factorList) {
+            List<RepeatedMeasuresNode> factorList,
+            List<ResponseNode> responseList) {
 
         // build contrast component for the effect of interest 
         RepeatedMeasuresNode factorOfInterest = factorOfInterestMap.getRepeatedMeasuresNode();
@@ -260,7 +263,7 @@ public class ContrastHelper {
             }
             return contrast;
         } else {
-            return ContrastHelper.grandMeanWithin(factorList);
+            return ContrastHelper.grandMeanWithin(factorList, responseList);
         }
     }
     
@@ -301,16 +304,20 @@ public class ContrastHelper {
      * @param factorList list of all within participant effects
      * @return grand mean contrast
      */
-    public static RealMatrix grandMeanWithin(List<RepeatedMeasuresNode> factorList) {
+    public static RealMatrix grandMeanWithin(List<RepeatedMeasuresNode> rmList,
+            List<ResponseNode> responseList) {
         // computes the grand mean across the factors
         int dimension = 1;
-        if (factorList != null) {
-            for(RepeatedMeasuresNode factor: factorList) {
-                int size = factor.getNumberOfMeasurements();
+        if (rmList != null) {
+            for(RepeatedMeasuresNode rmNode: rmList) {
+                int size = rmNode.getNumberOfMeasurements();
                 if (size > 0) {
                     dimension *= size;
                 }
             }
+        }
+        if (responseList != null && responseList.size() > 0) {
+            dimension *= responseList.size();
         }
         return MatrixUtils.getRealMatrixWithFilledValue(dimension, 1, 1/(double) dimension);
     }
