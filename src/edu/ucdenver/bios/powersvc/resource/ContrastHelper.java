@@ -116,6 +116,11 @@ public class ContrastHelper {
                     }
                 }
             }
+            // multiply on an identity matrix with dimension equal to the number of multivariate responses
+            if (responseList != null && responseList.size() > 1) {
+                contrast = MatrixUtils.getKroneckerProduct(contrast,
+                        org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
+            }
             return contrast;
         } else {
             return ContrastHelper.grandMeanWithin(factorList, responseList);
@@ -162,7 +167,8 @@ public class ContrastHelper {
      * @return between participant interaction contrast (C matrix)
      */
     public static RealMatrix interactionWithin(List<HypothesisRepeatedMeasuresMapping> withinMap,
-            List<RepeatedMeasuresNode> factorList) {
+            List<RepeatedMeasuresNode> factorList,
+            List<ResponseNode> responseList) {
         RealMatrix contrast = 
             org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(RepeatedMeasuresNode factor: factorList) {
@@ -181,6 +187,11 @@ public class ContrastHelper {
                 contrast = MatrixUtils.getKroneckerProduct(contrast,
                         MatrixUtils.getRealMatrixWithFilledValue(size, 1, 1/(double) size));
             }
+        }
+        // multiply on an identity matrix with dimension equal to the number of multivariate responses
+        if (responseList != null && responseList.size() > 1) {
+            contrast = MatrixUtils.getKroneckerProduct(contrast,
+                    org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
         }
         return contrast;
     }
@@ -260,6 +271,11 @@ public class ContrastHelper {
                                 MatrixUtils.getRealMatrixWithFilledValue(1, size, 1/(double) size));
                     }
                 }
+            }
+            // multiply on an identity matrix with dimension equal to the number of multivariate responses
+            if (responseList != null && responseList.size() > 1) {
+                contrast = MatrixUtils.getKroneckerProduct(contrast,
+                        org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
             }
             return contrast;
         } else {

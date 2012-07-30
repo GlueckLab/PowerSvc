@@ -460,7 +460,8 @@ public final class PowerResourceHelper {
                             break;
                         case INTERACTION:
                             withinContrast = ContrastHelper.interactionWithin(withinMap, 
-                                    studyDesign.getRepeatedMeasuresTree());
+                                    studyDesign.getRepeatedMeasuresTree(),
+                                    studyDesign.getResponseList());
                             break;
                         case TREND:
                             HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
