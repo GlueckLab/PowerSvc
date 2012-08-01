@@ -25,6 +25,8 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
+import org.restlet.data.Status;
+import org.restlet.resource.ResourceException;
 
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.OrthogonalPolynomials;
@@ -53,17 +55,28 @@ public class ContrastHelper {
     public static RealMatrix mainEffectBetween(BetweenParticipantFactor factorOfInterest, 
             List<BetweenParticipantFactor> factorList) {
 
+        if (factorOfInterest == null || factorOfInterest.getCategoryList() == null) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Cannot compute between participant contrast - invalid factor of interest");
+        }
+        if (factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Cannot compute between participant contrast - invalid factor list");
+        }
         // build contrast component for the effect of interest 
         int levels = factorOfInterest.getCategoryList().size();
         int df = levels-1;
-        RealMatrix negIdentity = 
-            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
-        RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(df, 1, 1);
-        RealMatrix effectContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity);
 
         // perform a Kronecker product across the factors with the effect of interest
         // and average contrasts for any remaining factors
         if (df > 0) {
+            // build the "any difference between the groups" contrast for the factor of interest
+            RealMatrix negIdentity = 
+                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
+            RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(df, 1, 1);
+            RealMatrix effectContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity);
+            
+            // compute the overall contrast across the factors
             RealMatrix contrast = org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
             for(BetweenParticipantFactor factor: factorList) {
                 if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
@@ -79,6 +92,7 @@ public class ContrastHelper {
             }
             return contrast;
         } else {
+            // if less than 2 categories for the factor of interest, just compute the grand mean
             return ContrastHelper.grandMeanBetween(factorList);
         }
     }
@@ -92,7 +106,15 @@ public class ContrastHelper {
     public static RealMatrix mainEffectWithin(RepeatedMeasuresNode factorOfInterest, 
             List<RepeatedMeasuresNode> factorList,
             List<ResponseNode> responseList) {
-
+        if (factorOfInterest == null || factorOfInterest.getNumberOfMeasurements() == null) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Cannot compute within participant contrast - invalid factor of interest");
+        }
+        if (factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                    "Cannot compute within participant contrast - invalid factor list");
+        }
+        
         // build contrast component for the effect of interest 
         int levels = factorOfInterest.getNumberOfMeasurements();
         int df = levels-1;
@@ -135,6 +157,12 @@ public class ContrastHelper {
      */
     public static RealMatrix interactionBetween(List<HypothesisBetweenParticipantMapping> betweenMap,
             List<BetweenParticipantFactor> factorList) {
+        if (betweenMap == null || betweenMap.size() <= 0 ||
+                factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                "Cannot compute interaction contrast - invalid list of between participant factors");
+        }
+        
         RealMatrix contrast = 
             org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(BetweenParticipantFactor factor: factorList) {
@@ -169,6 +197,12 @@ public class ContrastHelper {
     public static RealMatrix interactionWithin(List<HypothesisRepeatedMeasuresMapping> withinMap,
             List<RepeatedMeasuresNode> factorList,
             List<ResponseNode> responseList) {
+        if (withinMap == null || withinMap.size() <= 0 ||
+                factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+                "Cannot compute interaction contrast - invalid list of within participant factors");
+        }
+        
         RealMatrix contrast = 
             org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(RepeatedMeasuresNode factor: factorList) {
@@ -177,8 +211,15 @@ public class ContrastHelper {
                 withinFactorInTestList(factor, withinMap);
             if (factorMapping != null) {
                 List<Spacing> spacingList = factorMapping.getRepeatedMeasuresNode().getSpacingList();
-                double[] spacingArray = new double[spacingList.size()];
-                for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
+                double[] spacingArray;
+                if (spacingList != null) {
+                    spacingArray = new double[spacingList.size()];
+                    for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
+                } else {
+                    int size = factorMapping.getRepeatedMeasuresNode().getNumberOfMeasurements();
+                    spacingArray = new double[size];
+                    for(int i = 0; i < size; i++) { spacingArray[i] = i; }
+                }
                 contrast = MatrixUtils.getKroneckerProduct(contrast,
                         getTrendContrast(spacingArray, 
                                 factorMapping.getType(), false));
@@ -245,16 +286,23 @@ public class ContrastHelper {
      */
     public static RealMatrix trendWithin(HypothesisRepeatedMeasuresMapping factorOfInterestMap, 
             List<RepeatedMeasuresNode> factorList,
-            List<ResponseNode> responseList) {
-
+            List<ResponseNode> responseList) {        
+        
         // build contrast component for the effect of interest 
         RepeatedMeasuresNode factorOfInterest = factorOfInterestMap.getRepeatedMeasuresNode();
         HypothesisTrendTypeEnum trendType = factorOfInterestMap.getType();
         int levels = factorOfInterest.getNumberOfMeasurements();
         if (levels > 1) {
             List<Spacing> spacingList = factorOfInterest.getSpacingList();
-            double[] spacingArray = new double[spacingList.size()];
-            for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
+            double[] spacingArray;
+            if (spacingList != null) {
+                spacingArray = new double[spacingList.size()];
+                for(int i = 0; i < spacingList.size(); i++) { spacingArray[i] = spacingList.get(i).getValue(); }
+            } else {
+                int size = factorOfInterest.getNumberOfMeasurements();
+                spacingArray = new double[size];
+                for(int i = 0; i < size; i++) { spacingArray[i] = i+1; }
+            }
             RealMatrix trendContrast = getTrendContrast(spacingArray, trendType, false);
 
             // horizontal direct product the trend contrast with average contrasts for remaining
