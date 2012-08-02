@@ -57,6 +57,7 @@ import edu.ucdenver.bios.webservice.common.domain.PowerMethod;
 import edu.ucdenver.bios.webservice.common.domain.PowerResult;
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.Quantile;
+import edu.ucdenver.bios.webservice.common.domain.RelativeGroupSize;
 import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
 import edu.ucdenver.bios.webservice.common.domain.SampleSize;
 import edu.ucdenver.bios.webservice.common.domain.SigmaScale;
@@ -283,19 +284,54 @@ public final class PowerResourceHelper {
             /* For Guided study designs, we assume a cell means coding.  Thus, the design matrix is 
              * simply an identity matrix with dimension equal to the product of the number of levels
              * of each between subject factor
-             */
-            int dimension = 1;
+             * We add additional rows for unequal group sizes
+             */            
+            int totalColumns = 1;
             // calculate the product of the #levels of each between participant factor
-            List<BetweenParticipantFactor> factors = studyDesign.getBetweenParticipantFactorList();
-            for(BetweenParticipantFactor factor: factors) {
-                List<Category> categoryList = factor.getCategoryList();
-                if (categoryList != null) {
-                    dimension *= categoryList.size();
+            List<BetweenParticipantFactor> factorList = studyDesign.getBetweenParticipantFactorList();
+            if (factorList != null) {
+                for(BetweenParticipantFactor factor: factorList) {
+                    List<Category> categoryList = factor.getCategoryList();
+                    if (categoryList != null) {
+                        totalColumns *= categoryList.size();
+                    }
                 }
             }
-            // create the design matrix
-            RealMatrix designEssenceMatrix = 
-                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(dimension);
+            // now check for unequal group sizes
+            int totalRows = 0;
+            List<RelativeGroupSize> groupSizeList = studyDesign.getRelativeGroupSizeList();
+            if (groupSizeList != null) {
+                if (groupSizeList.size() != totalColumns) {
+                    // invalid relative group size list
+                    throw new IllegalArgumentException("Invalid list of relative group sizes");
+                }
+                for(RelativeGroupSize relativeSize: groupSizeList) {
+                    totalRows += relativeSize.getValue();
+                }
+            } else {
+                totalRows = totalColumns;
+            }
+            
+            RealMatrix designEssenceMatrix = null;
+            if (totalRows == totalColumns) {
+                // equal group sizes, so just a basic cell means coding (i.e. identity)
+                designEssenceMatrix = 
+                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(totalRows);
+            } else {
+                // unequal group sizes, so start with a zero matrix
+                designEssenceMatrix = 
+                    MatrixUtils.getRealMatrixWithFilledValue(totalRows, totalColumns, 0);
+                // now set 1's in the appropriate places
+                int col = 0;
+                int row = 0;
+                for(RelativeGroupSize relativeSize: groupSizeList) {
+                    for(int counter = 0; counter < relativeSize.getValue(); counter++) {
+                        designEssenceMatrix.setEntry(row, col, 1);
+                        row++;
+                    }
+                    col++;
+                }
+            }
             return designEssenceMatrix;
         }
     }
