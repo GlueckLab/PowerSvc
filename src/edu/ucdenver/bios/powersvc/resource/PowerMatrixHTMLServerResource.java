@@ -146,7 +146,7 @@ implements PowerMatrixHTMLResource {
             
             buffer.append("<p/>For notation details, please see<p/>");
             buffer.append(createCitations());
-            
+            buffer.append(createBrowserNotes());
         } else {
             buffer.append("No study design specified");
         }
@@ -576,5 +576,11 @@ implements PowerMatrixHTMLResource {
         		"&amp;rft.aufirst=Keith%20E&amp;rft.aulast=Muller&amp;" +
         		"rft.au=Keith%20E%20Muller&amp;rft.au=Paul%20W%20Stewart" +
         		"&amp;rft.date=2006\"/></div>";
+    }
+    
+    private String createBrowserNotes() {
+        return "<p/>This feature requires browser support of MathML.  Please see " +
+        		"<a href=\"http://en.wikipedia.org/wiki/MathML\">Wikipedia's MathML " +
+        		"Page</a> for information regarding supported browsers.";
     }
 }
