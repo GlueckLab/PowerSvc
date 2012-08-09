@@ -276,7 +276,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return design essence matrix
      */
-    private static RealMatrix designMatrixFromStudyDesign(StudyDesign studyDesign) {
+    public static RealMatrix designMatrixFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             // matrix based design
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_DESIGN));
@@ -341,7 +341,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return fixed/random beta matrix
      */
-    private static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
+    public static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
         double[][] betaFixedData = null;
         double[][] betaRandomData = null;
         int rows = 0;
@@ -397,7 +397,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return fixed/random C matrix
      */
-    private static FixedRandomMatrix betweenParticipantContrastFromStudyDesign(StudyDesign studyDesign) {
+    public static FixedRandomMatrix betweenParticipantContrastFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             // matrix based design
             NamedMatrix cFixed = 
@@ -470,7 +470,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return U matrix
      */
-    private static RealMatrix withinParticipantContrastFromStudyDesign(StudyDesign studyDesign) {
+    public static RealMatrix withinParticipantContrastFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_WITHIN_CONTRAST));
         } else {
@@ -633,7 +633,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return sigma outcomes/covariate matrix
      */
-    private static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
+    public static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
@@ -665,7 +665,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return sigma covariate matrix
      */
-    private static RealMatrix sigmaCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
+    public static RealMatrix sigmaCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
         return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_GAUSSIAN));
     }
 
@@ -674,7 +674,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return theta null matrix
      */
-    private static RealMatrix thetaNullMatrixFromStudyDesign(StudyDesign studyDesign,
+    public static RealMatrix thetaNullMatrixFromStudyDesign(StudyDesign studyDesign,
             FixedRandomMatrix C, RealMatrix U) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_THETA_NULL));
