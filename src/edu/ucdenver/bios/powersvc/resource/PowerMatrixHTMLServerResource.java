@@ -80,6 +80,9 @@ implements PowerMatrixHTMLResource {
     public String getMatricesAsHTML(StudyDesign studyDesign) {
         StringBuffer buffer = new StringBuffer();
         
+        buffer.append("<html><head><script type=\"text/javascript\" " +
+        		"src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?" +
+        		"config=TeX-AMS-MML_HTMLorMML\"></script></head><body>");
         if (studyDesign != null) {
             // calculate cluster size
             List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
@@ -151,6 +154,7 @@ implements PowerMatrixHTMLResource {
             buffer.append("No study design specified");
         }
 
+        buffer.append("</body></html>");
         return buffer.toString();
     }
     
