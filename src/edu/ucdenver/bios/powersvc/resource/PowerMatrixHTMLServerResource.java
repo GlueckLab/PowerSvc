@@ -26,11 +26,14 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.restlet.data.Form;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.ucdenver.bios.powersvc.application.PowerConstants;
+import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
 import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
@@ -76,7 +79,7 @@ implements PowerMatrixHTMLResource {
      * @param studyDesign the StudyDesign object
      * @return html string with representation of matrices
      */
-    @Post
+    @Post("json:html")
     public String getMatricesAsHTML(StudyDesign studyDesign) {
         StringBuffer buffer = new StringBuffer();
         
@@ -156,6 +159,36 @@ implements PowerMatrixHTMLResource {
 
         buffer.append("</body></html>");
         return buffer.toString();
+    }
+    
+    /**
+     * Get matrices used in the power calculation for a "guided" study design
+     * as an HTML formatted string.  This method required HTML form input
+     * with the study design json in the 'studydesign' field. This method uses the notation of
+     * Muller & Stewart 2007.
+     */
+    @Post("form:html")
+    public String getMatricesAsHTML(Form studyDesignForm) {
+        StudyDesign studyDesign = getStudyDesignFromForm(studyDesignForm);
+        if (studyDesign != null) {
+            return getMatricesAsHTML(studyDesign);
+        } else {
+            return "No study design specified";
+        }
+    }
+    
+    private StudyDesign getStudyDesignFromForm(Form studyDesignForm) {
+        String jsonStudyDesign = studyDesignForm.getFirstValue("studydesign");
+        if (jsonStudyDesign != null) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                StudyDesign design = mapper.readValue(jsonStudyDesign, StudyDesign.class);
+                return design;
+            } catch (Exception e) {
+                PowerLogger.getInstance().error("Invalid study design: " + e.getMessage());
+            }
+        }
+        return null;
     }
     
     /**

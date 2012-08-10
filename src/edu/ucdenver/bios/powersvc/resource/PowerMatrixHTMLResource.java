@@ -22,6 +22,7 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
+import org.restlet.data.Form;
 import org.restlet.resource.Post;
 
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
@@ -39,6 +40,15 @@ public interface PowerMatrixHTMLResource {
      * as an HTML formatted string.  This method uses the notation of
      * Muller & Stewart 2007
      */
-    @Post
+    @Post("json:html")
     String getMatricesAsHTML(StudyDesign studyDesign);
+    
+    /**
+     * Get matrices used in the power calculation for a "guided" study design
+     * as an HTML formatted string.  This method required HTML form input
+     * with the study design json in the 'studydesign' field. This method uses the notation of
+     * Muller & Stewart 2007.
+     */
+    @Post("form:html")
+    String getMatricesAsHTML(Form studyDesignForm);
 }
