@@ -46,7 +46,7 @@
     <property name="tmp.dir" value="${basedir}/tmp" />
     <property name="war.dir" value="${tmp.dir}/war" />
     <property name="artifacts.dir" value="${basedir}/artifacts" />
-	<property name="javadoc.dir" value="${tmp.dir}/PowerSvc-javadoc" />
+	<property name="javadoc.dir" value="${tmp.dir}/PowerSvc-${version}-javadoc" />
 	<property name="javastats.lib" 
 		value="${basedir}/../../JavaStatistics/build/bin/edu.ucdenver.bios.javastatistics-1.1.0.jar" />
 	<property name="webservicecommon.lib" 
