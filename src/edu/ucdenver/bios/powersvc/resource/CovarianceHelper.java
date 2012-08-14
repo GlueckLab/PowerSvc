@@ -96,9 +96,9 @@ public class CovarianceHelper {
 
     /**
      * Create a covariance matrix for responses
-     * @param covariance
-     * @param responsesList
-     * @return
+     * @param covariance the covariance domain object
+     * @param responsesList the response variables
+     * @return covariance matrix
      */
     public static RealMatrix covarianceToRealMatrix(Covariance covariance, 
             List<ResponseNode> responsesList) {

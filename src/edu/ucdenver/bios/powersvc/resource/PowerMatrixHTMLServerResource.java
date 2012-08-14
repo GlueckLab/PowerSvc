@@ -96,7 +96,6 @@ implements PowerMatrixHTMLResource {
                 }
             }
 
-            
             /*
              * We are clearing and resetting the clustering information
              * here for the sake of reusing the functions in PowerResourceHelper.
@@ -114,22 +113,42 @@ implements PowerMatrixHTMLResource {
                     PowerResourceHelper.thetaNullMatrixFromStudyDesign(studyDesign, C, U);
             
             // add MathML code for the matrices
-            buffer.append(realMatrixDisplayToMathML(
-                    PowerConstants.DISPLAY_MATRIX_DESIGN, 
+            // design matrix
+            buffer.append(matrixHeaderMathML(PowerConstants.DISPLAY_MATRIX_DESIGN));
+            buffer.append(realMatrixToMathML(
                     PowerResourceHelper.designMatrixFromStudyDesign(
-                            studyDesign), 1, false));
-            buffer.append(fixedRandomMatrixToMathML(
-                    PowerConstants.DISPLAY_MATRIX_BETA,
-                    B, clusterSize));
-            buffer.append(fixedRandomMatrixToMathML(
-                    PowerConstants.DISPLAY_MATRIX_BETWEEN_CONTRAST,
-                    C, 1));
-            buffer.append(realMatrixDisplayToMathML(
-                    PowerConstants.DISPLAY_MATRIX_WITHIN_CONTRAST,
-                    U, clusterSize, true));
-            buffer.append(realMatrixDisplayToMathML(
-                    PowerConstants.DISPLAY_MATRIX_THETA_NULL,
-                    thetaNull, clusterSize, false));
+                            studyDesign), false));
+            buffer.append(matrixCloseMathML());
+            // beta matrix
+            buffer.append(matrixHeaderMathML(PowerConstants.DISPLAY_MATRIX_BETA));
+            if (clusterSize > 1) {
+                buffer.append(getColumnOfOnesMathML(clusterSize, true));
+                buffer.append(MO_OPEN);
+                buffer.append(KRONECKER_PRODUCT);
+                buffer.append(MO_CLOSE);   
+            }
+            buffer.append(fixedRandomMatrixToMathML(B));
+            buffer.append(matrixCloseMathML());
+            // between participant contrast
+            buffer.append(matrixHeaderMathML(PowerConstants.DISPLAY_MATRIX_BETWEEN_CONTRAST));
+            buffer.append(fixedRandomMatrixToMathML(C));
+            buffer.append(matrixCloseMathML());
+            // within participant contrast
+            buffer.append(matrixHeaderMathML(
+                    PowerConstants.DISPLAY_MATRIX_WITHIN_CONTRAST));
+            if (clusterSize > 1) {
+                buffer.append(getColumnOfOnesMathML(clusterSize, false));
+                buffer.append(MO_OPEN);
+                buffer.append(KRONECKER_PRODUCT);
+                buffer.append(MO_CLOSE);   
+            }
+            buffer.append(realMatrixToMathML(U, false));
+            buffer.append(matrixCloseMathML());
+            // theta null matrix
+            buffer.append(matrixHeaderMathML(
+                    PowerConstants.DISPLAY_MATRIX_THETA_NULL));
+            buffer.append(realMatrixToMathML(thetaNull, false));
+            buffer.append(matrixCloseMathML());
             
             // add matrices for either GLMM(F) or GLMM(F,g) designs
             if (studyDesign.isGaussianCovariate()) {
@@ -137,15 +156,28 @@ implements PowerMatrixHTMLResource {
                         PowerResourceHelper.sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign);
                 RealMatrix sigmaG = 
                         PowerResourceHelper.sigmaCovariateMatrixFromStudyDesign(studyDesign);
-                buffer.append(realMatrixDisplayToMathML(
-                        PowerConstants.DISPLAY_MATRIX_SIGMA_GAUSSIAN,
-                        sigmaG, 1, false));
-                buffer.append(realMatrixDisplayToMathML(
-                        PowerConstants.DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN,
-                        sigmaYG, clusterSize, false));
+                // sigma for Gaussian covariate
+                buffer.append(matrixHeaderMathML(
+                        PowerConstants.DISPLAY_MATRIX_SIGMA_GAUSSIAN));
+                buffer.append(realMatrixToMathML(sigmaYG, false));
+                buffer.append(matrixCloseMathML());
+                // sigma for Gaussian covariate and outcomes
+                buffer.append(matrixHeaderMathML(
+                        PowerConstants.DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+                if (clusterSize > 1) {
+                    buffer.append(getColumnOfOnesMathML(clusterSize, false));
+                    buffer.append(MO_OPEN);
+                    buffer.append(KRONECKER_PRODUCT);
+                    buffer.append(MO_CLOSE);   
+                }
+                buffer.append(realMatrixToMathML(sigmaYG, false));
+                buffer.append(matrixCloseMathML());
+                // sigma outcomes matrix
+                studyDesign.setClusteringTree(clusterNodeList);
                 buffer.append(getSigmaOutcomeMatrixMathML(studyDesign));
 
             } else {
+                // sigma error
                 studyDesign.setClusteringTree(clusterNodeList);
                 buffer.append(getSigmaErrorMatrixMathML(studyDesign));
             }
@@ -189,6 +221,34 @@ implements PowerMatrixHTMLResource {
             }
         }
         return null;
+    }
+    
+    /**
+     * Create a MathML string with the matrix start block
+     * @param name name of the matrix
+     * @return MathML matrix start block
+     */
+    private String matrixHeaderMathML(String name) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(MATH_OPEN);
+        buffer.append(MROW_OPEN);
+        buffer.append(name);
+        buffer.append(MO_OPEN);
+        buffer.append(" = ");
+        buffer.append(MO_CLOSE); 
+        return buffer.toString();
+    }
+    
+    /**
+     * Create a MathML string with the matrix close block
+     * @return MathML matrix close block
+     */
+    private String matrixCloseMathML() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(MROW_CLOSE);
+        buffer.append(MATH_CLOSE);
+        buffer.append("<br/>");
+        return buffer.toString();
     }
     
     /**
@@ -577,10 +637,9 @@ implements PowerMatrixHTMLResource {
      * @param clusterSize
      * @return
      */
-    private String fixedRandomMatrixToMathML(String name, FixedRandomMatrix matrix,
-            int clusterSize) {
+    private String fixedRandomMatrixToMathML(FixedRandomMatrix matrix) {
         RealMatrix completeMatrix = matrix.getCombinedMatrix();
-        return realMatrixDisplayToMathML(name, completeMatrix, clusterSize, false);
+        return realMatrixToMathML(completeMatrix, false);
     }
     
     /**

@@ -50,7 +50,7 @@ public class ContrastHelper {
      * Create a main effect contrast for between participant factors.
      * @param factorOfInterest factor being tested
      * @param factorList list of all between participant effects
-     * @return
+     * @return main effect contrast matrix
      */
     public static RealMatrix mainEffectBetween(BetweenParticipantFactor factorOfInterest, 
             List<BetweenParticipantFactor> factorList) {
@@ -189,9 +189,10 @@ public class ContrastHelper {
     }
 
     /**
-     * Create an interaction contrast for between participant effects
-     * @param betweenMap list of all between participant effects being tested
-     * @param factorList list of all between participant effects
+     * Create an interaction contrast for within participant effects
+     * @param withinMap list of all within participant effects being tested
+     * @param factorList list of all within participant effects
+     * @param responseList list of response variables
      * @return between participant interaction contrast (C matrix)
      */
     public static RealMatrix interactionWithin(List<HypothesisRepeatedMeasuresMapping> withinMap,
@@ -365,7 +366,8 @@ public class ContrastHelper {
 
     /**
      * Create grand mean contrast for within  participant effects
-     * @param factorList list of all within participant effects
+     * @param rmList list of all within participant effects
+     * @param responseList list of all response variables
      * @return grand mean contrast
      */
     public static RealMatrix grandMeanWithin(List<RepeatedMeasuresNode> rmList,

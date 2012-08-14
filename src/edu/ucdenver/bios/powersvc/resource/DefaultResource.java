@@ -25,9 +25,6 @@ package edu.ucdenver.bios.powersvc.resource;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
-import edu.ucdenver.bios.powersvc.application.PowerConstants;
-
-
 /**
  * Default request resource.  Called from the URI /power
  * Simply returns a self-identifying message for the server
@@ -42,7 +39,10 @@ public class DefaultResource extends ServerResource {
      */
     @Get
     public final String represent() {
+        String version = 
+                getApplication().getContext().getParameters().getFirstValue("edu.ucdenver.bios.powersvc.application.version");
+        
         return ("Statistical Power REST Service, version "
-                + PowerConstants.VERSION);
+                + version);
     }
 }
