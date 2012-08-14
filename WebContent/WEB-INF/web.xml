@@ -8,6 +8,12 @@
         <param-value>edu.ucdenver.bios.powersvc.application.PowerApplication</param-value>
     </context-param>
     
+   	<!-- Application version - auto populated during build -->
+    <context-param>
+        <param-name>edu.ucdenver.bios.powersvc.application.version</param-name>
+        <param-value>UNKNOWN</param-value>
+    </context-param>
+    
     <!-- Restlet adapter -->
     <servlet>
         <servlet-name>RestletServlet</servlet-name>
