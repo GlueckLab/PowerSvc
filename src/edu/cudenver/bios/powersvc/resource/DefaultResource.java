@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
 package edu.cudenver.bios.powersvc.resource;
 
@@ -41,6 +42,10 @@ public class DefaultResource extends ServerResource
 	 */
 	@Get public String represent() 
 	{
-	        return "Statistical Power REST Service, version " + PowerConstants.VERSION;
+        String version = 
+                getApplication().getContext().getParameters().getFirstValue("edu.ucdenver.bios.powersvc.application.version");
+        
+        return ("Statistical Power REST Service, version "
+                + version);
 	}
 }
