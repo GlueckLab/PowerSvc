@@ -188,7 +188,7 @@
 				<include name="${svc.name}.war"/>
 			</fileset>
 		</copy>
-		<echo>Deployed the ${svcname}.war to ${tomcat.home}\webapps</echo>
+		<echo>Deployed the ${svc.name}.war to ${tomcat.home}\webapps</echo>
 	</target>
 	
 	<!-- Create the javadoc distribution  -->	
