@@ -23,7 +23,7 @@
 	<!-- when releasing software, this is the only place the version information
 			should be specified. Appropriate changes to the manifest and source
 			code will be performed by the build -->
-	<property name="version" value="2.0.0beta" />
+	<property name="svc.version" value="2.0.0beta" />
 	<!-- optional suffix if we have multiple versions of the warfile 
 			running on the same tomcat -->
 	<condition property="warfile.suffix" value="">
@@ -46,7 +46,7 @@
     <property name="tmp.dir" value="${basedir}/tmp" />
     <property name="war.dir" value="${tmp.dir}/war" />
     <property name="artifacts.dir" value="${basedir}/artifacts" />
-	<property name="javadoc.dir" value="${tmp.dir}/PowerSvc-${version}-javadoc" />
+	<property name="javadoc.dir" value="${tmp.dir}/${svc.name}-${svc.version}-javadoc" />
 	<property name="javastats.lib" 
 		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.1.0.jar" />
 	<property name="webservicecommon.lib" 
@@ -131,11 +131,11 @@
 
     <!-- Build the project's war file.  -->
     <target name="compress" depends="compile">              
-    	<replace file="${war.dir}/WEB-INF/web.xml" token="UNKNOWN" value="${version}"/>
+    	<replace file="${war.dir}/WEB-INF/web.xml" token="UNKNOWN" value="${svc.version}"/>
         <war destfile="${artifacts.dir}/${svc.name}.war" webxml="${war.dir}/WEB-INF/web.xml">
             <webinf dir="${war.dir}/WEB-INF" excludes="**/web.xml"/>
 			<manifest>
-				<attribute name="Manifest-Version" value="${version}" />
+				<attribute name="Manifest-Version" value="${svc.version}" />
 			</manifest>
             <classes dir="${war.dir}/WEB-INF/classes"/>
             <lib dir="${war.dir}/WEB-INF/lib" includes="**/*.jar"/>
@@ -152,15 +152,15 @@
                  use="true"
                  author="true"
                  version="true"
-                 windowtitle="${owner}: Power Web Service Java API (${version}) Specification"
-                 doctitle="${owner}: Power Web Service Java API (${version}) Specification">
+                 windowtitle="${owner}: Power Web Service Java API (${svc.version}) Specification"
+                 doctitle="${owner}: Power Web Service Java API (${svc.version}) Specification">
              <fileset dir="${source.dir}" defaultexcludes="yes">
                  <include name="**/*.java"/>
             </fileset>
             <classpath>
                 <path refid="libraries" />
             </classpath>
-            <header><![CDATA[<p><b>Power Web Service ${version}</b></p>]]></header>
+            <header><![CDATA[<p><b>Power Web Service ${svc.version}</b></p>]]></header>
             <bottom><![CDATA[<font size=1>${owner}</font>]]></bottom>
             <link href="http://java.sun.com/javase/6/docs/api"/>
         </javadoc>
@@ -193,7 +193,7 @@
 	
 	<!-- Create the javadoc distribution  -->	
 	<target name="distribution.javadoc" >
-		<zip destfile="${artifacts.dir}/${svc.name}-${version}-javadoc.zip" basedir="${javadoc.dir}/.." >
+		<zip destfile="${artifacts.dir}/${svc.name}-${svc.version}-javadoc.zip" basedir="${javadoc.dir}/.." >
 			<zipfileset dir="${javadoc.dir}" />
 			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
 		    <zipfileset file="${basedir}/../README.txt"/>
@@ -202,7 +202,7 @@
 	
 	<!-- Create the source distribution -->
 	<target name="distribution.source">
-		<zip destfile="${artifacts.dir}/${svc.name}-${version}-source.zip"  >
+		<zip destfile="${artifacts.dir}/${svc.name}-${svc.version}-source.zip"  >
 			<zipfileset dir="${basedir}/../.."  includes="PowerSvc/*,
 				PowerSvc/build/build.xml,
 				PowerSvc/config/**,
@@ -217,7 +217,7 @@
 	
 	<!-- Create the binary distribution -->
 	<target name="distribution.binary">
-		<zip destfile="${artifacts.dir}/${svc.name}-${version}-binary.zip" >
+		<zip destfile="${artifacts.dir}/${svc.name}-${svc.version}-binary.zip" >
 			<zipfileset file="${artifacts.dir}/${svc.name}.war" />	
 			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
 		    <zipfileset file="${basedir}/../README.txt"/>
