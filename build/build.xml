@@ -19,7 +19,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  -->
-<project name="Power Web Service" default="build-distributions">
+<project name="Power Web Service" default="distributions">
 	<!-- when releasing software, this is the only place the version information
 			should be specified. Appropriate changes to the manifest and source
 			code will be performed by the build -->
@@ -48,9 +48,9 @@
     <property name="artifacts.dir" value="${basedir}/artifacts" />
 	<property name="javadoc.dir" value="${tmp.dir}/PowerSvc-${version}-javadoc" />
 	<property name="javastats.lib" 
-		value="${basedir}/../../JavaStatistics/build/bin/edu.ucdenver.bios.javastatistics-1.1.0.jar" />
+		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.1.0.jar" />
 	<property name="webservicecommon.lib" 
-		value="${basedir}/../../WebServiceCommon/build/bin/edu.ucdenver.bios.webservice.common-1.0.0.jar" />
+		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-1.0.0.jar" />
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 
 	<!-- Third party libraries -->
@@ -192,7 +192,7 @@
 	</target>
 	
 	<!-- Create the javadoc distribution  -->	
-	<target name="javadoc-distribution" >
+	<target name="distribution.javadoc" >
 		<zip destfile="${artifacts.dir}/${svc.name}-${version}-javadoc.zip" basedir="${javadoc.dir}/.." >
 			<zipfileset dir="${javadoc.dir}" />
 			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
@@ -201,7 +201,7 @@
 	</target>
 	
 	<!-- Create the source distribution -->
-	<target name="source-distribution">
+	<target name="distribution.source">
 		<zip destfile="${artifacts.dir}/${svc.name}-${version}-source.zip"  >
 			<zipfileset dir="${basedir}/../.."  includes="PowerSvc/*,
 				PowerSvc/build/build.xml,
@@ -216,7 +216,7 @@
 	</target>
 	
 	<!-- Create the binary distribution -->
-	<target name="binary-distribution">
+	<target name="distribution.binary">
 		<zip destfile="${artifacts.dir}/${svc.name}-${version}-binary.zip" >
 			<zipfileset file="${artifacts.dir}/${svc.name}.war" />	
 			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
@@ -225,6 +225,9 @@
 	</target>
 	
 	<!-- build all distributions -->
-	<target name="build-distributions" depends="test,binary-distribution,javadoc-distribution,source-distribution"/>
-	
+	<target name="distributions" 
+		depends="test,
+		distribution.binary,
+		distribution.javadoc,
+		distribution.source"/>
 </project>
