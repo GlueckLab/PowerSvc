@@ -49,8 +49,6 @@
 	<property name="javadoc.dir" value="${tmp.dir}/${svc.name}-${svc.version}-javadoc" />
 	<property name="javastats.lib" 
 		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.1.0.jar" />
-	<property name="webservicecommon.lib" 
-		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-1.0.0.jar" />
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 
 	<!-- Third party libraries -->
@@ -74,16 +72,12 @@
 	<path id="libraries">
 		<fileset refid="thirdpartylibs"/>
     	<fileset file="${javastats.lib}" />
-    	<fileset file="${webservicecommon.lib}" />
 	</path>
 		
 	<!-- remove artifacts from previous build -->
     <target name="clean">
         <delete dir="${tmp.dir}"/>
         <delete dir="${artifacts.dir}"/>
-    	<delete>
-    	    <fileset dir="." includes="TEST-*"/>
-    	</delete>
     </target>
 	
 	<!-- create directories for new build -->
@@ -125,7 +119,6 @@
         <copy todir="${war.dir}/WEB-INF/lib" flatten="true" >
         		<fileset refid="thirdpartylibs"/>
             	<fileset file="${javastats.lib}" />
-            	<fileset file="${webservicecommon.lib}" />
         </copy>
     </target>
 
@@ -174,9 +167,11 @@
               <pathelement location="${war.dir}/WEB-INF/classes"/>
             </classpath>
             <formatter type="plain" />
-  		  <test name="edu.cudenver.bios.powersvc.test.TestParsing" haltonfailure="no">
+  		  <test name="edu.cudenver.bios.powersvc.test.TestParsing" haltonfailure="yes"
+  		  outfile="tmp/TestParsing">
   		  </test>
-  		  <test name="edu.cudenver.bios.powersvc.test.TestRepresentation" haltonfailure="no">
+  		  <test name="edu.cudenver.bios.powersvc.test.TestRepresentation" haltonfailure="yes"
+  		  outfile="tmp/TestRepresentation">
   		  </test>
         </junit>
     </target>
