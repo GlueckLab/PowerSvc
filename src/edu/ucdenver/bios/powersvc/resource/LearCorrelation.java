@@ -39,7 +39,7 @@ public class LearCorrelation
 	 * repeated measurements.  Assumes that the spacing values in
 	 * the RepeatedMeasuresNode objects are sorted in ascending order
 	 * 
-	 * @param node repeated measures node object
+	 * @param integerList spacing list
 	 * @throws IllegalArgumentException
 	 */
 	public LearCorrelation(List<Integer> integerList)

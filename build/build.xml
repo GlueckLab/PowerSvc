@@ -19,20 +19,41 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  -->
-<project name="power2" default="test">
-	<property environment="env"/>
-	<property name="version" value="2.0.0" />
-	<property name="catalina.home" value="${env.CATALINA_HOME}" />
-    <property name="svc.name" value="power2" />
-    <property name="war.dir" value="${basedir}/war" />
+<project name="Power Web Service" default="distributions">
+	<!-- when releasing software, this is the only place the version information
+			should be specified. Appropriate changes to the manifest and source
+			code will be performed by the build -->
+	<property name="svc.version" value="dev" />
+	<!-- optional suffix if we have multiple versions of the warfile 
+			running on the same tomcat -->
+	<condition property="warfile.suffix" value="">
+	   <not>  
+	      <isset property=""/>
+	   </not>
+	</condition>
+	<!-- specify the tomcat location as a build argument if using the deploy target -->
+	<condition property="tomcat.home" value="">
+	   <not>  
+	      <isset property=""/>
+	   </not>
+	</condition>
+    <!-- main properties -->
+	<property name="owner" value="University of Colorado Denver, 
+		Department of Biostatistics and Informatics" />
+    <property name="svc.name" value="power${warfile.suffix}" />
     <property name="source.dir" value="${basedir}/../src" />
-    <property name="bin.dir" value="${basedir}/bin" />
     <property name="wc.dir" value="${basedir}/../WebContent" />
-	<property name="javastats.dir" value="${basedir}/../../JavaStatistics/build/bin" />
-	<property name="webservicecommon.dir" value="${basedir}/../../WebServiceCommon/build/bin" />
+    <property name="tmp.dir" value="${basedir}/tmp" />
+    <property name="war.dir" value="${tmp.dir}/war" />
+    <property name="artifacts.dir" value="${basedir}/artifacts" />
+	<property name="javadoc.dir" value="${tmp.dir}/${svc.name}-${svc.version}-javadoc" />
+	<property name="javastats.lib" 
+		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-dev.jar" />
+	<property name="webservicecommon.lib" 
+		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-dev.jar" />
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
-	<property name="javadoc.dir" value="${basedir}/javadoc/PowerSvc-javadoc" />
-	
+
+	<!-- Third party libraries -->
 	<fileset id="thirdpartylibs" dir="${thirdparty.dir}">
 		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
@@ -47,34 +68,34 @@
 		<include name="log4j/1.2.15/lib/log4j-1.2.15.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 		<include name="gson/2.1/lib/gson-2.1.jar" />
-		
 	</fileset>
 
+	<!-- complete classpath -->
 	<path id="libraries">
 		<fileset refid="thirdpartylibs"/>
-    	<fileset dir="${javastats.dir}">
-            <include name="edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
-        </fileset>
-    	<fileset dir="${webservicecommon.dir}">
-            <include name="edu.ucdenver.bios.webservice.common-1.0.0.jar"/>
-        </fileset>
+    	<fileset file="${javastats.lib}" />
+    	<fileset file="${webservicecommon.lib}" />
 	</path>
 		
+	<!-- remove artifacts from previous build -->
     <target name="clean">
-        <delete dir="${war.dir}"/>
-        <delete dir="${bin.dir}"/>
-        <delete dir="${javadoc.dir}"/>
+        <delete dir="${tmp.dir}"/>
+        <delete dir="${artifacts.dir}"/>
     	<delete>
     	    <fileset dir="." includes="TEST-*"/>
     	</delete>
     </target>
 	
+	<!-- create directories for new build -->
 	<target name="setup" depends="clean">
+        <mkdir dir="${artifacts.dir}"/>
+        <mkdir dir="${tmp.dir}"/>
         <mkdir dir="${war.dir}"/>
-        <mkdir dir="${bin.dir}"/>
+        <mkdir dir="${javadoc.dir}"/>
 	</target>
 
-    <target name="compile" depends="setup, copy-resources">
+	<!-- compile the source code -->
+    <target name="compile" depends="setup,copy-resources">
       <javac debug="true"
              deprecation="on"
              listfiles="true"
@@ -85,10 +106,14 @@
       />
     </target>
 
+	<!-- setup temprary warfile directory and copy required libraries -->
     <target name="copy-resources">
         <copy todir="${war.dir}/WEB-INF/classes">
             <fileset dir="${source.dir}">
                 <exclude name="**/*.java" />
+            </fileset>
+            <fileset dir="../config">
+                <include name="log4j.properties"/>
             </fileset>
         </copy>
         <copy todir="${war.dir}">
@@ -98,30 +123,28 @@
             </fileset>
         </copy>
         <copy todir="${war.dir}/WEB-INF/lib" flatten="true" >
-            <fileset refid="thirdpartylibs" />
-        	<fileset dir="${javastats.dir}">
-                <include name="edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
-            </fileset>
-        	<fileset dir="${webservicecommon.dir}">
-                <include name="edu.ucdenver.bios.webservice.common-1.0.0.jar"/>
-            </fileset>
+        		<fileset refid="thirdpartylibs"/>
+            	<fileset file="${javastats.lib}" />
+            	<fileset file="${webservicecommon.lib}" />
         </copy>
     </target>
 
-    <!-- Build the project's web application.  -->
+    <!-- Build the project's war file.  -->
     <target name="compress" depends="compile">              
-        <echo>webapps DIR IS ${bin.dir}</echo>
-        <war destfile="${bin.dir}/${svc.name}.war" webxml="${war.dir}/WEB-INF/web.xml">
+    	<replace file="${war.dir}/WEB-INF/web.xml" token="UNKNOWN" value="${svc.version}"/>
+        <war destfile="${artifacts.dir}/${svc.name}.war" webxml="${war.dir}/WEB-INF/web.xml">
             <webinf dir="${war.dir}/WEB-INF" excludes="**/web.xml"/>
+			<manifest>
+				<attribute name="Manifest-Version" value="${svc.version}" />
+			</manifest>
             <classes dir="${war.dir}/WEB-INF/classes"/>
-            <classes dir="../config">
-                <include name="log4j.properties"/>
-            </classes>
             <lib dir="${war.dir}/WEB-INF/lib" includes="**/*.jar"/>
         </war>
     </target>
     
-    <target name="javadoc" depends="compile" description="Generates the API specification (javadoc)">
+	<!-- run javadoc -->
+    <target name="javadoc" depends="compress" 
+    	description="Generates the API specification (javadoc)">
         <javadoc packagenames="edu.cudenver.bios.*"
                  access="public"
                  classpath="${basedir}/../classes" 
@@ -129,74 +152,82 @@
                  use="true"
                  author="true"
                  version="true"
-                 windowtitle="UC Denver Biostatistics - Power Service Java API (${version}) Specification"
-                 doctitle="UC Denver Biostatistics - Power Service Java API (${version}) Specification">
+                 windowtitle="${owner}: Power Web Service Java API (${svc.version}) Specification"
+                 doctitle="${owner}: Power Web Service Java API (${svc.version}) Specification">
              <fileset dir="${source.dir}" defaultexcludes="yes">
                  <include name="**/*.java"/>
             </fileset>
-            <header><![CDATA[<p><b>power service</b></p>]]></header>
-            <bottom><![CDATA[<font size=1>CU Denver Biostatistic Department</font>]]></bottom>
+            <classpath>
+                <path refid="libraries" />
+            </classpath>
+            <header><![CDATA[<p><b>Power Web Service ${svc.version}</b></p>]]></header>
+            <bottom><![CDATA[<font size=1>${owner}</font>]]></bottom>
             <link href="http://java.sun.com/javase/6/docs/api"/>
         </javadoc>
     </target>
     
-    <target name="test" depends="compress">
+	<!-- build the app then run the unit tests -->
+    <target name="test" depends="javadoc">
         <junit printsummary="yes" haltonfailure="yes" showoutput="true" fork="true">
             <classpath>
               <path refid="libraries" />
               <pathelement location="${war.dir}/WEB-INF/classes"/>
             </classpath>
             <formatter type="plain" />
-  		  <test name="edu.ucdenver.bios.powersvc.resource.test.TestGuidedDesignConversion" haltonfailure="no">
+  		  <test name="edu.ucdenver.bios.powersvc.resource.test.TestGuidedDesignConversion" 
+  		  	haltonfailure="no" outfile="tmp/TestGuidedDesignConversion">
   		  </test>
         </junit>
     </target>
-	<target name="deploy" description="This target moves the ${svcname}.war 
-		to the user's catalina.home\webapps directory." >
-		<copy todir="${catalina.home}\webapps">
+	
+	<!-- deploy to the local tomcat  -->
+	<target name="deploy" depends="test" description="This target moves the ${svcname}.war 
+		to the user's tomcat.home\webapps directory." >
+		<copy todir="${tomcat.home}\webapps">
 			<fileset dir="${bin.dir}">
 				<include name="${svc.name}.war"/>
 			</fileset>
 		</copy>
-		<echo>Deployed the ${svcname}.war to ${catalina.home}\webapps</echo>
+		<echo>Deployed the ${svc.name}.war to ${tomcat.home}\webapps</echo>
 	</target>
 	
-	<target name="buildDeploy" depends="test, deploy"/>
-	<!-- Create the javadoc distribution  -->
-	<target name="javadoc-distribution" depends="javadoc">
-		<jar destfile="${bin.dir}/${svc.name}-javadoc.jar" basedir="${javadoc.dir}/.." >
-			<manifest>
-				<attribute name="Author" value="Sarah Kreidler"/>
-				<section name="Shared">
-					<attribute name="Title" value="${svc.name} Javadoc"/>
-					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
-				</section>
-				<section name="Copyright">
-					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
-				</section>
-			</manifest>
-		</jar>
+	<!-- Create the javadoc distribution  -->	
+	<target name="distribution.javadoc" >
+		<zip destfile="${artifacts.dir}/${svc.name}-${svc.version}-javadoc.zip" basedir="${javadoc.dir}/.." >
+			<zipfileset dir="${javadoc.dir}" />
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip>
 	</target>
 	
 	<!-- Create the source distribution -->
-	<target name="source-distribution">
-		<jar destfile="${bin.dir}/${svc.name}-source.jar" basedir="${basedir}/../.." 
-			includes="PowerSvc/*,
+	<target name="distribution.source">
+		<zip destfile="${artifacts.dir}/${svc.name}-${svc.version}-source.zip"  >
+			<zipfileset dir="${basedir}/../.."  includes="PowerSvc/*,
 				PowerSvc/build/build.xml,
 				PowerSvc/config/**,
 				PowerSvc/src/**,
 				PowerSvc/text/**,
-				PowerSvc/WebContent/**">			
-			<manifest>
-				<attribute name="Author" value="Sarah Kreidler"/>
-				<section name="Shared">
-					<attribute name="Title" value="${svc.name} Source Code"/>
-					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
-				</section>
-				<section name="Copyright">
-					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
-				</section>
-			</manifest>
-		</jar>
+				PowerSvc/WebContent/**" 
+			    excludes="PowerSvc/bin/**" />	
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip>
 	</target>
+	
+	<!-- Create the binary distribution -->
+	<target name="distribution.binary">
+		<zip destfile="${artifacts.dir}/${svc.name}-${svc.version}-binary.zip" >
+			<zipfileset file="${artifacts.dir}/${svc.name}.war" />	
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip>
+	</target>
+	
+	<!-- build all distributions -->
+	<target name="distributions" 
+		depends="test,
+		distribution.binary,
+		distribution.javadoc,
+		distribution.source"/>
 </project>

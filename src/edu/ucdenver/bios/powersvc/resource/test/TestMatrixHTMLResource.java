@@ -26,10 +26,12 @@ import java.util.ArrayList;
 import org.apache.commons.math.linear.MatrixUtils;
 
 import edu.ucdenver.bios.powersvc.application.PowerConstants;
+import edu.ucdenver.bios.powersvc.resource.PowerMatrixHTMLServerResource;
 import edu.ucdenver.bios.powersvc.resource.PowerResourceHelper;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
 import edu.ucdenver.bios.webservice.common.domain.BetweenParticipantFactor;
 import edu.ucdenver.bios.webservice.common.domain.Category;
+import edu.ucdenver.bios.webservice.common.domain.ClusterNode;
 import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.Hypothesis;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
@@ -51,27 +53,24 @@ import edu.ucdenver.bios.webservice.common.enums.StatisticalTestTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 import junit.framework.TestCase;
 
-public class TestGuidedDesignConversion extends TestCase {
+public class TestMatrixHTMLResource extends TestCase {
 
     
-    public void testMatrixDesign() {
+    private void testMatrixDesign() {
         StudyDesign design = buildUnivariateMatrixDesign(SolutionTypeEnum.POWER);
+        PowerMatrixHTMLServerResource resource = new PowerMatrixHTMLServerResource();
         
-        NamedMatrixList matrixList = PowerResourceHelper.namedMatrixListFromStudyDesign(design);
+        String matrixHTML = resource.getMatricesAsHTML(design);
+        System.out.println(matrixHTML);
         
-        for(NamedMatrix matrix: matrixList) {
-            printNamedMatrix(matrix);
-        }
     }
 
     public void testUnviariateGuidedDesign() {
         StudyDesign design = buildUnivariateGuidedDesign();
+        PowerMatrixHTMLServerResource resource = new PowerMatrixHTMLServerResource();
         
-        NamedMatrixList matrixList = PowerResourceHelper.namedMatrixListFromStudyDesign(design);
-        
-        for(NamedMatrix matrix: matrixList) {
-            printNamedMatrix(matrix);
-        }
+        String matrixHTML = resource.getMatricesAsHTML(design);
+        System.out.println(matrixHTML);
     }
     
     private StudyDesign buildUnivariateMatrixDesign(SolutionTypeEnum solvingFor)
@@ -231,6 +230,15 @@ public class TestGuidedDesignConversion extends TestCase {
 //        factorList.add(x2);
 //        factorList.add(x3);
         studyDesign.setBetweenParticipantFactorList(factorList);
+        
+        // add clustering
+        ClusterNode clusterNode = new ClusterNode();
+        clusterNode.setGroupName("school");
+        clusterNode.setGroupSize(100);
+        clusterNode.setIntraClusterCorrelation(0.01);
+        ArrayList<ClusterNode> clusteringTree = new ArrayList<ClusterNode>();
+        clusteringTree.add(clusterNode);
+        studyDesign.setClusteringTree(clusteringTree);
         
         // build the hypotheses
         Hypothesis hypothesis = new Hypothesis();
