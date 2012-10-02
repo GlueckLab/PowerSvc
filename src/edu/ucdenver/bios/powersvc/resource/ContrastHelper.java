@@ -24,7 +24,7 @@ package edu.ucdenver.bios.powersvc.resource;
 
 import java.util.List;
 
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.restlet.data.Status;
 import org.restlet.resource.ResourceException;
 
@@ -72,12 +72,12 @@ public class ContrastHelper {
         if (df > 0) {
             // build the "any difference between the groups" contrast for the factor of interest
             RealMatrix negIdentity = 
-                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
+                org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
             RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(df, 1, 1);
             RealMatrix effectContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity);
             
             // compute the overall contrast across the factors
-            RealMatrix contrast = org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+            RealMatrix contrast = org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1);
             for(BetweenParticipantFactor factor: factorList) {
                 if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
                     contrast = MatrixUtils.getKroneckerProduct(contrast, effectContrast);
@@ -119,14 +119,14 @@ public class ContrastHelper {
         int levels = factorOfInterest.getNumberOfMeasurements();
         int df = levels-1;
         RealMatrix negIdentity = 
-            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
+            org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(df).scalarMultiply(-1);
         RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(df, 1, 1);
         RealMatrix effectContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity).transpose();
 
         // perform a kronecker product across the factors with the effect of interest
         // and average contrasts for any remaining factors
         if (df > 0) {
-            RealMatrix contrast = org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+            RealMatrix contrast = org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1);
             for(RepeatedMeasuresNode factor: factorList) {
                 if (factor.getDimension().equals(factorOfInterest.getDimension())) {
                     contrast = MatrixUtils.getKroneckerProduct(contrast, effectContrast);
@@ -141,7 +141,7 @@ public class ContrastHelper {
             // multiply on an identity matrix with dimension equal to the number of multivariate responses
             if (responseList != null && responseList.size() > 1) {
                 contrast = MatrixUtils.getKroneckerProduct(contrast,
-                        org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
+                        org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
             }
             return contrast;
         } else {
@@ -164,7 +164,7 @@ public class ContrastHelper {
         }
         
         RealMatrix contrast = 
-            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+            org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(BetweenParticipantFactor factor: factorList) {
 
             HypothesisBetweenParticipantMapping factorMapping = 
@@ -205,7 +205,7 @@ public class ContrastHelper {
         }
         
         RealMatrix contrast = 
-            org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1);
+            org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(RepeatedMeasuresNode factor: factorList) {
 
             HypothesisRepeatedMeasuresMapping factorMapping = 
@@ -233,7 +233,7 @@ public class ContrastHelper {
         // multiply on an identity matrix with dimension equal to the number of multivariate responses
         if (responseList != null && responseList.size() > 1) {
             contrast = MatrixUtils.getKroneckerProduct(contrast,
-                    org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
+                    org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
         }
         return contrast;
     }
@@ -324,7 +324,7 @@ public class ContrastHelper {
             // multiply on an identity matrix with dimension equal to the number of multivariate responses
             if (responseList != null && responseList.size() > 1) {
                 contrast = MatrixUtils.getKroneckerProduct(contrast,
-                        org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
+                        org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(responseList.size()));
             }
             return contrast;
         } else {
@@ -407,7 +407,7 @@ public class ContrastHelper {
         switch (trendType) {
         case NONE:
             RealMatrix negIdentity = 
-                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(levels-1).scalarMultiply(-1);
+                org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(levels-1).scalarMultiply(-1);
             RealMatrix column1s = MatrixUtils.getRealMatrixWithFilledValue(levels-1, 1, 1);
             trendContrast = MatrixUtils.getHorizontalAppend(column1s, negIdentity).transpose();
             break;

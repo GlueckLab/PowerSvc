@@ -25,7 +25,7 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.restlet.data.Form;
 import org.restlet.resource.Post;

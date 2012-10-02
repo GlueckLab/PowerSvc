@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.log4j.Logger;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -316,7 +316,7 @@ public final class PowerResourceHelper {
             if (totalRows == totalColumns) {
                 // equal group sizes, so just a basic cell means coding (i.e. identity)
                 designEssenceMatrix = 
-                org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(totalRows);
+                org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(totalRows);
             } else {
                 // unequal group sizes, so start with a zero matrix
                 designEssenceMatrix = 

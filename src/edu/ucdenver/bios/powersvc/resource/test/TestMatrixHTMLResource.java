@@ -23,7 +23,9 @@ package edu.ucdenver.bios.powersvc.resource.test;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
+
+import org.apache.commons.math3.linear.MatrixUtils;
 
 import edu.ucdenver.bios.powersvc.application.PowerConstants;
 import edu.ucdenver.bios.powersvc.resource.PowerMatrixHTMLServerResource;
@@ -36,7 +38,6 @@ import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.Hypothesis;
 import edu.ucdenver.bios.webservice.common.domain.HypothesisBetweenParticipantMapping;
 import edu.ucdenver.bios.webservice.common.domain.NamedMatrix;
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.NominalPower;
 import edu.ucdenver.bios.webservice.common.domain.ResponseNode;
 import edu.ucdenver.bios.webservice.common.domain.SampleSize;
@@ -51,7 +52,6 @@ import edu.ucdenver.bios.webservice.common.enums.HypothesisTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.SolutionTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StatisticalTestTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
-import junit.framework.TestCase;
 
 public class TestMatrixHTMLResource extends TestCase {
 
