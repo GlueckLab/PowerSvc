@@ -25,8 +25,8 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.ucdenver.bios.webservice.common.domain.Blob2DArray;
 import edu.ucdenver.bios.webservice.common.domain.Covariance;

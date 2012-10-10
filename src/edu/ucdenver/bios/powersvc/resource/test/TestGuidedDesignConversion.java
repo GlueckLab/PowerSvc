@@ -23,7 +23,7 @@ package edu.ucdenver.bios.powersvc.resource.test;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math.linear.MatrixUtils;
+import org.apache.commons.math3.linear.MatrixUtils;
 
 import edu.ucdenver.bios.powersvc.application.PowerConstants;
 import edu.ucdenver.bios.powersvc.resource.PowerResourceHelper;
