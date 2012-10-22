@@ -50,7 +50,7 @@
 	<property name="javastats.lib" 
 		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.2.0.jar" />
 	<property name="webservicecommon.lib" 
-		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-1.0.0.jar" />
+		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-1.1.0.jar" />
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 
 	<!-- Third party libraries -->
