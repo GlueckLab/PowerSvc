@@ -142,9 +142,13 @@ public final class PowerResourceHelper {
                 params.getWithinSubjectContrast()));
         // add matrices for either GLMM(F) or GLMM(F,g) designs
         if (studyDesign.isGaussianCovariate()) {
-            params.setSigmaOutcome(sigmaOutcomesMatrixFromStudyDesign(studyDesign));
-            params.setSigmaGaussianRandom(sigmaCovariateMatrixFromStudyDesign(studyDesign));
-            params.setSigmaOutcomeGaussianRandom(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign));
+            RealMatrix sigmaY = sigmaOutcomesMatrixFromStudyDesign(studyDesign);
+            RealMatrix sigmaG = sigmaCovariateMatrixFromStudyDesign(studyDesign);
+            params.setSigmaOutcome(sigmaY);
+            params.setSigmaGaussianRandom(sigmaG);
+            params.setSigmaOutcomeGaussianRandom(
+                    sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign,
+                            sigmaG, sigmaY));
 
             // add power methods
             if (studyDesign.getPowerMethodList() != null) {
@@ -297,22 +301,31 @@ public final class PowerResourceHelper {
                     }
                 }
             }
-            // now check for unequal group sizes
             int totalRows = 0;
             List<RelativeGroupSize> groupSizeList = studyDesign.getRelativeGroupSizeList();
-            if (groupSizeList != null) {
-                if (groupSizeList.size() != totalColumns) {
-                    // invalid relative group size list
-                    throw new IllegalArgumentException("Invalid list of relative group sizes");
-                }
-                for(RelativeGroupSize relativeSize: groupSizeList) {
-                    totalRows += relativeSize.getValue();
+            if (totalColumns > 1) {
+                // we have multiple groups, so check for unequal group sizes
+                if (groupSizeList != null) {
+                    if (groupSizeList.size() != totalColumns) {
+                        // invalid relative group size list
+                        throw new IllegalArgumentException("Invalid list of relative group sizes");
+                    }
+                    for(RelativeGroupSize relativeSize: groupSizeList) {
+                        totalRows += relativeSize.getValue();
+                    }
+                } else {
+                    totalRows = totalColumns;
                 }
             } else {
-                totalRows = totalColumns;
+                // only 1 column, so the X matrix must be 1x1
+                totalRows = 1;
             }
-            
             RealMatrix designEssenceMatrix = null;
+            // make sure we didn't produce bad dimensions
+            if (totalRows <=0 || totalColumns <= 0) {
+                throw new IllegalArgumentException("Unable to produce a valid design matrix");
+            }
+            // now build the actual matrix
             if (totalRows == totalColumns) {
                 // equal group sizes, so just a basic cell means coding (i.e. identity)
                 designEssenceMatrix = 
@@ -618,7 +631,7 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return sigma outcomes matrix
      */
-    private static RealMatrix sigmaOutcomesMatrixFromStudyDesign(StudyDesign studyDesign) {
+    public static RealMatrix sigmaOutcomesMatrixFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_OUTCOME));
         } else {
@@ -631,14 +644,41 @@ public final class PowerResourceHelper {
      * @param studyDesign study design object
      * @return sigma outcomes/covariate matrix
      */
-    public static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
+    public static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(
+            StudyDesign studyDesign, 
+            RealMatrix sigmaG, RealMatrix sigmaY) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
         } else {
             RealMatrix sigmaYG = toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
+            /*
+             * In guided mode, sigmaYG is specified as correlation values.  We adjust
+             * to make it into a covariance matrix.  We also expand for clustering
+             */
             if (sigmaYG != null) {
+                /*
+                 * Make into a covariance.  We first make sure the other sigma matrices are
+                 * of appropriate dimension to allow this
+                 */
+                if (sigmaG == null || sigmaG.getRowDimension() <= 0 ||
+                        sigmaG.getColumnDimension() <= 0) {
+                    throw new IllegalArgumentException("Invalid covariance for Gaussian covariate");
+                }
+                if (sigmaY == null || 
+                        sigmaY.getRowDimension() < sigmaYG.getRowDimension() ||
+                        sigmaY.getColumnDimension() != sigmaY.getRowDimension()) {
+                    throw new IllegalArgumentException("Invalid covariance for outcome");
+                }
+                // assumes sigmaG is already updated to be a variance
+                double varG = sigmaG.getEntry(0, 0);
+                for(int row = 0; row < sigmaYG.getRowDimension(); row++) {
+                    double corrYG = sigmaYG.getEntry(row, 0);
+                    double varY = sigmaY.getEntry(row, row);
+                    sigmaYG.setEntry(row, 0, corrYG * Math.sqrt(varG * varY));
+                }
+                // calculate cluster size
                 List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
                 if (clusterNodeList != null && clusterNodeList.size() > 0) {
                     int totalRows = 1;
@@ -662,7 +702,21 @@ public final class PowerResourceHelper {
      * @return sigma covariate matrix
      */
     public static RealMatrix sigmaCovariateMatrixFromStudyDesign(StudyDesign studyDesign) {
-        return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_GAUSSIAN));
+        if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
+            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_GAUSSIAN));
+        } else {
+            // in Guided Mode, the user specifies this as a standard deviation, so we square it
+            RealMatrix sigmaG = 
+                toRealMatrix(
+                        studyDesign.getNamedMatrix(
+                                PowerConstants.MATRIX_SIGMA_GAUSSIAN));
+            if (sigmaG != null && sigmaG.getRowDimension() > 0 &&
+                    sigmaG.getColumnDimension() > 0) {
+                double stddev = sigmaG.getEntry(0, 0);
+                sigmaG.setEntry(0, 0, stddev * stddev);
+            }
+            return sigmaG;
+        }
     }
 
     /**
@@ -747,7 +801,8 @@ public final class PowerResourceHelper {
             if (sigmaG != null) matrixList.add(sigmaG);
 
             NamedMatrix sigmaYG = 
-                toNamedMatrix(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign),
+                toNamedMatrix(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign,
+                        toRealMatrix(sigmaG), toRealMatrix(sigmaY)),
                         PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN);
             if (sigmaYG != null) matrixList.add(sigmaYG);
         } else {

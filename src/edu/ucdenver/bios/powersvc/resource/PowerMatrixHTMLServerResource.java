@@ -152,14 +152,18 @@ implements PowerMatrixHTMLResource {
             
             // add matrices for either GLMM(F) or GLMM(F,g) designs
             if (studyDesign.isGaussianCovariate()) {
-                RealMatrix sigmaYG = 
-                        PowerResourceHelper.sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign);
+                RealMatrix sigmaY = 
+                    PowerResourceHelper.sigmaOutcomesMatrixFromStudyDesign(studyDesign);
                 RealMatrix sigmaG = 
-                        PowerResourceHelper.sigmaCovariateMatrixFromStudyDesign(studyDesign);
+                    PowerResourceHelper.sigmaCovariateMatrixFromStudyDesign(studyDesign);
+                RealMatrix sigmaYG = 
+                        PowerResourceHelper.sigmaOutcomesCovariateMatrixFromStudyDesign(
+                                studyDesign, sigmaG, sigmaY);
+
                 // sigma for Gaussian covariate
                 buffer.append(matrixHeaderMathML(
                         PowerConstants.DISPLAY_MATRIX_SIGMA_GAUSSIAN));
-                buffer.append(realMatrixToMathML(sigmaYG, false));
+                buffer.append(realMatrixToMathML(sigmaG, false));
                 buffer.append(matrixCloseMathML());
                 // sigma for Gaussian covariate and outcomes
                 buffer.append(matrixHeaderMathML(
