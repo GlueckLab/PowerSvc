@@ -1,0 +1,62 @@
+<html>
+<head>
+<script type="text/javascript">
+
+	function loadXMLDoc() {
+		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+			xmlhttp = new XMLHttpRequest();
+		} else {// code for IE6, IE5
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xmlhttp.onreadystatechange = function() {
+			if(xmlhttp.readyState==4){
+				document.getElementById("results").innerHTML = xmlhttp.responseText;
+				document.body.style.cursor = "default";
+			}
+		}
+		var url = '/webapps/power/testf?ndf='  + 
+		document.getElementById("ndf").value + 
+		'&ddf=' + document.getElementById("ddf").value + 
+		'&nc=' + document.getElementById("nc").value;
+		if (document.getElementById("quantile").checked) {
+			url += '&q=' + document.getElementById("qfvalue").value;
+		} else {
+			url += '&crit=' + document.getElementById("qfvalue").value;
+		}
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send(null);
+		document.body.style.cursor = "wait";
+	}
+</script>
+</head>
+<body>
+<h1>Non-central F-distribution Test Page</h1>
+Please enter your degrees of freedom and non-centrality parameter below.
+Then enter either a quantile (for inverse CDF test) or an F value (for cdf test).
+Quantiles should be entered as a decimal (i.e. 0.9 for 90th percentile).
+<p></p>
+Click the "Submit" button and your results will be displayed at the bottom of the page.
+<p></p>
+
+<table>
+<tr><td>Numerator DF:</td><td>
+<input id="ndf" type='text' onChange='validateDF(this.value);'></input></td></tr>
+<tr><td>Denominator DF:</td><td>
+<input id="ddf" type='text' onChange='validateDF(this.value);'></input></td></tr>
+<tr><td>Non-centrality:</td><td>
+<input id="nc" type='text' onChange='validateNC(this.value);'></input></td></tr>
+<tr><td><input id="quantile" type="radio" name="cdf" value="q" />Quantile 
+<input id="fcrit" type="radio" name="cdf" value="f" />F</td>
+<td><input id="qfvalue" type='text'  onChange='validateQuantileOrCrit(this.value);'></input></td></tr>
+</table>
+<p></p>
+
+<button type="button" onclick="loadXMLDoc()">Submit</button>
+<hr></hr>
+
+<div id="results">(result)</div>
+
+
+</body>
+</html>
+

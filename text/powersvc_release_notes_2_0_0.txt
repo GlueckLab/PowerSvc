@@ -1,0 +1,58 @@
+##
+## Power Service for the GLIMMPSE Software System.  Processes
+## incoming HTTP requests for power, sample size, and detectable
+## difference
+## 
+## Copyright (C) 2010 Regents of the University of Colorado.  
+##
+## This program is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License
+## as published by the Free Software Foundation; either version 2
+## of the License, or (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+##
+
+Power Service 2.0.0 Release Notes
+--------------------------------------------
+
+Features
+
+- Rewrite of communication layer to use StudyDesign object model
+(see the WebServiceCommon layer for details)
+- Adds the ability to obtain the matrices from a study design
+either as JSON or MathML/HTML
+- Accepts designs with no between participant factors
+
+API Changes
+
+- The external API has changed to use JSON instead of XML
+- All calls expect a StudyDesign object (see WebServiceCommon)
+
+Dependency Changes
+
+- Upgraded to Apache Commons Math version 3.0.
+- Integrated JavaStatistics library 1.2.0.
+
+Bug Fixes
+
+- For GUIDED study designs, now adjusts sigmaG and sigmaYG
+to be covariance matrices (these are specified as standard
+deviations and correlations for guided designs)
+
+Known Issues
+
+- Extremely large sample sizes (> 100K) may lead to numerical
+overflows and yield lower than expected power values, or
+may fail due to invalid degrees of freedom in the underlying
+F approximations
+
+
+ 
