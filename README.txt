@@ -1,4 +1,4 @@
- Power Service for the GLIMMPSE Software System.  Processes
+ Power Web Service for the GLIMMPSE Software System.  Processes
  incoming HTTP requests for power, sample size, and detectable
  difference
   
@@ -22,20 +22,20 @@
 1. INTRODUCTION
 ------------------------------
 
-This web service process power/sample size/detectable difference requests from
-the Glimmpse user interface.  It is a component of the Glimmpse software system 
-(http://www.glimmpse.com/)
+Th Power web service calculates power, sample size, or detectable difference for
+the Glimmpse Web user interface.  It is a component of the Glimmpse software system 
+(http://glimmpse.samplesizeshop.com/)
 
-The power calculations are based on the publication:
+The power calculations are based on the work of Professor Keith E. Muller
+and colleagues.  A full list of related publications are available at:
 
-Glueck DH and Muller KE.  Adjusting power for a baseline covariate in linear models.
-Statist. Med. 2003; 22:2535–2551.
+http://samplesizeshop.com/education/related-publications/
 
 ------------------------------
 2.  LATEST VERSION
 ------------------------------
 
-Version 1.0.0
+Version 2.0.0
 
 ------------------------------
 3.  DOCUMENTATION
@@ -43,24 +43,20 @@ Version 1.0.0
 
 Documentation is available from the project web site:
 
-http://www.glimmpse.com/
-
-The REST interface documentation is included with the source distribution in:
-
-${POWER_SERVICE_HOME}/docs/api.html
+http://samplesizeshop.com/documentation/glimmpse/
 
 ------------------------------
 4. DEPENDENCIES
 ------------------------------
 
-This web service has been tested in Apache Tomcat 6.x
+This web service has been tested in Apache Tomcat 6.x and 7.x
 
 ==Third-party dependencies==
 
 Java Runtime Environment 1.6.0 or higher
 Apache Commons Math 2.1 or higher
 JSC Statistics Package (http://www.jsc.nildram.co.uk/)
-Restlet 1.1.6 (org.restlet.jar, com.noelios.restlet.jar, com.noelios.restlet.ext.servlet_2.5.jar)
+Restlet 2.0.x
 JUnit 4.7
 Log4j 1.2.15
 Apache Ant 1.8.1
@@ -69,7 +65,7 @@ Apache Ant 1.8.1
 5.  SUPPORT
 ------------------------------
 
-This web service is provided without warranty.
+The Power web service is provided without warranty.
 
 For questions regarding this web service, please email sarah.kreidler@ucdenver.edu
 
@@ -78,29 +74,30 @@ For questions regarding this web service, please email sarah.kreidler@ucdenver.e
 ------------------------------
 
 The main build.xml script is located in the ${POWER_SERVICE_HOME}/build
-directory.  To compile the library, cd to ${POWER_SERVICE_HOME}/build
-and type
+directory.  To compile the application, change to the ${POWER_SERVICE_HOME}/build
+directory and type
 
-cd to ${POWER_SERVICE_HOME}/build
 ant
 
 The resulting war file is called
 
-${POWER_SERVICE_HOME}/build/bin/power.war
+${POWER_SERVICE_HOME}/build/artifacts/power.war
 
 The build script assumes that the a directory called thirdparty is
 installed at the same directory level as ${POWER_SERVICE_HOME}.
 A thirdparty distribution in the appropriate format is available from 
-http://www.glimmpse.com/
+
+http://samplesizeshop.com/software-downloads/glimmpse-software-downloads/
+
 ------------------------------
 7. CONTRIBUTORS / ACKNOWLEDGEMENTS
 ------------------------------
 
-This library was created by Dr. Sarah Kreidler and Dr. Deb Glueck
-at the University of Colorado Denver.
+The Power web service was created by Dr. Sarah Kreidler and Dr. Deb Glueck
+at the University of Colorado Denver, Department of Biostatistics and Informatics.
 
 Special thanks to the following individuals were instrumental in completion of this project:
-Dr. Keith Muller
+Professor Keith E. Muller
 Dr. Anis Karimpour-Fard
 Dr. Jackie Johnson
 

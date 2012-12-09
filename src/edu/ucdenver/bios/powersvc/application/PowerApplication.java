@@ -29,6 +29,7 @@ import org.restlet.routing.Router;
 
 import edu.ucdenver.bios.powersvc.resource.DefaultResource;
 import edu.ucdenver.bios.powersvc.resource.DetectableDifferenceServerResource;
+import edu.ucdenver.bios.powersvc.resource.PowerMatrixHTMLServerResource;
 import edu.ucdenver.bios.powersvc.resource.PowerMatrixServerResource;
 import edu.ucdenver.bios.powersvc.resource.PowerServerResource;
 import edu.ucdenver.bios.powersvc.resource.SampleSizeServerResource;
@@ -77,7 +78,7 @@ public class PowerApplication extends Application {
         router.attach("/samplesize", SampleSizeServerResource.class);
         router.attach("/difference", DetectableDifferenceServerResource.class);
         router.attach("/matrix", PowerMatrixServerResource.class);
-        
+        router.attach("/matrix/html", PowerMatrixHTMLServerResource.class);
         // unit test resource - easier to collaborate with remote testers
         //this way
         router.attach("/testf", FTestResource.class);

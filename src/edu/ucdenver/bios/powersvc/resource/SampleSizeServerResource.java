@@ -30,6 +30,7 @@ import org.restlet.resource.ServerResource;
 
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
@@ -66,11 +67,13 @@ implements SampleSizeResource {
             List<Power> calcResults = calculator.getSampleSize(params);
             // convert to concrete classes           
             return PowerResourceHelper.toPowerResultList(calcResults);
-        }
-        catch (IllegalArgumentException iae)
-        {
+        } catch (IllegalArgumentException iae) {
             PowerLogger.getInstance().error(iae.getMessage());
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
+        } catch (PowerException pe) {
+            PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                    pe.getMessage());
         }
 	}
 

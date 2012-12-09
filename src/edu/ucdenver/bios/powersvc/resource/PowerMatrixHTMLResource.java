@@ -22,27 +22,33 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import org.restlet.resource.Get;
-import org.restlet.resource.ServerResource;
+import org.restlet.data.Form;
+import org.restlet.resource.Post;
+
+import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
+import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Default request resource.  Called from the URI /power
- * Simply returns a self-identifying message for the server
- *
+ * Main interface for retrieving an html formatted display of matrices.
  * @author Sarah Kreidler
+ *
  */
-public class DefaultResource extends ServerResource {
+public interface PowerMatrixHTMLResource {
+    
     /**
-     * Self-identify the Power Service and version number
-     * when a GET request is received.
-     * @return server self-identification string
+     * Get matrices used in the power calculation for a "guided" study design
+     * as an HTML formatted string.  This method uses the notation of
+     * Muller & Stewart 2007
      */
-    @Get
-    public final String represent() {
-        String version = 
-                getApplication().getContext().getParameters().getFirstValue("edu.ucdenver.bios.powersvc.application.version");
-        
-        return ("Statistical Power REST Service, version "
-                + version);
-    }
+    @Post("json:html")
+    String getMatricesAsHTML(StudyDesign studyDesign);
+    
+    /**
+     * Get matrices used in the power calculation for a "guided" study design
+     * as an HTML formatted string.  This method required HTML form input
+     * with the study design json in the 'studydesign' field. This method uses the notation of
+     * Muller & Stewart 2007.
+     */
+    @Post("form:html")
+    String getMatricesAsHTML(Form studyDesignForm);
 }

@@ -25,7 +25,7 @@ import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.math.linear.MatrixUtils;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.restlet.resource.ClientResource;
 
 import edu.ucdenver.bios.powersvc.application.PowerConstants;

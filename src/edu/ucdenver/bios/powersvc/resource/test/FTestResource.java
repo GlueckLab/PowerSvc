@@ -66,10 +66,6 @@ public class FTestResource extends ServerResource
     /**
      * Create a new resource to handle unit test requests.  
      * Data is returned as XML.
-     * 
-     * @param context restlet context
-     * @param request http request object
-     * @param response http response object
      */
     public FTestResource() 
     {
