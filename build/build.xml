@@ -37,6 +37,19 @@
 	      <isset property=""/>
 	   </not>
 	</condition>
+		<!-- allows user to override default version of web service 
+	     common library -->
+	<condition property="webservicecommon.version" value="dev">
+	   <not>  
+	      <isset property=""/>
+	   </not>
+	</condition>
+			<!-- allows user to override default version of java statistics library -->
+	<condition property="javastatistics.version" value="dev">
+	   <not>  
+	      <isset property=""/>
+	   </not>
+	</condition>
     <!-- main properties -->
 	<property name="owner" value="University of Colorado Denver, 
 		Department of Biostatistics and Informatics" />
@@ -48,9 +61,9 @@
     <property name="artifacts.dir" value="${basedir}/artifacts" />
 	<property name="javadoc.dir" value="${tmp.dir}/${svc.name}-${svc.version}-javadoc" />
 	<property name="javastats.lib" 
-		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-dev.jar" />
+		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-${javastatistics.version}.jar" />
 	<property name="webservicecommon.lib" 
-		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-dev.jar" />
+		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-${webservicecommon.version}.jar" />
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 
 	<!-- Third party libraries -->
