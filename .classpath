@@ -13,9 +13,9 @@
 	<classpathentry kind="lib" path="/thirdparty/restlet/2.0.10/lib/org.restlet.ext.servlet.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/restlet/2.0.10/lib/org.restlet.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/restlet/2.0.10/lib/org.restlet.ext.xml.jar"/>
+	<classpathentry kind="lib" path="/WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-dev.jar"/>
+	<classpathentry kind="lib" path="/JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-dev.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/jackson/1.9.4/lib/jackson-all-1.9.4.jar"/>
-	<classpathentry kind="lib" path="/WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-1.0.0.jar"/>
-	<classpathentry kind="lib" path="/JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.2.0.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

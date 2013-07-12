@@ -23,7 +23,7 @@
 	<!-- when releasing software, this is the only place the version information
 			should be specified. Appropriate changes to the manifest and source
 			code will be performed by the build -->
-	<property name="svc.version" value="2.0.0beta" />
+	<property name="svc.version" value="2.0.0" />
 	<!-- optional suffix if we have multiple versions of the warfile 
 			running on the same tomcat -->
 	<condition property="warfile.suffix" value="">
@@ -33,6 +33,19 @@
 	</condition>
 	<!-- specify the tomcat location as a build argument if using the deploy target -->
 	<condition property="tomcat.home" value="">
+	   <not>  
+	      <isset property=""/>
+	   </not>
+	</condition>
+		<!-- allows user to override default version of web service 
+	     common library -->
+	<condition property="webservicecommon.version" value="dev">
+	   <not>  
+	      <isset property=""/>
+	   </not>
+	</condition>
+			<!-- allows user to override default version of java statistics library -->
+	<condition property="javastatistics.version" value="dev">
 	   <not>  
 	      <isset property=""/>
 	   </not>
@@ -48,9 +61,9 @@
     <property name="artifacts.dir" value="${basedir}/artifacts" />
 	<property name="javadoc.dir" value="${tmp.dir}/${svc.name}-${svc.version}-javadoc" />
 	<property name="javastats.lib" 
-		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.2.0.jar" />
+		value="${basedir}/../../JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-${javastatistics.version}.jar" />
 	<property name="webservicecommon.lib" 
-		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-1.1.0.jar" />
+		value="${basedir}/../../WebServiceCommon/build/artifacts/edu.ucdenver.bios.webservice.common-${webservicecommon.version}.jar" />
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 
 	<!-- Third party libraries -->
