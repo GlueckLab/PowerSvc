@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.restlet.data.MediaType;
-import org.restlet.resource.DomRepresentation;
+import org.restlet.ext.xml.DomRepresentation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 

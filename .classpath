@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="owner.project.facets" value="jst.java"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="lib" path="/thirdparty/restlet/1.1.6/lib/com.noelios.restlet.ext.servlet_2.5.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/restlet/1.1.6/lib/com.noelios.restlet.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/restlet/1.1.6/lib/org.restlet.jar"/>
-	<classpathentry kind="lib" path="/JavaStatistics/lib/JavaStatistics.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/junit/4.7/lib/junit-4.7.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/ApacheCommonsMath/2.1/lib/commons-math-2.1.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/log4j/1.2.15/lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/thirdparty/restlet/2.0.10/lib/org.restlet.ext.servlet.jar"/>
+	<classpathentry kind="lib" path="/thirdparty/restlet/2.0.10/lib/org.restlet.jar"/>
+	<classpathentry kind="lib" path="/thirdparty/restlet/2.0.10/lib/org.restlet.ext.xml.jar"/>
+	<classpathentry kind="lib" path="/JavaStatistics/build/artifacts/edu.ucdenver.bios.javastatistics-1.1.0.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

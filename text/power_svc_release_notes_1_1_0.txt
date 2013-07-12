@@ -1,0 +1,5 @@
+Power Service 1.1.0 Release Notes
+--------------------------------------------
+
+1. Upgraded to the Restlet 2.0 libraries.  Note that the external API
+is unchanged. 

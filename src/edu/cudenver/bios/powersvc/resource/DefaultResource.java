@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,18 +17,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA  02110-1301, USA.
  */
 package edu.cudenver.bios.powersvc.resource;
 
-import org.restlet.Context;
-import org.restlet.data.MediaType;
-import org.restlet.data.Request;
-import org.restlet.data.Response;
-import org.restlet.resource.Representation;
-import org.restlet.resource.Resource;
-import org.restlet.resource.StringRepresentation;
-import org.restlet.resource.Variant;
+import org.restlet.resource.Get;
+import org.restlet.resource.ServerResource;
 
 import edu.cudenver.bios.powersvc.application.PowerConstants;
 
@@ -39,31 +34,18 @@ import edu.cudenver.bios.powersvc.application.PowerConstants;
  * 
  * @author Sarah Kreidler
  */
-public class DefaultResource extends Resource
+public class DefaultResource extends ServerResource
 {
 	/**
-	 * Create a default resource handler
-	 * @param context restlet context
-	 * @param request HTTP request object
-	 * @param response HTTP response object
+	 * Self-identify the Power Service and version number
+	 * when a GET request is received
 	 */
-    public DefaultResource(Context context, Request request, Response response) 
-    {
-        super(context, request, response);
-
-        // This representation has only one type of representation.
-        getVariants().add(new Variant(MediaType.TEXT_PLAIN));
-    }
-
-    /**
-     * Returns a full representation for a given variant.
-     */
-    @Override
-    public Representation represent(Variant variant) {
-        Representation representation = 
-            new StringRepresentation("Statistical Power REST Service, version " + PowerConstants.VERSION, 
-            		MediaType.TEXT_PLAIN);
-
-        return representation;
-    }
+	@Get public String represent() 
+	{
+        String version = 
+                getApplication().getContext().getParameters().getFirstValue("edu.ucdenver.bios.powersvc.application.version");
+        
+        return ("Statistical Power REST Service, version "
+                + version);
+	}
 }
