@@ -51,22 +51,5 @@ public final class PowerConstants {
     public static final String MATRIX_SIGMA_OUTCOME_GAUSSIAN = "sigmaOutcomeGaussianRandom";
     public static final String RESPONSES_COVARIANCE_LABEL = "__RESPONSE_COVARIANCE__";
     
-    // display names for matrices (used in MatrixHTML resource)
-    public static final String BOLD_OPEN = "<mstyle mathvariant=\"bold\" mathsize=\"normal\">";
-    public static final String BOLD_CLOSE = "</mstyle>";
-    public static final String DISPLAY_MATRIX_BETA = BOLD_OPEN + "<mi>B</mi>" + BOLD_CLOSE;
-    public static final String DISPLAY_MATRIX_DESIGN = 
-            "<mrow><mtext>Es</mtext><mo>(</mo>"+ BOLD_OPEN + "<mi>X</mi>" + BOLD_CLOSE + "<mo>)</mo></mrow>";
-    public static final String DISPLAY_MATRIX_THETA_NULL = "<msub>"+ BOLD_OPEN + 
-            "<mi>&#x0398;</mi>" + BOLD_CLOSE + "<mn>0</mn></msub>";
-    public static final String DISPLAY_MATRIX_WITHIN_CONTRAST = BOLD_OPEN + "<mi>U</mi>" + BOLD_CLOSE;
-    public static final String DISPLAY_MATRIX_BETWEEN_CONTRAST = BOLD_OPEN + "<mi>C</mi>" + BOLD_CLOSE;
-    public static final String DISPLAY_MATRIX_SIGMA_ERROR = "<msub>" + BOLD_OPEN +
-            "<mi>&#x03A3;</mi>"+ BOLD_CLOSE + "<mi>E</mi></msub>";
-    public static final String DISPLAY_MATRIX_SIGMA_GAUSSIAN = "<msub>" + BOLD_OPEN +
-            "<mi>&#x03A3;</mi>"+ BOLD_CLOSE + "<mi>g</mi></msub>";
-    public static final String DISPLAY_MATRIX_SIGMA_OUTCOME = "<msub>" + BOLD_OPEN +
-            "<mi>&#x03A3;</mi>"+ BOLD_CLOSE + "<mi>Y</mi></msub>";
-    public static final String DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN = "<msub>" + BOLD_OPEN +
-            "<mi>&#x03A3;</mi>"+ BOLD_CLOSE + "<mi>Yg</mi></msub>";
+
 }
