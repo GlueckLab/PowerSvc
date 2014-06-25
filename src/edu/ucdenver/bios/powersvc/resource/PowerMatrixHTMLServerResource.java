@@ -277,7 +277,7 @@ implements PowerMatrixHTMLResource {
     }
     
     /**
-     * Create mathML for an identity matrix using
+     * Create MathJax LaTeX for an identity matrix using
      * Muller & Stewart 2007 notation.
      * 
      * @param size column size
@@ -291,9 +291,9 @@ implements PowerMatrixHTMLResource {
     }
     
     /**
-     * Create mathML for the sigma error matrix
+     * Create MathJax LaTeX for the sigma error matrix
      * @param studyDesign
-     * @return mathML block
+     * @return MathJax LaTeX block
      */
     private String getSigmaMatrixTex(String name, StudyDesign studyDesign) {
         StringBuffer buffer = new StringBuffer();
@@ -356,7 +356,7 @@ implements PowerMatrixHTMLResource {
      * Get LaTeX for a compound symmetric correlation matrix
      * @param size size of the matrix
      * @param rho correlation parameter
-     * @return mathML for matrix
+     * @return MathJax LaTeX for matrix
      */
     private String getCompoundSymmetricTex(int size, double rho) {
     	
@@ -379,9 +379,9 @@ implements PowerMatrixHTMLResource {
     }
     
     /**
-     * Create mathML for the sigma error matrix
+     * Create MathJax LaTeX for the sigma error matrix
      * @param studyDesign
-     * @return mathML block
+     * @return MathJax LaTeX block
      */
     private String getSigmaErrorMatrixTex(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
@@ -399,9 +399,9 @@ implements PowerMatrixHTMLResource {
     }  
     
     /**
-     * Create mathML for the sigma error matrix
+     * Create MathJax LaTeX for the sigma error matrix
      * @param studyDesign
-     * @return mathML block
+     * @return MathJax LaTeX block
      */
     private String getSigmaOutcomeMatrixTex(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
@@ -498,8 +498,9 @@ implements PowerMatrixHTMLResource {
     }
     
     private String createBrowserNotes() {
-        return "<p/>This feature requires browser support of MathML.  Please see " +
-        		"<a href=\"http://en.wikipedia.org/wiki/MathML\">Wikipedia's MathML " +
-        		"Page</a> for information regarding supported browsers.";
+        return "<p/><div ng-show=\"!isMobile\">" +
+        		"This feature requires browser support of MathJax.  Please see the " +
+        		"<a target=\"_blank\" href=\"http://www.mathjax.org/\">MathJax Homepage</a> " +
+        		"for information regarding supported browsers.</div>";
     }
 }
