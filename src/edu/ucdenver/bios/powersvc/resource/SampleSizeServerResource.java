@@ -23,7 +23,10 @@
 package edu.ucdenver.bios.powersvc.resource;
 
 import java.util.List;
+import java.util.concurrent.*;
 
+import edu.ucdenver.bios.powersvc.application.JsonLogger;
+import org.apache.log4j.Logger;
 import org.restlet.data.Status;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
@@ -39,13 +42,17 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 /**
  * Implementation of the SampleSizeResource interface for calculating
  * sample size.
- * @author Sarah Kreidler
  *
+ * @author Sarah Kreidler
  */
 public class SampleSizeServerResource extends ServerResource
 implements SampleSizeResource {
 
-	/**
+    private Logger logger = Logger.getLogger(getClass());
+
+    private static final ExecutorService THREADS = Executors.newCachedThreadPool();
+
+    /**
 	 * Calculate the total sample size for the specified study design.
 	 * 
 	 * @param studyDesign study design object
@@ -53,28 +60,69 @@ implements SampleSizeResource {
 	 */
 	public PowerResultList getSampleSize(StudyDesign studyDesign)
 	{
-        if (studyDesign == null) 
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
-                    "Invalid study design");
-        
-        try
-        {
-            GLMMPowerParameters params = 
-                PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
-            // create the appropriate power calculator for this model
-            GLMMPowerCalculator calculator = new GLMMPowerCalculator();
-            // calculate the power results
-            List<Power> calcResults = calculator.getSampleSize(params);
-            // convert to concrete classes           
-            return PowerResourceHelper.toPowerResultList(calcResults);
-        } catch (IllegalArgumentException iae) {
-            PowerLogger.getInstance().error(iae.getMessage());
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
-        } catch (PowerException pe) {
-            PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                    pe.getMessage());
-        }
-	}
+        JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " +
+                getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
+        long start = System.currentTimeMillis();
 
+        // Execute the calculation in asynchronously and time out after 30 seconds.  User
+        // gets an error
+        SampleSizeCallable callable = new SampleSizeCallable(studyDesign);
+        Future<PowerResultList> future = THREADS.submit(callable);
+        try {
+            PowerResultList results = future.get(30, TimeUnit.SECONDS);
+            logger.info("getSampleSize(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
+            return results;
+        } catch (InterruptedException e) {
+            logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Computation interrupted");
+        } catch (ExecutionException e) {
+            logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
+            if (e.getCause() instanceof PowerException) {
+                PowerException pe = (PowerException) e.getCause();
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+            }
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
+        } catch (TimeoutException e) {
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef().toString());
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + JsonLogger.toJson(studyDesign));
+            boolean canceled = future.cancel(true);
+            logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                    "Request timed out during computation");
+        }
+    }
+
+    public static class SampleSizeCallable implements Callable<PowerResultList> {
+
+        private StudyDesign studyDesign;
+
+        private SampleSizeCallable(StudyDesign studyDesign) {
+            if (studyDesign == null)
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                        "Invalid study design");
+            this.studyDesign = studyDesign;
+        }
+
+        @Override
+        public PowerResultList call() throws Exception {
+            try {
+                GLMMPowerParameters params =
+                        PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
+                // create the appropriate power calculator for this model
+                GLMMPowerCalculator calculator = new GLMMPowerCalculator();
+                // calculate the power results
+                List<Power> calcResults = calculator.getSampleSize(params);
+                // convert to concrete classes
+                return PowerResourceHelper.toPowerResultList(calcResults);
+            } catch (IllegalArgumentException iae) {
+                PowerLogger.getInstance().error(iae.getMessage());
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
+            } catch (PowerException pe) {
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                        pe.getMessage());
+            }
+
+        }
+    }
 }

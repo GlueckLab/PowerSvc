@@ -23,7 +23,10 @@
 package edu.ucdenver.bios.powersvc.resource;
 
 import java.util.List;
+import java.util.concurrent.*;
 
+import edu.ucdenver.bios.powersvc.application.JsonLogger;
+import org.apache.log4j.Logger;
 import org.restlet.data.Status;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
@@ -46,6 +49,10 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 public class PowerServerResource extends ServerResource
 implements PowerResource {
 
+    private Logger logger = Logger.getLogger(getClass());
+
+    private static final ExecutorService THREADS = Executors.newCachedThreadPool();
+
     /**
      * Calculate power for the specified study design.
      *
@@ -59,24 +66,62 @@ implements PowerResource {
             "Invalid study design");
         }
 
+        logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() + ": studyDesign = " + studyDesign);
+        long start = System.currentTimeMillis();
+
+        // Execute the calculation in asynchronously and time out after 30 seconds
+        PowerCallable callable = new PowerCallable(studyDesign);
+        Future<PowerResultList> future = THREADS.submit(callable);
         try {
-        	GLMMPowerParameters params = 
-        	    PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
-            // create the appropriate power calculator for this model
-            GLMMPowerCalculator calculator = new GLMMPowerCalculator();
-            // calculate the power results
-            List<Power> calcResults = calculator.getPower(params);
-            // convert to concrete classes         
-            return PowerResourceHelper.toPowerResultList(calcResults);
-        } catch (IllegalArgumentException iae) {
-            PowerLogger.getInstance().error(iae.getMessage());
-        	throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-        	        iae.getMessage());
-        } catch (PowerException pe) {
-            PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+            // TODO: make the timeout configurable
+            PowerResultList results = future.get(30, TimeUnit.SECONDS);
+            logger.info("getPower(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
+            return results;
+        } catch (InterruptedException e) {
+            logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Exception computation");
+        } catch (ExecutionException e) {
+            logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
+        } catch (TimeoutException e) {
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef().toString());
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + JsonLogger.toJson(studyDesign));
+            boolean canceled = future.cancel(true);
+            logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                    pe.getMessage());
+                    "Request timed out during computation");
         }
+
 	}
 
+    public static class PowerCallable implements Callable<PowerResultList> {
+
+        private StudyDesign studyDesign;
+
+        public PowerCallable(StudyDesign studyDesign) {
+            this.studyDesign = studyDesign;
+        }
+
+        @Override
+        public PowerResultList call() throws Exception {
+            try {
+                GLMMPowerParameters params =
+                        PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
+                // create the appropriate power calculator for this model
+                GLMMPowerCalculator calculator = new GLMMPowerCalculator();
+                // calculate the power results
+                List<Power> calcResults = calculator.getPower(params);
+                // convert to concrete classes
+                return PowerResourceHelper.toPowerResultList(calcResults);
+            } catch (IllegalArgumentException iae) {
+                PowerLogger.getInstance().error(iae.getMessage());
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                        iae.getMessage());
+            } catch (PowerException pe) {
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+                        pe.getMessage());
+            }
+        }
+    }
 }
