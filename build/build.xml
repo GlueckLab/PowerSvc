@@ -23,7 +23,7 @@
 	<!-- when releasing software, this is the only place the version information
 			should be specified. Appropriate changes to the manifest and source
 			code will be performed by the build -->
-	<property name="svc.version" value="2.0.1" />
+	<property name="svc.version" value="dev" />
 	<!-- optional suffix if we have multiple versions of the warfile 
 			running on the same tomcat -->
 	<condition property="warfile.suffix" value="">
@@ -39,13 +39,13 @@
 	</condition>
 		<!-- allows user to override default version of web service 
 	     common library -->
-	<condition property="webservicecommon.version" value="dev">
+	<condition property="webservicecommon.version" value="1.1.1">
 	   <not>  
 	      <isset property=""/>
 	   </not>
 	</condition>
 			<!-- allows user to override default version of java statistics library -->
-	<condition property="javastatistics.version" value="dev">
+	<condition property="javastatistics.version" value="1.2.0">
 	   <not>  
 	      <isset property=""/>
 	   </not>
