@@ -64,12 +64,12 @@ implements SampleSizeResource {
                 getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
         long start = System.currentTimeMillis();
 
-        // Execute the calculation in asynchronously and time out after 30 seconds.  User
+        // Execute the calculation in asynchronously and time out after 300 seconds.  User
         // gets an error
         SampleSizeCallable callable = new SampleSizeCallable(studyDesign);
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
-            PowerResultList results = future.get(30, TimeUnit.SECONDS);
+            PowerResultList results = future.get(300, TimeUnit.SECONDS);
             logger.info("getSampleSize(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
