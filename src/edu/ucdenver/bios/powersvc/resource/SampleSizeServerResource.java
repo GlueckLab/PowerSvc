@@ -61,7 +61,7 @@ implements SampleSizeResource {
 	public PowerResultList getSampleSize(StudyDesign studyDesign)
 	{
         JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " +
-                getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
+                getRequest().getRootRef().toString() + ": studyDesign = ", JsonLogger.toJson(studyDesign));
         long start = System.currentTimeMillis();
 
         // Execute the calculation in asynchronously and time out after 30 seconds.  User
