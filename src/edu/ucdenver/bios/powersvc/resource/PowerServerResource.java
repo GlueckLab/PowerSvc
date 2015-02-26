@@ -49,6 +49,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 public class PowerServerResource extends ServerResource
 implements PowerResource {
 
+    private static final int BYTES_PER_MEG = 1024 * 1024;
     private Logger logger = Logger.getLogger(getClass());
 
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
@@ -66,7 +67,11 @@ implements PowerResource {
             "Invalid study design");
         }
 
-        logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() + ": studyDesign = " + studyDesign);
+        JsonLogger.logObject("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() +
+                getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
+        logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
+                "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
+                "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
         long start = System.currentTimeMillis();
 
         // Execute the calculation in asynchronously and time out after 30 seconds
@@ -74,7 +79,7 @@ implements PowerResource {
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
             // TODO: make the timeout configurable
-            PowerResultList results = future.get(30, TimeUnit.SECONDS);
+            PowerResultList results = future.get(300, TimeUnit.SECONDS);
             logger.info("getPower(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
