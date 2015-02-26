@@ -52,6 +52,8 @@ implements SampleSizeResource {
 
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
 
+    private static final int BYTES_PER_MEG = 1024 * 1024;
+
     /**
 	 * Calculate the total sample size for the specified study design.
 	 * 
@@ -60,8 +62,11 @@ implements SampleSizeResource {
 	 */
 	public PowerResultList getSampleSize(StudyDesign studyDesign)
 	{
-        JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " +
-                getRequest().getRootRef().toString() + ": studyDesign = ", JsonLogger.toJson(studyDesign));
+        JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " + getRequest().getRootRef().toString() +
+                getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
+        logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
+                "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
+                "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
         long start = System.currentTimeMillis();
 
         // Execute the calculation in asynchronously and time out after 30 seconds.  User
@@ -69,7 +74,7 @@ implements SampleSizeResource {
         SampleSizeCallable callable = new SampleSizeCallable(studyDesign);
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
-            PowerResultList results = future.get(30, TimeUnit.SECONDS);
+            PowerResultList results = future.get(300, TimeUnit.SECONDS);
             logger.info("getSampleSize(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
