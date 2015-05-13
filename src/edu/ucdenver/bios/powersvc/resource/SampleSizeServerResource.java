@@ -53,13 +53,13 @@ implements SampleSizeResource {
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
 
     /**
-	 * Calculate the total sample size for the specified study design.
-	 * 
-	 * @param studyDesign study design object
-	 * @return List of power objects for the study design.  These will contain the total sample size
-	 */
-	public PowerResultList getSampleSize(StudyDesign studyDesign)
-	{
+     * Calculate the total sample size for the specified study design.
+     *
+     * @param studyDesign study design object
+     * @return List of power objects for the study design.  These will contain the total sample size
+     */
+    public PowerResultList getSampleSize(StudyDesign studyDesign)
+    {
         JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " +
                 getRequest().getRootRef().toString() + ": studyDesign = ", JsonLogger.toJson(studyDesign));
         long start = System.currentTimeMillis();
@@ -115,7 +115,7 @@ implements SampleSizeResource {
                 // convert to concrete classes
                 return PowerResourceHelper.toPowerResultList(calcResults);
             } catch (IllegalArgumentException iae) {
-                PowerLogger.getInstance().error(iae.getMessage());
+                PowerLogger.getInstance().error(iae.getMessage(), iae);
                 throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
             } catch (PowerException pe) {
                 PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());

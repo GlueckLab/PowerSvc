@@ -92,7 +92,7 @@ implements PowerResource {
                     "Request timed out during computation");
         }
 
-	}
+    }
 
     public static class PowerCallable implements Callable<PowerResultList> {
 
@@ -114,7 +114,7 @@ implements PowerResource {
                 // convert to concrete classes
                 return PowerResourceHelper.toPowerResultList(calcResults);
             } catch (IllegalArgumentException iae) {
-                PowerLogger.getInstance().error(iae.getMessage());
+                PowerLogger.getInstance().error(iae.getMessage(), iae);
                 throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                         iae.getMessage());
             } catch (PowerException pe) {
