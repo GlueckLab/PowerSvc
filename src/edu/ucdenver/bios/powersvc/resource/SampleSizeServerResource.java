@@ -115,7 +115,7 @@ implements SampleSizeResource {
                 // convert to concrete classes
                 return PowerResourceHelper.toPowerResultList(calcResults);
             } catch (IllegalArgumentException iae) {
-                PowerLogger.getInstance().error(iae.getMessage());
+                PowerLogger.getInstance().error(iae.getMessage(), iae);
                 throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
             } catch (PowerException pe) {
                 PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
