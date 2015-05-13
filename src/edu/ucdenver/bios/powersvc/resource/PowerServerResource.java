@@ -92,7 +92,7 @@ implements PowerResource {
                     "Request timed out during computation");
         }
 
-	}
+    }
 
     public static class PowerCallable implements Callable<PowerResultList> {
 
