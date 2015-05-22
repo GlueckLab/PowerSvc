@@ -48,14 +48,12 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  */
 public class PowerServerResource extends ServerResource
 implements PowerResource {
-    private static final String BAD_REQUEST = "Bad Request (400) - ";
-
     private Logger logger = Logger.getLogger(getClass());
 
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
 
     /**
-     * Calculate power for the specified study design.
+     * Calculate the power for the specified study design.
      *
      * @param studyDesign study design object
      * @return List of power objects for the study design.
@@ -66,7 +64,8 @@ implements PowerResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid study design");
         }
 
-        logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() + ": studyDesign = " + studyDesign);
+        logger.info("PowerServerResource.getPower(): "
+                        + getRequest().getRootRef() + ": studyDesign = " + studyDesign);
         long start = System.currentTimeMillis();
 
         // Execute the calculation asynchronously and time out after 30 seconds.
@@ -75,7 +74,8 @@ implements PowerResource {
         try {
             // TODO: make the timeout configurable
             PowerResultList results = future.get(30, TimeUnit.SECONDS);
-            logger.info("getPower(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
+            logger.info("getPower(): "
+                            + "executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
             logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
@@ -83,10 +83,15 @@ implements PowerResource {
         } catch (ExecutionException e) {
             logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
             Throwable cause = e.getCause();
+            if (cause instanceof PowerException) {
+                PowerException pe = (PowerException) cause;
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+            }
             if (cause instanceof ResourceException) {
-                String status = ((ResourceException) cause).getStatus().toString();
-                if (status.startsWith(BAD_REQUEST)) {
-                    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, status.substring(BAD_REQUEST.length()));
+                ResourceException re = (ResourceException) cause;
+                Status status = re.getStatus();
+                if (Status.CLIENT_ERROR_BAD_REQUEST.equals(status)) {
+                    throw re;
                 }
             }
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
@@ -104,7 +109,7 @@ implements PowerResource {
 
         private StudyDesign studyDesign;
 
-        public PowerCallable(StudyDesign studyDesign) {
+        private PowerCallable(StudyDesign studyDesign) {
             this.studyDesign = studyDesign;
         }
 
