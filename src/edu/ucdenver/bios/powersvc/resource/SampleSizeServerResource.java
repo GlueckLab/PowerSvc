@@ -28,6 +28,7 @@ import java.util.concurrent.*;
 import edu.ucdenver.bios.powersvc.application.JsonLogger;
 import org.apache.log4j.Logger;
 import org.restlet.data.Status;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -47,8 +48,6 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  */
 public class SampleSizeServerResource extends ServerResource
 implements SampleSizeResource {
-    private static final String BAD_REQUEST = "Bad Request (400) - ";
-
     private Logger logger = Logger.getLogger(getClass());
 
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
@@ -59,13 +58,14 @@ implements SampleSizeResource {
      * @param studyDesign study design object
      * @return List of power objects for the study design.  These will contain the total sample size.
      */
-    public PowerResultList getSampleSize(StudyDesign studyDesign) {
+    @Post
+    public final PowerResultList getSampleSize(final StudyDesign studyDesign) {
         if (studyDesign == null) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid study design");
         }
 
-        JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " +
-                getRequest().getRootRef().toString() + ": studyDesign = ", JsonLogger.toJson(studyDesign));
+        logger.info("SampleSizeServerResource.getSampleSize(): "
+                        + getRequest().getRootRef() + ": studyDesign = " + studyDesign);
         long start = System.currentTimeMillis();
 
         // Execute the calculation asynchronously and time out after 30 seconds.
@@ -74,7 +74,8 @@ implements SampleSizeResource {
         try {
             // TODO: make the timeout configurable
             PowerResultList results = future.get(30, TimeUnit.SECONDS);
-            logger.info("getSampleSize(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
+            logger.info("getSampleSize(): "
+                            + "executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
             logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
@@ -87,9 +88,10 @@ implements SampleSizeResource {
                 PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
             }
             if (cause instanceof ResourceException) {
-                String status = ((ResourceException) cause).getStatus().toString();
-                if (status.startsWith(BAD_REQUEST)) {
-                    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, status.substring(BAD_REQUEST.length()));
+                ResourceException re = (ResourceException) cause;
+                Status status = re.getStatus();
+                if (Status.CLIENT_ERROR_BAD_REQUEST.equals(status)) {
+                    throw re;
                 }
             }
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
