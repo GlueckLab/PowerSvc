@@ -43,11 +43,12 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 /**
  * Implementation of the PowerResource interface for calculating
  * power, sample size, and detectable difference.
- * @author Sarah Kreidler
  *
+ * @author Sarah Kreidler
  */
 public class PowerServerResource extends ServerResource
 implements PowerResource {
+    private static final String BAD_REQUEST = "Bad Request (400) - ";
 
     private Logger logger = Logger.getLogger(getClass());
 
@@ -57,19 +58,18 @@ implements PowerResource {
      * Calculate power for the specified study design.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design
+     * @return List of power objects for the study design.
      */
     @Post
     public final PowerResultList getPower(final StudyDesign studyDesign) {
         if (studyDesign == null) {
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Invalid study design");
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid study design");
         }
 
         logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() + ": studyDesign = " + studyDesign);
         long start = System.currentTimeMillis();
 
-        // Execute the calculation in asynchronously and time out after 30 seconds
+        // Execute the calculation asynchronously and time out after 30 seconds.
         PowerCallable callable = new PowerCallable(studyDesign);
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
@@ -79,9 +79,16 @@ implements PowerResource {
             return results;
         } catch (InterruptedException e) {
             logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Exception computation");
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Computation interrupted");
         } catch (ExecutionException e) {
             logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
+            Throwable cause = e.getCause();
+            if (cause instanceof ResourceException) {
+                String status = ((ResourceException) cause).getStatus().toString();
+                if (status.startsWith(BAD_REQUEST)) {
+                    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, status.substring(BAD_REQUEST.length()));
+                }
+            }
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
         } catch (TimeoutException e) {
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef().toString());
@@ -91,7 +98,6 @@ implements PowerResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                     "Request timed out during computation");
         }
-
     }
 
     public static class PowerCallable implements Callable<PowerResultList> {
@@ -115,12 +121,10 @@ implements PowerResource {
                 return PowerResourceHelper.toPowerResultList(calcResults);
             } catch (IllegalArgumentException iae) {
                 PowerLogger.getInstance().error(iae.getMessage(), iae);
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                        iae.getMessage());
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
             } catch (PowerException pe) {
-                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                        pe.getMessage());
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage(), pe);
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, pe.getMessage());
             }
         }
     }
