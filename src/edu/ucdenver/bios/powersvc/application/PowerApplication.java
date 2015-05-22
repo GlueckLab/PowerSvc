@@ -24,8 +24,15 @@ package edu.ucdenver.bios.powersvc.application;
 
 import org.restlet.Application;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.Restlet;
+import org.restlet.data.MediaType;
+import org.restlet.data.Status;
+import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
 import org.restlet.routing.Router;
+import org.restlet.service.StatusService;
 
 import edu.ucdenver.bios.powersvc.resource.DefaultResource;
 import edu.ucdenver.bios.powersvc.resource.DetectableDifferenceServerResource;
@@ -43,7 +50,6 @@ import edu.ucdenver.bios.powersvc.resource.test.FTestResource;
  * @author Sarah Kreidler
  */
 public class PowerApplication extends Application {
-
     /**
      * Class which dispatches http requests to the appropriate
      * handler class for the power service.
@@ -55,7 +61,7 @@ public class PowerApplication extends Application {
     public PowerApplication(final Context parentContext)
     throws Exception {
         super(parentContext);
-
+        setStatusService(new PowerStatusService());
         PowerLogger.getInstance().info("Statistical power service starting.");
     }
 
@@ -85,5 +91,64 @@ public class PowerApplication extends Application {
 
         return router;
     }
-}
 
+    /**
+     * A StatusService subclass, to override the error representation.
+     */
+    private static final class PowerStatusService extends StatusService {
+        private static final String MAILTO_URL = "mailto:samplesizeshop@gmail.com?subject=GLIMMPSE%20issue";
+
+        @Override
+        public Representation getRepresentation(Status status, Request request, Response response) {
+            if (! Status.CLIENT_ERROR_BAD_REQUEST.equals(status)) {
+                return super.getRepresentation(status, request, response);
+            }
+
+            final StringBuilder sb = new StringBuilder();
+
+            sb.append("<html>\n");
+            sb.append("<head>\n");
+            sb.append("<title>Bad Request</title>\n");
+            sb.append("</head>\n");
+            sb.append("<body style=\"font-family: sans-serif;\">\n");
+
+            sb.append("<p>");
+            sb.append("We're sorry, there seems to be an error in your request:");
+            sb.append("</p>\n");
+            sb.append("<p style=\"font-style: italic\">");
+            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append(status.getDescription() != null ? status.getDescription() : "Unknown error");
+            sb.append("</p>\n");
+
+            sb.append("<p>");
+            sb.append("If you believe you have received this message in error, please contact <a href=\"");
+            sb.append(obfuscation(MAILTO_URL));
+            sb.append("\">technical support</a>.");
+            sb.append("</p>\n");
+
+            sb.append("</body>\n");
+            sb.append("</html>\n");
+
+            return new StringRepresentation(sb.toString(), MediaType.TEXT_HTML);
+        }
+
+        /**
+         * Return an obfuscation of a string, suitable for use as an anchor element href attribute
+         * in HTML.
+         *
+         * @param s The string.
+         *
+         * @return An obfuscation of the string.
+         */
+        private static final String obfuscation(String s) {
+            StringBuilder sb = new StringBuilder(500);
+
+            char[] ca = s.toCharArray();
+            for (int i = 0, n = ca.length; i < n; ++ i) {
+                sb.append("&#" + (int) ca[i] + ";");
+            }
+
+            return sb.toString();
+        }
+    }
+}
