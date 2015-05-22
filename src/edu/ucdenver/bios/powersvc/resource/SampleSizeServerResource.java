@@ -47,6 +47,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  */
 public class SampleSizeServerResource extends ServerResource
 implements SampleSizeResource {
+    private static final String BAD_REQUEST = "Bad Request (400) - ";
 
     private Logger logger = Logger.getLogger(getClass());
 
@@ -56,19 +57,22 @@ implements SampleSizeResource {
      * Calculate the total sample size for the specified study design.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design.  These will contain the total sample size
+     * @return List of power objects for the study design.  These will contain the total sample size.
      */
-    public PowerResultList getSampleSize(StudyDesign studyDesign)
-    {
+    public PowerResultList getSampleSize(StudyDesign studyDesign) {
+        if (studyDesign == null) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid study design");
+        }
+
         JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " +
                 getRequest().getRootRef().toString() + ": studyDesign = ", JsonLogger.toJson(studyDesign));
         long start = System.currentTimeMillis();
 
-        // Execute the calculation in asynchronously and time out after 30 seconds.  User
-        // gets an error
+        // Execute the calculation asynchronously and time out after 30 seconds.
         SampleSizeCallable callable = new SampleSizeCallable(studyDesign);
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
+            // TODO: make the timeout configurable
             PowerResultList results = future.get(30, TimeUnit.SECONDS);
             logger.info("getSampleSize(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
@@ -77,9 +81,16 @@ implements SampleSizeResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Computation interrupted");
         } catch (ExecutionException e) {
             logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
-            if (e.getCause() instanceof PowerException) {
-                PowerException pe = (PowerException) e.getCause();
+            Throwable cause = e.getCause();
+            if (cause instanceof PowerException) {
+                PowerException pe = (PowerException) cause;
                 PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+            }
+            if (cause instanceof ResourceException) {
+                String status = ((ResourceException) cause).getStatus().toString();
+                if (status.startsWith(BAD_REQUEST)) {
+                    throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, status.substring(BAD_REQUEST.length()));
+                }
             }
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
         } catch (TimeoutException e) {
@@ -97,9 +108,6 @@ implements SampleSizeResource {
         private StudyDesign studyDesign;
 
         private SampleSizeCallable(StudyDesign studyDesign) {
-            if (studyDesign == null)
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                        "Invalid study design");
             this.studyDesign = studyDesign;
         }
 
@@ -118,11 +126,9 @@ implements SampleSizeResource {
                 PowerLogger.getInstance().error(iae.getMessage(), iae);
                 throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
             } catch (PowerException pe) {
-                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                        pe.getMessage());
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage(), pe);
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, pe.getMessage());
             }
-
         }
     }
 }
