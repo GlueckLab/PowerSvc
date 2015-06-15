@@ -43,28 +43,27 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 /**
  * Implementation of the PowerResource interface for calculating
  * power, sample size, and detectable difference.
- * @author Sarah Kreidler
  *
+ * @author Sarah Kreidler
  */
 public class PowerServerResource extends ServerResource
 implements PowerResource {
+    private Logger logger = Logger.getLogger(getClass());
 
     private static final int BYTES_PER_MEG = 1024 * 1024;
-    private Logger logger = Logger.getLogger(getClass());
 
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
 
     /**
-     * Calculate power for the specified study design.
+     * Calculate the power for the specified study design.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design
+     * @return List of power objects for the study design.
      */
     @Post
     public final PowerResultList getPower(final StudyDesign studyDesign) {
         if (studyDesign == null) {
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Invalid study design");
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid study design");
         }
 
         JsonLogger.logObject("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() +
@@ -74,19 +73,32 @@ implements PowerResource {
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
         long start = System.currentTimeMillis();
 
-        // Execute the calculation in asynchronously and time out after 30 seconds
+        // Execute the calculation asynchronously and time out after 30 seconds.
         PowerCallable callable = new PowerCallable(studyDesign);
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
             // TODO: make the timeout configurable
             PowerResultList results = future.get(300, TimeUnit.SECONDS);
-            logger.info("getPower(): executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
+            logger.info("getPower(): "
+                            + "executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
             logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Exception computation");
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Computation interrupted");
         } catch (ExecutionException e) {
             logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
+            Throwable cause = e.getCause();
+            if (cause instanceof PowerException) {
+                PowerException pe = (PowerException) cause;
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
+            }
+            if (cause instanceof ResourceException) {
+                ResourceException re = (ResourceException) cause;
+                Status status = re.getStatus();
+                if (Status.CLIENT_ERROR_BAD_REQUEST.equals(status)) {
+                    throw re;
+                }
+            }
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
         } catch (TimeoutException e) {
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef().toString());
@@ -96,14 +108,13 @@ implements PowerResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                     "Request timed out during computation");
         }
-
-	}
+    }
 
     public static class PowerCallable implements Callable<PowerResultList> {
 
         private StudyDesign studyDesign;
 
-        public PowerCallable(StudyDesign studyDesign) {
+        private PowerCallable(StudyDesign studyDesign) {
             this.studyDesign = studyDesign;
         }
 
@@ -119,13 +130,11 @@ implements PowerResource {
                 // convert to concrete classes
                 return PowerResourceHelper.toPowerResultList(calcResults);
             } catch (IllegalArgumentException iae) {
-                PowerLogger.getInstance().error(iae.getMessage());
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                        iae.getMessage());
+                PowerLogger.getInstance().error(iae.getMessage(), iae);
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, iae.getMessage());
             } catch (PowerException pe) {
-                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage());
-                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-                        pe.getMessage());
+                PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage(), pe);
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, pe.getMessage());
             }
         }
     }
