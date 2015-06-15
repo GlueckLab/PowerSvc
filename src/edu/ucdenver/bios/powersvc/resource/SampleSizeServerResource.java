@@ -50,6 +50,8 @@ public class SampleSizeServerResource extends ServerResource
 implements SampleSizeResource {
     private Logger logger = Logger.getLogger(getClass());
 
+    private static final int BYTES_PER_MEG = 1024 * 1024;
+
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
 
     /**
@@ -64,8 +66,11 @@ implements SampleSizeResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Invalid study design");
         }
 
-        logger.info("SampleSizeServerResource.getSampleSize(): "
-                        + getRequest().getRootRef() + ": studyDesign = " + studyDesign);
+        JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " + getRequest().getRootRef().toString() +
+                getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
+        logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
+                "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
+                "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
         long start = System.currentTimeMillis();
 
         // Execute the calculation asynchronously and time out after 30 seconds.
@@ -73,7 +78,7 @@ implements SampleSizeResource {
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
             // TODO: make the timeout configurable
-            PowerResultList results = future.get(30, TimeUnit.SECONDS);
+            PowerResultList results = future.get(300, TimeUnit.SECONDS);
             logger.info("getSampleSize(): "
                             + "executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
             return results;
