@@ -23,6 +23,7 @@
 package edu.ucdenver.bios.powersvc.resource;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -81,12 +82,14 @@ public final class PowerResourceHelper {
     /**
      * Convert a study design object into a power parameters object
      * TODO: should be removed once modifications to java stats are complete
-     * 
+     *
      * @param studyDesign
      * @return power parameter object for use with JavaStatistics
      */
     public static GLMMPowerParameters studyDesignToPowerParameters(StudyDesign studyDesign)
-    throws IllegalArgumentException {
+            throws IllegalArgumentException {
+        validate(studyDesign);
+
         GLMMPowerParameters params = new GLMMPowerParameters();
 
         /** Build list inputs **/
@@ -137,7 +140,7 @@ public final class PowerResourceHelper {
         // build the within subject contrast
         params.setWithinSubjectContrast(withinParticipantContrastFromStudyDesign(studyDesign));
         // build theta null matrix
-        params.setTheta(thetaNullMatrixFromStudyDesign(studyDesign, 
+        params.setTheta(thetaNullMatrixFromStudyDesign(studyDesign,
                 params.getBetweenSubjectContrast(),
                 params.getWithinSubjectContrast()));
         // add matrices for either GLMM(F) or GLMM(F,g) designs
@@ -190,7 +193,7 @@ public final class PowerResourceHelper {
      * @return GLMM PowerMethod enum type
      * @throws IllegalArgumentException on unknown power methods
      */
-    private static GLMMPowerParameters.PowerMethod toGLMMPowerMethod(PowerMethod method) 
+    private static GLMMPowerParameters.PowerMethod toGLMMPowerMethod(PowerMethod method)
     throws IllegalArgumentException {
         switch(method.getPowerMethodEnum()) {
         case CONDITIONAL:
@@ -210,7 +213,7 @@ public final class PowerResourceHelper {
      * @return GLMM PowerMethod enum type
      * @throws IllegalArgumentException on unknown power methods
      */
-    private static PowerMethod toPowerMethod(GLMMPowerParameters.PowerMethod method) 
+    private static PowerMethod toPowerMethod(GLMMPowerParameters.PowerMethod method)
     throws IllegalArgumentException {
         switch(method) {
         case CONDITIONAL_POWER:
@@ -227,7 +230,7 @@ public final class PowerResourceHelper {
     /**
      * Convert a domain layer statistical test to a GLMMTest enum
      */
-    private static GLMMTestFactory.Test toGLMMTest(StatisticalTest test) 
+    private static GLMMTestFactory.Test toGLMMTest(StatisticalTest test)
     throws IllegalArgumentException {
         switch(test.getType()) {
         case UNIREP:
@@ -252,7 +255,7 @@ public final class PowerResourceHelper {
     /**
      * Convert a domain layer statistical test to a GLMMTest enum
      */
-    private static StatisticalTest toStatisticalTest(GLMMTestFactory.Test test) 
+    private static StatisticalTest toStatisticalTest(GLMMTestFactory.Test test)
     throws IllegalArgumentException {
         switch(test) {
         case UNIREP:
@@ -285,11 +288,11 @@ public final class PowerResourceHelper {
             // matrix based design
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_DESIGN));
         } else {
-            /* For Guided study designs, we assume a cell means coding.  Thus, the design matrix is 
+            /* For Guided study designs, we assume a cell means coding.  Thus, the design matrix is
              * simply an identity matrix with dimension equal to the product of the number of levels
              * of each between subject factor
              * We add additional rows for unequal group sizes
-             */            
+             */
             int totalColumns = 1;
             // calculate the product of the #levels of each between participant factor
             List<BetweenParticipantFactor> factorList = studyDesign.getBetweenParticipantFactorList();
@@ -328,11 +331,11 @@ public final class PowerResourceHelper {
             // now build the actual matrix
             if (totalRows == totalColumns) {
                 // equal group sizes, so just a basic cell means coding (i.e. identity)
-                designEssenceMatrix = 
+                designEssenceMatrix =
                 org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(totalRows);
             } else {
                 // unequal group sizes, so start with a zero matrix
-                designEssenceMatrix = 
+                designEssenceMatrix =
                     MatrixUtils.getRealMatrixWithFilledValue(totalRows, totalColumns, 0);
                 // now set 1's in the appropriate places
                 int col = 0;
@@ -358,10 +361,10 @@ public final class PowerResourceHelper {
         double[][] betaFixedData = null;
         double[][] betaRandomData = null;
         int rows = 0;
-        
-        NamedMatrix betaFixed = 
+
+        NamedMatrix betaFixed =
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
-        NamedMatrix betaRandom = 
+        NamedMatrix betaRandom =
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
         // get the beta information from the study design matrices
         if (betaFixed != null) {
@@ -379,15 +382,15 @@ public final class PowerResourceHelper {
                 for(ClusterNode node: clusterNodeList) {
                     totalColumns *= node.getGroupSize();
                 }
-                
-                // direct product the beta matrix with a matrix of ones to 
+
+                // direct product the beta matrix with a matrix of ones to
                 // generate the proper dimensions for a cluster sample
                 RealMatrix oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(1, totalColumns, 1);
                 RealMatrix betaFixedMatrix = new Array2DRowRealMatrix(betaFixedData);
                 betaFixedMatrix = MatrixUtils.getKroneckerProduct(oneMatrix, betaFixedMatrix);
                 // reset the data
                 betaFixedData = betaFixedMatrix.getData();
-                
+
                 // now repeat for the beta random matrix
                 if (betaRandom != null) {
                     oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(1, totalColumns, 1);
@@ -395,11 +398,11 @@ public final class PowerResourceHelper {
                     betaRandomMatrix = MatrixUtils.getKroneckerProduct(oneMatrix, betaRandomMatrix);
                     // reset the data
                     betaRandomData = betaRandomMatrix.getData();
-                } 
+                }
             }
         }
-        
-        FixedRandomMatrix betaFixedRandom = 
+
+        FixedRandomMatrix betaFixedRandom =
             new FixedRandomMatrix(betaFixedData, betaRandomData, false);
         return betaFixedRandom;
     }
@@ -413,12 +416,12 @@ public final class PowerResourceHelper {
     public static FixedRandomMatrix betweenParticipantContrastFromStudyDesign(StudyDesign studyDesign) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             // matrix based design
-            NamedMatrix cFixed = 
+            NamedMatrix cFixed =
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST);
-            NamedMatrix cRandom = 
+            NamedMatrix cRandom =
                 studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM);
 
-            return 
+            return
             new FixedRandomMatrix((cFixed != null ? cFixed.getData().getData() : null),
                     (cRandom != null ? cRandom.getData().getData() : null),
                     true);
@@ -433,23 +436,23 @@ public final class PowerResourceHelper {
                     RealMatrix cFixed = null;
                     RealMatrix cRandom = null;
                     // get the factor of interest
-                    List<HypothesisBetweenParticipantMapping> betweenMap = 
+                    List<HypothesisBetweenParticipantMapping> betweenMap =
                         hypothesis.getBetweenParticipantFactorMapList();
                     if (betweenMap != null && betweenMap.size() > 0) {
                         // build the fixed part of the contrast based on the hypothesis of interest
                         switch (hypothesis.getType()) {
                         case MAIN_EFFECT:
                             // between subject factor of interest
-                            cFixed = ContrastHelper.mainEffectBetween(betweenMap.get(0).getBetweenParticipantFactor(), 
+                            cFixed = ContrastHelper.mainEffectBetween(betweenMap.get(0).getBetweenParticipantFactor(),
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case INTERACTION:
-                            cFixed = ContrastHelper.interactionBetween(betweenMap, 
+                            cFixed = ContrastHelper.interactionBetween(betweenMap,
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case TREND:
                             HypothesisBetweenParticipantMapping trendFactor = betweenMap.get(0);
-                            cFixed = ContrastHelper.trendBetween(trendFactor,                                    
+                            cFixed = ContrastHelper.trendBetween(trendFactor,
                                     studyDesign.getBetweenParticipantFactorList());
                         }
                     } else {
@@ -462,17 +465,17 @@ public final class PowerResourceHelper {
                             cRandom = MatrixUtils.getRealMatrixWithFilledValue(cFixed.getRowDimension(), 1, 0);
                         }
                     }
-                    return new FixedRandomMatrix((cFixed != null ? cFixed.getData() : null), 
+                    return new FixedRandomMatrix((cFixed != null ? cFixed.getData() : null),
                             (cRandom != null ? cRandom.getData() : null), true);
                 }
 
                 // no hypothesis specified
-                return null; 
+                return null;
             }
         }
 
         // unknown view type
-        return null; 
+        return null;
     }
 
 
@@ -495,31 +498,31 @@ public final class PowerResourceHelper {
                 if (hypothesis != null) {
                     RealMatrix withinContrast = null;
                     // get the factor of interest
-                    List<HypothesisRepeatedMeasuresMapping> withinMap = 
+                    List<HypothesisRepeatedMeasuresMapping> withinMap =
                         hypothesis.getRepeatedMeasuresMapTree();
                     if (withinMap != null && withinMap.size() > 0) {
                         // build the fixed part of the contrast based on the hypothesis of interest
                         switch (hypothesis.getType()) {
                         case MAIN_EFFECT:
                             // between subject factor of interest
-                            withinContrast = 
-                                ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(), 
+                            withinContrast =
+                                ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(),
                                     studyDesign.getRepeatedMeasuresTree(),
                                     studyDesign.getResponseList());
                             break;
                         case INTERACTION:
-                            withinContrast = ContrastHelper.interactionWithin(withinMap, 
+                            withinContrast = ContrastHelper.interactionWithin(withinMap,
                                     studyDesign.getRepeatedMeasuresTree(),
                                     studyDesign.getResponseList());
                             break;
                         case TREND:
                             HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
-                            withinContrast = ContrastHelper.trendWithin(trendFactor,                                    
+                            withinContrast = ContrastHelper.trendWithin(trendFactor,
                                     studyDesign.getRepeatedMeasuresTree(),
                                     studyDesign.getResponseList());
                         }
                     } else {
-                        withinContrast = 
+                        withinContrast =
                                 ContrastHelper.grandMeanWithin(studyDesign.getRepeatedMeasuresTree(),
                                         studyDesign.getResponseList());
                     }
@@ -533,25 +536,25 @@ public final class PowerResourceHelper {
                                 totalRows *= node.getGroupSize();
                             }
 
-                            // direct product the U matrix with a matrix of ones to 
+                            // direct product the U matrix with a matrix of ones to
                             // generate the proper dimensions for a cluster sample
-                            RealMatrix oneMatrix = 
+                            RealMatrix oneMatrix =
                                 MatrixUtils.getRealMatrixWithFilledValue(totalRows, 1, 1);
                             withinContrast = MatrixUtils.getKroneckerProduct(oneMatrix, withinContrast);
 
                         }
                     }
-                    
+
                     return withinContrast;
                 }
 
                 // no hypothesis specified
-                return null; 
+                return null;
             }
         }
 
         // unknown view type
-        return null; 
+        return null;
     }
 
     /**
@@ -566,7 +569,7 @@ public final class PowerResourceHelper {
             // guided mode, so we need to decode the covariance objects
             // first, allocate a list of matrices to build the overall kronecker covariance
             ArrayList<RealMatrix> kroneckerMatrixList = new ArrayList<RealMatrix>();
-            
+
             // add covariance information for clustering
             List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
             if (clusterNodeList != null) {
@@ -590,23 +593,23 @@ public final class PowerResourceHelper {
                     kroneckerMatrixList.add(new Array2DRowRealMatrix(data));
                 }
             }
-            
+
             // add covariance for repeated measures
             List<RepeatedMeasuresNode> rmNodeList = studyDesign.getRepeatedMeasuresTree();
             if (rmNodeList != null) {
                 for(RepeatedMeasuresNode rmNode: rmNodeList) {
                     Covariance covariance = studyDesign.getCovarianceFromSet(rmNode.getDimension());
                     if (covariance != null) {
-                        RealMatrix kroneckerMatrix = 
+                        RealMatrix kroneckerMatrix =
                                 CovarianceHelper.covarianceToRealMatrix(covariance, rmNode);
                         if (kroneckerMatrix != null) {
                             kroneckerMatrixList.add(kroneckerMatrix);
                         } else {
-                            throw new IllegalArgumentException("Invalid covariance information for factor: " + 
+                            throw new IllegalArgumentException("Invalid covariance information for factor: " +
                                     rmNode.getDimension());
                         }
                     } else {
-                        throw new IllegalArgumentException("Missing covariance information for factor: " + 
+                        throw new IllegalArgumentException("Missing covariance information for factor: " +
                                 rmNode.getDimension());
                     }
                 }
@@ -614,14 +617,14 @@ public final class PowerResourceHelper {
             // lastly, we need to add the covariance of responses
             Covariance covariance = studyDesign.getCovarianceFromSet(
                     PowerConstants.RESPONSES_COVARIANCE_LABEL);
-            RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance, 
+            RealMatrix kroneckerMatrix = CovarianceHelper.covarianceToRealMatrix(covariance,
                     studyDesign.getResponseList());
             if (kroneckerMatrix != null) {
                 kroneckerMatrixList.add(kroneckerMatrix);
             } else {
                 throw new IllegalArgumentException("Invalid covariance information for response variables");
             }
-            
+
             return MatrixUtils.getKroneckerProduct(kroneckerMatrixList);
         }
     }
@@ -645,7 +648,7 @@ public final class PowerResourceHelper {
      * @return sigma outcomes/covariate matrix
      */
     public static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(
-            StudyDesign studyDesign, 
+            StudyDesign studyDesign,
             RealMatrix sigmaG, RealMatrix sigmaY) {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
@@ -666,7 +669,7 @@ public final class PowerResourceHelper {
                         sigmaG.getColumnDimension() <= 0) {
                     throw new IllegalArgumentException("Invalid covariance for Gaussian covariate");
                 }
-                if (sigmaY == null || 
+                if (sigmaY == null ||
                         sigmaY.getRowDimension() < sigmaYG.getRowDimension() ||
                         sigmaY.getColumnDimension() != sigmaY.getRowDimension()) {
                     throw new IllegalArgumentException("Invalid covariance for outcome");
@@ -685,8 +688,8 @@ public final class PowerResourceHelper {
                     for(ClusterNode node: clusterNodeList) {
                         totalRows *= node.getGroupSize();
                     }
-                    
-                    // kronecker product the sigmaYG matrix with a matrix of ones to 
+
+                    // kronecker product the sigmaYG matrix with a matrix of ones to
                     // generate the proper dimensions for a cluster sample
                     RealMatrix oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(totalRows, 1, 1);
                     sigmaYG = MatrixUtils.getKroneckerProduct(oneMatrix, sigmaYG);
@@ -706,7 +709,7 @@ public final class PowerResourceHelper {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_SIGMA_GAUSSIAN));
         } else {
             // in Guided Mode, the user specifies this as a standard deviation, so we square it
-            RealMatrix sigmaG = 
+            RealMatrix sigmaG =
                 toRealMatrix(
                         studyDesign.getNamedMatrix(
                                 PowerConstants.MATRIX_SIGMA_GAUSSIAN));
@@ -729,16 +732,16 @@ public final class PowerResourceHelper {
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
             return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_THETA_NULL));
         } else {
-            RealMatrix thetaNull = 
+            RealMatrix thetaNull =
                 toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.MATRIX_THETA_NULL));
             if (thetaNull == null) {
                 if (C != null && C.getFixedMatrix() != null && U != null) {
                     int rows = C.getFixedMatrix().getRowDimension();
                     int columns = U.getColumnDimension();
                     thetaNull = MatrixUtils.getRealMatrixWithFilledValue(rows, columns, 0);
-                } 
+                }
             }
-            return thetaNull; 
+            return thetaNull;
         }
     }
 
@@ -753,7 +756,7 @@ public final class PowerResourceHelper {
         }
         // allocate a result list
         NamedMatrixList matrixList = new NamedMatrixList();
-        // parse the study design into matrices 
+        // parse the study design into matrices
         // build design matrix
         NamedMatrix X = toNamedMatrix(designMatrixFromStudyDesign(studyDesign),
                 PowerConstants.MATRIX_DESIGN);
@@ -763,17 +766,17 @@ public final class PowerResourceHelper {
         if (beta != null) {
             matrixList.add(toNamedMatrix(beta.getFixedMatrix(), PowerConstants.MATRIX_BETA));
             if (studyDesign.isGaussianCovariate()) {
-                matrixList.add(toNamedMatrix(beta.getRandomMatrix(), 
+                matrixList.add(toNamedMatrix(beta.getRandomMatrix(),
                         PowerConstants.MATRIX_BETA_RANDOM));
             }
         }
         // build the between subject contrast
         FixedRandomMatrix C = betweenParticipantContrastFromStudyDesign(studyDesign);
         if (C != null) {
-            matrixList.add(toNamedMatrix(C.getFixedMatrix(), 
+            matrixList.add(toNamedMatrix(C.getFixedMatrix(),
                     PowerConstants.MATRIX_BETWEEN_CONTRAST));
             if (studyDesign.isGaussianCovariate()) {
-                matrixList.add(toNamedMatrix(C.getRandomMatrix(), 
+                matrixList.add(toNamedMatrix(C.getRandomMatrix(),
                         PowerConstants.MATRIX_BETWEEN_CONTRAST_RANDOM));
             }
         }
@@ -790,7 +793,7 @@ public final class PowerResourceHelper {
 
         // add matrices for either GLMM(F) or GLMM(F,g) designs
         if (studyDesign.isGaussianCovariate()) {
-            NamedMatrix sigmaY = 
+            NamedMatrix sigmaY =
                 toNamedMatrix(sigmaOutcomesMatrixFromStudyDesign(studyDesign),
                         PowerConstants.MATRIX_SIGMA_OUTCOME);
             if (sigmaY != null) matrixList.add(sigmaY);
@@ -800,13 +803,13 @@ public final class PowerResourceHelper {
                         PowerConstants.MATRIX_SIGMA_GAUSSIAN);
             if (sigmaG != null) matrixList.add(sigmaG);
 
-            NamedMatrix sigmaYG = 
+            NamedMatrix sigmaYG =
                 toNamedMatrix(sigmaOutcomesCovariateMatrixFromStudyDesign(studyDesign,
                         toRealMatrix(sigmaG), toRealMatrix(sigmaY)),
                         PowerConstants.MATRIX_SIGMA_OUTCOME_GAUSSIAN);
             if (sigmaYG != null) matrixList.add(sigmaYG);
         } else {
-            NamedMatrix sigmaE = 
+            NamedMatrix sigmaE =
                 toNamedMatrix(sigmaErrorMatrixFromStudyDesign(studyDesign),
                         PowerConstants.MATRIX_SIGMA_ERROR);
             if (sigmaE != null) matrixList.add(sigmaE);
@@ -817,7 +820,7 @@ public final class PowerResourceHelper {
     /**
      * This method takes Named Matrix and converts it into a RealMatrix and
      * returns a Real Matrix.
-     * 
+     *
      * @param namedMatrix
      *            The matrix is a input matrix of type NamedMatrix which is to
      *            be converted to type RealMatrix.
@@ -838,7 +841,7 @@ public final class PowerResourceHelper {
     /**
      * This method takes a Real Matrix and converts it into a Named Matrix and
      * returns that Named Matrix.
-     * 
+     *
      * @param matrix
      *            The matrix is a input matrix of type RealMatrix and is to be
      *            converted to a NamedMatrix.
@@ -895,8 +898,8 @@ public final class PowerResourceHelper {
                 new SigmaScale(glmmPower.getSigmaScale()),
                 toPowerMethod(glmmPower.getPowerMethod()),
                 quantile,
-                toConfidenceInterval(glmmPower.getConfidenceInterval())  
-        );        
+                toConfidenceInterval(glmmPower.getConfidenceInterval())
+        );
     }
 
     /**
@@ -911,6 +914,42 @@ public final class PowerResourceHelper {
         } else {
             return new ConfidenceInterval(ci.getLowerLimit(), ci.getUpperLimit(),
                     ci.getAlphaLower(), ci.getAlphaUpper());
+        }
+    }
+
+    /**
+     * Perform some input validation on a study design.
+     *
+     * @param studyDesign The study design.
+     *
+     * @throws IllegalArgumentException if the study design does not pass
+     *                                  some input validity tests.
+     */
+    private static void validate(StudyDesign studyDesign) {
+        // All repeatedMeasuresTree node dimensions must be distinct.
+        Set<String> dimensions = new HashSet<String>();
+        List<RepeatedMeasuresNode> rmNodes = studyDesign.getRepeatedMeasuresTree();
+        if (rmNodes != null) {
+            for (RepeatedMeasuresNode rmNode: rmNodes) {
+                String dimension = rmNode.getDimension();
+                if (dimensions.contains(dimension)) {
+                    throw new IllegalArgumentException("Duplicate repeated measures dimension '" + dimension + "'");
+                }
+                dimensions.add(dimension);
+            }
+        }
+
+        // All covariance node names must be distinct.
+        Set<String> names = new HashSet<String>();
+        Set<Covariance> covariances = studyDesign.getCovariance();
+        if (covariances != null) {
+            for (Covariance covariance: covariances) {
+                String name = covariance.getName();
+                if (names.contains(name)) {
+                    throw new IllegalArgumentException("Duplicate covariance name '" + name + "'");
+                }
+                names.add(name);
+            }
         }
     }
 
