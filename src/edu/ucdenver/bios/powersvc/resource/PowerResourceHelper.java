@@ -23,6 +23,7 @@
 package edu.ucdenver.bios.powersvc.resource;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -86,7 +87,9 @@ public final class PowerResourceHelper {
      * @return power parameter object for use with JavaStatistics
      */
     public static GLMMPowerParameters studyDesignToPowerParameters(StudyDesign studyDesign)
-    throws IllegalArgumentException {
+            throws IllegalArgumentException {
+        validate(studyDesign);
+
         GLMMPowerParameters params = new GLMMPowerParameters();
 
         /** Build list inputs **/
@@ -911,6 +914,42 @@ public final class PowerResourceHelper {
         } else {
             return new ConfidenceInterval(ci.getLowerLimit(), ci.getUpperLimit(),
                     ci.getAlphaLower(), ci.getAlphaUpper());
+        }
+    }
+
+    /**
+     * Perform some input validation on a study design.
+     *
+     * @param studyDesign The study design.
+     *
+     * @throws IllegalArgumentException if the study design does not pass
+     *                                  some input validity tests.
+     */
+    private static void validate(StudyDesign studyDesign) {
+        // All repeatedMeasuresTree node dimensions must be distinct.
+        Set<String> dimensions = new HashSet<String>();
+        List<RepeatedMeasuresNode> rmNodes = studyDesign.getRepeatedMeasuresTree();
+        if (rmNodes != null) {
+            for (RepeatedMeasuresNode rmNode: rmNodes) {
+                String dimension = rmNode.getDimension();
+                if (dimensions.contains(dimension)) {
+                    throw new IllegalArgumentException("Duplicate repeated measures dimension '" + dimension + "'");
+                }
+                dimensions.add(dimension);
+            }
+        }
+
+        // All covariance node names must be distinct.
+        Set<String> names = new HashSet<String>();
+        Set<Covariance> covariances = studyDesign.getCovariance();
+        if (covariances != null) {
+            for (Covariance covariance: covariances) {
+                String name = covariance.getName();
+                if (names.contains(name)) {
+                    throw new IllegalArgumentException("Duplicate covariance name '" + name + "'");
+                }
+                names.add(name);
+            }
         }
     }
 
