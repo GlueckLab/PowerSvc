@@ -1,10 +1,15 @@
 
 apply plugin: 'war'
 
+group = 'org.samplesizeshop'
+archivesBaseName = 'power'
+version = '2.0-SNAPSHOT'
+
 repositories {
     maven {
         url 'http://maven.restlet.org'
     }
+    mavenLocal()
     mavenCentral()
 }
 
