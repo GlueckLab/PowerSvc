@@ -135,6 +135,9 @@ implements SampleSizeResource {
             } catch (PowerException pe) {
                 PowerLogger.getInstance().error("[" + pe.getErrorCode() + "]:" + pe.getMessage(), pe);
                 throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, pe.getMessage());
+            } catch (OutOfMemoryError oome) {
+                PowerLogger.getInstance().error(oome.getMessage(), oome);
+                throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Insufficient memory to process this study design");
             }
         }
     }
