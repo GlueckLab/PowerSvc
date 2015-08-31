@@ -422,8 +422,7 @@ implements PowerMatrixHTMLResource {
     /**
      * Create a LaTeX representation of the matrix
      * @param name
-     * @param matrix
-     * @param clusterSize
+     * @param baseMatrix
      * @param transpose
      * @return
      */
