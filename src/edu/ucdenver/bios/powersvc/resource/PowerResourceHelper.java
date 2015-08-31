@@ -360,7 +360,6 @@ public final class PowerResourceHelper {
     public static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
         double[][] betaFixedData = null;
         double[][] betaRandomData = null;
-        int rows = 0;
 
         NamedMatrix betaFixed =
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
@@ -369,7 +368,6 @@ public final class PowerResourceHelper {
         // get the beta information from the study design matrices
         if (betaFixed != null) {
             betaFixedData = betaFixed.getData().getData();
-            rows = betaFixed.getRows();
         }
         if (betaRandom != null) {
             betaRandomData = betaRandom.getData().getData();
