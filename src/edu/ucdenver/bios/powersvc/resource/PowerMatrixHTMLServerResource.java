@@ -79,7 +79,7 @@ implements PowerMatrixHTMLResource {
      */
     @Post("json:html")
     public String getMatricesAsHTML(StudyDesign studyDesign) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         buffer.append("<html><head><script type=\"text/javascript\" " +
                 "src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?" +
@@ -123,11 +123,12 @@ implements PowerMatrixHTMLResource {
 
             // beta matrix
             buffer.append(getBeginEquation());
+            buffer.append(DISPLAY_MATRIX_BETA + " = ");
             if (clusterSize > 1) {
                 buffer.append(getColumnOfOnesTex(clusterSize, true));
                 buffer.append(KRONECKER_PRODUCT);
             }
-            buffer.append(realMatrixToTex(DISPLAY_MATRIX_BETA,
+            buffer.append(realMatrixToTex(null,
                     B.getCombinedMatrix(), false));
             buffer.append(getEndEquation());
 
@@ -139,12 +140,12 @@ implements PowerMatrixHTMLResource {
 
             // within participant contrast
             buffer.append(getBeginEquation());
+            buffer.append(DISPLAY_MATRIX_WITHIN_CONTRAST + " = ");
             if (clusterSize > 1) {
                 buffer.append(getColumnOfOnesTex(clusterSize, false));
                 buffer.append(KRONECKER_PRODUCT);
             }
-            buffer.append(realMatrixToTex(
-                    DISPLAY_MATRIX_WITHIN_CONTRAST,
+            buffer.append(realMatrixToTex(null,
                     U, false));
             buffer.append(getEndEquation());
 
@@ -267,7 +268,7 @@ implements PowerMatrixHTMLResource {
      * @return string representation of matrix
      */
     private String getColumnOfOnesTex(int size, boolean transpose) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         buffer.append("\\boldsymbol{1}_{" + size + "}");
         if (transpose) {
@@ -284,7 +285,7 @@ implements PowerMatrixHTMLResource {
      * @return string representation of matrix
      */
     private String getIdentityTex(int size) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         buffer.append("\\boldsymbol{I}_{" + size + "}");
         return buffer.toString();
@@ -296,7 +297,7 @@ implements PowerMatrixHTMLResource {
      * @return MathJax LaTeX block
      */
     private String getSigmaMatrixTex(String name, StudyDesign studyDesign) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         buffer.append(name + " = ");
 
@@ -361,7 +362,7 @@ implements PowerMatrixHTMLResource {
     private String getCompoundSymmetricTex(int size, double rho) {
 
         // append a compound symmetric correlation matrix
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("\\left[");
         buffer.append(getColumnOfOnesTex(size,false));
         buffer.append(getColumnOfOnesTex(size,true));
@@ -427,7 +428,7 @@ implements PowerMatrixHTMLResource {
      * @return
      */
     private String realMatrixToTex(String name, RealMatrix baseMatrix, boolean transpose) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (baseMatrix != null) {
             RealMatrix matrix = baseMatrix;
             if (transpose) {
