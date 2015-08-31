@@ -81,10 +81,10 @@ implements PowerMatrixHTMLResource {
     public String getMatricesAsHTML(StudyDesign studyDesign) {
         StringBuilder buffer = new StringBuilder();
 
-        buffer.append("<html><head><script type=\"text/javascript\" " +
-                "src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?" +
-                "config=TeX-AMS-MML_HTMLorMML\"></script></head><body>" +
-                "<script>MathJax.Hub.Queue([\"Typeset\",MathJax.Hub]);</script>");
+        buffer.append("<html><head><script type=\"text/javascript\" ")
+              .append("src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?")
+              .append("config=TeX-AMS-MML_HTMLorMML\"></script></head><body>")
+              .append("<script>MathJax.Hub.Queue([\"Typeset\",MathJax.Hub]);</script>");
         if (studyDesign != null) {
             // calculate cluster size
             List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
@@ -123,7 +123,7 @@ implements PowerMatrixHTMLResource {
 
             // beta matrix
             buffer.append(getBeginEquation());
-            buffer.append(DISPLAY_MATRIX_BETA + " = ");
+            buffer.append(DISPLAY_MATRIX_BETA).append(" = ");
             if (clusterSize > 1) {
                 buffer.append(getColumnOfOnesTex(clusterSize, true));
                 buffer.append(KRONECKER_PRODUCT);
@@ -140,7 +140,7 @@ implements PowerMatrixHTMLResource {
 
             // within participant contrast
             buffer.append(getBeginEquation());
-            buffer.append(DISPLAY_MATRIX_WITHIN_CONTRAST + " = ");
+            buffer.append(DISPLAY_MATRIX_WITHIN_CONTRAST).append(" = ");
             if (clusterSize > 1) {
                 buffer.append(getColumnOfOnesTex(clusterSize, false));
                 buffer.append(KRONECKER_PRODUCT);
@@ -270,7 +270,7 @@ implements PowerMatrixHTMLResource {
     private String getColumnOfOnesTex(int size, boolean transpose) {
         StringBuilder buffer = new StringBuilder();
 
-        buffer.append("\\boldsymbol{1}_{" + size + "}");
+        buffer.append("\\boldsymbol{1}_{").append(size).append("}");
         if (transpose) {
             buffer.append("'");
         }
@@ -287,7 +287,7 @@ implements PowerMatrixHTMLResource {
     private String getIdentityTex(int size) {
         StringBuilder buffer = new StringBuilder();
 
-        buffer.append("\\boldsymbol{I}_{" + size + "}");
+        buffer.append("\\boldsymbol{I}_{").append(size).append("}");
         return buffer.toString();
     }
 
@@ -299,7 +299,7 @@ implements PowerMatrixHTMLResource {
     private String getSigmaMatrixTex(String name, StudyDesign studyDesign) {
         StringBuilder buffer = new StringBuilder();
 
-        buffer.append(name + " = ");
+        buffer.append(name).append(" = ");
 
         // add covariance information for clustering
         boolean first = true;
@@ -438,7 +438,7 @@ implements PowerMatrixHTMLResource {
             int columns = matrix.getColumnDimension();
 
             if (name != null) {
-                buffer.append(name + " = ");
+                buffer.append(name).append(" = ");
             }
 
             buffer.append(LATEX_MATRIX_BEGIN);
