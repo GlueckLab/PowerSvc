@@ -367,12 +367,12 @@ implements PowerMatrixHTMLResource {
         buffer.append(getColumnOfOnesTex(size,false));
         buffer.append(getColumnOfOnesTex(size,true));
         buffer.append("\\left(");
-        buffer.append(formatter.format(rho));
+        buffer.append(format(rho));
         buffer.append("\\right)");
         buffer.append(" + ");
         buffer.append(getIdentityTex(size));
         buffer.append("\\left(1 - ");
-        buffer.append(formatter.format(rho));
+        buffer.append(format(rho));
         buffer.append("\\right)");
         buffer.append("\\right]");
 
@@ -450,7 +450,7 @@ implements PowerMatrixHTMLResource {
                     if (col > 0) {
                         buffer.append(" & ");
                     }
-                    buffer.append(formatter.format(matrix.getEntry(row, col)));
+                    buffer.append(format(matrix.getEntry(row, col)));
                 }
 
             }
@@ -502,5 +502,10 @@ implements PowerMatrixHTMLResource {
                 "This feature requires browser support of MathJax.  Please see the " +
                 "<a target=\"_blank\" href=\"http://www.mathjax.org/\">MathJax Homepage</a> " +
                 "for information regarding supported browsers.</div>";
+    }
+
+    private static String format(double d) {
+        String s = formatter.format(d);
+        return s.equals("-0.0000") ? "0.0000" : s;
     }
 }
