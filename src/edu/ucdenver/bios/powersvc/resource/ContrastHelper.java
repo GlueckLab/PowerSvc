@@ -419,7 +419,12 @@ public class ContrastHelper {
             trendContrast.setEntry(levels-1, 0, -1);
             break;
         case ALL_POLYNOMIAL:
-            trendContrast = allTrendContrast;
+            if (allTrendContrast.getColumnDimension() > 1) {
+                trendContrast = allTrendContrast.getSubMatrix(
+                    0, allTrendContrast.getRowDimension() - 1,
+                    1, allTrendContrast.getColumnDimension() - 1
+                );
+            }
             break;
         case LINEAR:
             if (allTrendContrast.getRowDimension() > 1) {
