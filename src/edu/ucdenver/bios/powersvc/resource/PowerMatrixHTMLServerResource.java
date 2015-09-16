@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -50,6 +51,8 @@ import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
  */
 public class PowerMatrixHTMLServerResource extends ServerResource
 implements PowerMatrixHTMLResource {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     // display names for matrices (used in MatrixHTML resource)
     public static final String DISPLAY_MATRIX_BETA = "\\boldsymbol{B}";
@@ -240,12 +243,11 @@ implements PowerMatrixHTMLResource {
     private StudyDesign getStudyDesignFromForm(Form studyDesignForm) {
         String jsonStudyDesign = studyDesignForm.getFirstValue("studydesign");
         if (jsonStudyDesign != null) {
-            ObjectMapper mapper = new ObjectMapper();
             try {
-                StudyDesign design = mapper.readValue(jsonStudyDesign, StudyDesign.class);
+                StudyDesign design = MAPPER.readValue(jsonStudyDesign, StudyDesign.class);
                 return design;
-            } catch (Exception e) {
-                PowerLogger.getInstance().error("Invalid study design: " + e.getMessage());
+            } catch (IOException ioe) {
+                PowerLogger.getInstance().error("Invalid study design: " + ioe.getMessage());
             }
         }
         return null;
@@ -424,7 +426,7 @@ implements PowerMatrixHTMLResource {
      * @param name
      * @param baseMatrix
      * @param transpose
-     * @return
+     * @return LaTeX block
      */
     private String realMatrixToTex(String name, RealMatrix baseMatrix, boolean transpose) {
         StringBuilder buffer = new StringBuilder();

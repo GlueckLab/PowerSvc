@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -449,6 +449,7 @@ public final class PowerResourceHelper {
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case TREND:
+                        case MANOVA:
                             HypothesisBetweenParticipantMapping trendFactor = betweenMap.get(0);
                             cFixed = ContrastHelper.trendBetween(trendFactor,
                                     studyDesign.getBetweenParticipantFactorList());
@@ -514,6 +515,7 @@ public final class PowerResourceHelper {
                                     studyDesign.getResponseList());
                             break;
                         case TREND:
+                        case MANOVA:
                             HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
                             withinContrast = ContrastHelper.trendWithin(trendFactor,
                                     studyDesign.getRepeatedMeasuresTree(),

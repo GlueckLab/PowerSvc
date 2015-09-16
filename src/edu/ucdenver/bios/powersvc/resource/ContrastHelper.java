@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -419,27 +419,22 @@ public class ContrastHelper {
             trendContrast.setEntry(levels-1, 0, -1);
             break;
         case ALL_POLYNOMIAL:
-            if (allTrendContrast.getColumnDimension() > 1) {
-                trendContrast = allTrendContrast.getSubMatrix(
-                    0, allTrendContrast.getRowDimension() - 1,
-                    1, allTrendContrast.getColumnDimension() - 1
-                );
-            }
+            trendContrast = allTrendContrast;
+            break;
+        case ALL_NONCONSTANT_POLYNOMIAL:
+            trendContrast = allTrendContrast.getSubMatrix(
+                0, allTrendContrast.getRowDimension() - 1,
+                1, allTrendContrast.getColumnDimension() - 1
+            );
             break;
         case LINEAR:
-            if (allTrendContrast.getRowDimension() > 1) {
-                trendContrast = allTrendContrast.getColumnMatrix(1);
-            }
+            trendContrast = allTrendContrast.getColumnMatrix(1);
             break;
         case QUADRATIC:
-            if (allTrendContrast.getRowDimension() > 2) {
-                trendContrast = allTrendContrast.getColumnMatrix(2);
-            }
+            trendContrast = allTrendContrast.getColumnMatrix(2);
             break;
         case CUBIC:
-            if (allTrendContrast.getRowDimension() > 3) {
-                trendContrast = allTrendContrast.getColumnMatrix(3);
-            }
+            trendContrast = allTrendContrast.getColumnMatrix(3);
             break;
         }
         if (transpose) {
@@ -453,7 +448,7 @@ public class ContrastHelper {
      * Determine if the list of factors being tested contains the specified factor
      * @param factor
      * @param testFactorList
-     * @return
+     * @return the specified factor if so, else null
      */
     private static HypothesisBetweenParticipantMapping betweenFactorInTestList(BetweenParticipantFactor factor,
             List<HypothesisBetweenParticipantMapping> testFactorList) {
@@ -469,7 +464,7 @@ public class ContrastHelper {
      * Determine if the list of factors being tested contains the specified factor
      * @param factor
      * @param testFactorList
-     * @return
+     * @return the specified factor if so, else null
      */
     private static HypothesisRepeatedMeasuresMapping withinFactorInTestList(RepeatedMeasuresNode factor,
             List<HypothesisRepeatedMeasuresMapping> testFactorList) {

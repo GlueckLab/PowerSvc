@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -146,7 +146,7 @@ public class CovarianceHelper {
     /**
      * Convert a correlation into a covariance matrix
      * @param covariance
-     * @return
+     * @return covariance matrix
      */
     private static RealMatrix buildCovarianceFromCorrelation(Covariance covariance) {
         RealMatrix covarianceData = null;
