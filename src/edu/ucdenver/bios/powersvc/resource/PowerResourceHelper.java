@@ -888,7 +888,7 @@ public final class PowerResourceHelper {
             quantile = new Quantile(glmmPower.getQuantile());
         }
 
-        return new PowerResult(
+        PowerResult powerResult = new PowerResult(
                 toStatisticalTest(glmmPower.getTest()),
                 new TypeIError(glmmPower.getAlpha()),
                 new NominalPower(glmmPower.getNominalPower()),
@@ -900,6 +900,11 @@ public final class PowerResourceHelper {
                 quantile,
                 toConfidenceInterval(glmmPower.getConfidenceInterval())
         );
+
+        // powerResult.setErrorCode(glmmPower.getErrorCode()); // TODO: convert enum
+        powerResult.setErrorMessage(glmmPower.getErrorMessage());
+
+        return powerResult;
     }
 
     /**
