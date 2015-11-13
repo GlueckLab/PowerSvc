@@ -168,7 +168,7 @@ implements PowerResource {
     }
 
     private static ResourceException badRequestException(String message) {
-        final int MAX_LENGTH = 50;
+        final int MAX_LENGTH = 75;
         return new ResourceException(
             Status.CLIENT_ERROR_BAD_REQUEST,
             message.length() <= MAX_LENGTH
