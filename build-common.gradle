@@ -39,7 +39,7 @@ sourceSets {
 
 war {
     archiveName 'power.war'
-    from 'config'
+    classpath fileTree('config')
     webInf {
         from 'WebContent/WEB-INF'
     }

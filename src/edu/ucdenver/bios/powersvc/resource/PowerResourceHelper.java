@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -360,7 +360,6 @@ public final class PowerResourceHelper {
     public static FixedRandomMatrix betaMatrixFromStudyDesign(StudyDesign studyDesign) {
         double[][] betaFixedData = null;
         double[][] betaRandomData = null;
-        int rows = 0;
 
         NamedMatrix betaFixed =
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
@@ -369,7 +368,6 @@ public final class PowerResourceHelper {
         // get the beta information from the study design matrices
         if (betaFixed != null) {
             betaFixedData = betaFixed.getData().getData();
-            rows = betaFixed.getRows();
         }
         if (betaRandom != null) {
             betaRandomData = betaRandom.getData().getData();
@@ -451,6 +449,7 @@ public final class PowerResourceHelper {
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case TREND:
+                        case MANOVA:
                             HypothesisBetweenParticipantMapping trendFactor = betweenMap.get(0);
                             cFixed = ContrastHelper.trendBetween(trendFactor,
                                     studyDesign.getBetweenParticipantFactorList());
@@ -516,6 +515,7 @@ public final class PowerResourceHelper {
                                     studyDesign.getResponseList());
                             break;
                         case TREND:
+                        case MANOVA:
                             HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
                             withinContrast = ContrastHelper.trendWithin(trendFactor,
                                     studyDesign.getRepeatedMeasuresTree(),
@@ -888,7 +888,7 @@ public final class PowerResourceHelper {
             quantile = new Quantile(glmmPower.getQuantile());
         }
 
-        return new PowerResult(
+        PowerResult powerResult = new PowerResult(
                 toStatisticalTest(glmmPower.getTest()),
                 new TypeIError(glmmPower.getAlpha()),
                 new NominalPower(glmmPower.getNominalPower()),
@@ -900,6 +900,11 @@ public final class PowerResourceHelper {
                 quantile,
                 toConfidenceInterval(glmmPower.getConfidenceInterval())
         );
+
+        // powerResult.setErrorCode(glmmPower.getErrorCode()); // TODO: convert enum
+        powerResult.setErrorMessage(glmmPower.getErrorMessage());
+
+        return powerResult;
     }
 
     /**

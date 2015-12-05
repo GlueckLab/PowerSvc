@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -54,7 +54,7 @@ public class TestPowerResourceOnServer extends TestCase {
     private static final String SAMPLE_SIZE_URI = "http://" + HOST_PORT + "/power2/samplesize";
     private static final String DIFFERENCE_URI = "http://" + HOST_PORT + "/power2/difference";
     private static final String MATRIX_URI = "http://" + HOST_PORT + "/power2/matrix";
-    
+
     /**
      * Calculate power for a two-sample t test
      */
@@ -65,7 +65,7 @@ public class TestPowerResourceOnServer extends TestCase {
             // build an input study design
             StudyDesign studyDesign = buildUnivariateMatrixDesign(SolutionTypeEnum.POWER);
             // connect to local Power Service
-            ClientResource clientResource = new ClientResource(POWER_URI); 
+            ClientResource clientResource = new ClientResource(POWER_URI);
             PowerResource powerResource = clientResource.wrap(PowerResource.class);
             // calculate power
             System.out.println(studyDesign.getName() + ": calculating power.");
@@ -94,7 +94,7 @@ public class TestPowerResourceOnServer extends TestCase {
             // build an input study design
             StudyDesign studyDesign = buildUnivariateMatrixDesign(SolutionTypeEnum.SAMPLE_SIZE);
             // connect to local Power Service
-            ClientResource clientResource = new ClientResource(SAMPLE_SIZE_URI); 
+            ClientResource clientResource = new ClientResource(SAMPLE_SIZE_URI);
             SampleSizeResource sampleSizeResource = clientResource.wrap(SampleSizeResource.class);
             // calculate sample size
             System.out.println(studyDesign.getName() + ": calculating sample size.");
@@ -123,7 +123,7 @@ public class TestPowerResourceOnServer extends TestCase {
             // build an input study design
             StudyDesign studyDesign = buildUnivariateMatrixDesign(SolutionTypeEnum.DETECTABLE_DIFFERENCE);
             // connect to local Power Service
-            ClientResource clientResource = new ClientResource(DIFFERENCE_URI); 
+            ClientResource clientResource = new ClientResource(DIFFERENCE_URI);
             DetectableDifferenceResource differenceResource = clientResource.wrap(DetectableDifferenceResource.class);
             // get detectable difference
             System.out.println(studyDesign.getName() + ": calculating detectable difference.");
@@ -143,7 +143,7 @@ public class TestPowerResourceOnServer extends TestCase {
     }
 
     /**
-     * 
+     *
      */
     public void testUnivariateStudyDesignMatrices()
     {
@@ -152,7 +152,7 @@ public class TestPowerResourceOnServer extends TestCase {
             // build an input study design
             StudyDesign studyDesign = buildUnivariateMatrixDesign(SolutionTypeEnum.POWER);
             // connect to local Power Service
-            ClientResource clientResource = new ClientResource(MATRIX_URI); 
+            ClientResource clientResource = new ClientResource(MATRIX_URI);
             PowerMatrixResource matrixResource = clientResource.wrap(PowerMatrixResource.class);
             // get matrices from study design
             System.out.println(studyDesign.getName() + ": power matrices:");
@@ -170,11 +170,11 @@ public class TestPowerResourceOnServer extends TestCase {
             fail();
         }
     }
-    
+
     /**
      * Create a StudyDesign object representing a basic t-test design
-     * 
-     * @return StudyDesign 
+     *
+     * @return StudyDesign
      */
     private StudyDesign buildUnivariateMatrixDesign(SolutionTypeEnum solvingFor)
     {
@@ -213,7 +213,7 @@ public class TestPowerResourceOnServer extends TestCase {
             studyDesign.setNominalPowerList(nominalPowerList);
         }
 
-        // add a test 
+        // add a test
         ArrayList<StatisticalTest> testList = new ArrayList<StatisticalTest>();
         testList.add(new StatisticalTest(StatisticalTestTypeEnum.UNIREP));
         studyDesign.setStatisticalTestList(testList);
@@ -268,7 +268,7 @@ public class TestPowerResourceOnServer extends TestCase {
         sigmaError.setRows(1);
         sigmaError.setColumns(1);
         studyDesign.setNamedMatrix(sigmaError);
-        
+
         return studyDesign;
     }
 }
