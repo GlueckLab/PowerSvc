@@ -1,6 +1,6 @@
 apply from: 'build-common.gradle'
 
-version = '2.0-SNAPSHOT'
+version = '2.0.1-SNAPSHOT'
 
 dependencies {
     compile project(':WebServiceCommon')
