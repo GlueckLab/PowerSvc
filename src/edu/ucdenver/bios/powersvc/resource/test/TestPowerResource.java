@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -57,15 +57,15 @@ import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 
 /**
  * Test class to connect to a local instance of the power service
- * 
+ *
  * @author Sarah Kreidler
  */
 public class TestPowerResource extends TestCase
 {
-    // Create the client resources 
+    // Create the client resources
     PowerResource powerResource = null;
     SampleSizeResource sampleSizeResource = null;
-    
+
     /**
      * Connect to the server
      */
@@ -73,7 +73,7 @@ public class TestPowerResource extends TestCase
     {
         try
         {
-            //clientResource = new ClientResource("http://sph-bi-sakhadeo:8080/power/power"); 
+            //clientResource = new ClientResource("http://sph-bi-sakhadeo:8080/power/power");
             powerResource = new PowerServerResource();
             sampleSizeResource = new SampleSizeServerResource();
         }
@@ -129,23 +129,23 @@ public class TestPowerResource extends TestCase
             fail();
         }
     }
-    
-    
+
+
     /**
      * Create a StudyDesign object representing a basic t-test design
-     * 
-     * @return StudyDesign 
+     *
+     * @return StudyDesign
      */
     private StudyDesign buildDesign()
     {
         StudyDesign studyDesign = new StudyDesign();
         studyDesign.setName("Two Sample T-Test");
 
-        //        // add a test 
+        //        // add a test
         //
         //        // add tests
         //        params.addTest(Test.UNIREP);
-        //        
+        //
         //        // add alpha values
         //        params.addAlpha(0.05);
         //
@@ -154,22 +154,22 @@ public class TestPowerResource extends TestCase
         //        params.setBeta(new FixedRandomMatrix(beta, null, false));
         //        // add beta scale values
         //        for(double betaScale = 0; betaScale <= 2.5; betaScale += 0.05) params.addBetaScale(betaScale);
-        //        
+        //
         //        // build theta null matrix
         //        double [][] theta0 = {{0}};
         //        params.setTheta(new Array2DRowRealMatrix(theta0));
-        //        
+        //
         //        // build sigma matrix
         //        double [][] sigma = {{1}};
         //        params.setSigmaError(new Array2DRowRealMatrix(sigma));
         //        // add sigma scale values
         //        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        //        
+        //
         //        // build design matrix
         //        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(2));
         //        // add sample size multipliers
         //        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        //        
+        //
         //        // build between subject contrast
         //        double [][] between = {{1,-1}};
         //        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
@@ -177,14 +177,14 @@ public class TestPowerResource extends TestCase
 
         return studyDesign;
     }
-    
+
     /**
      * Create a StudyDesign object representing a basic t-test design
-     * 
-     * @return StudyDesign 
+     *
+     * @return StudyDesign
      */
     private StudyDesign buildDesignOneSample()
-    {          
+    {
         StudyDesign studyDesign = new StudyDesign();
         studyDesign.setViewTypeEnum(StudyDesignViewTypeEnum.GUIDED_MODE);
         studyDesign.setSolutionTypeEnum(SolutionTypeEnum.SAMPLE_SIZE);
@@ -193,12 +193,12 @@ public class TestPowerResource extends TestCase
         ArrayList<BetaScale> betaScaleList = new ArrayList<BetaScale>();
         betaScaleList.add(new BetaScale(1));
         studyDesign.setBetaScaleList(betaScaleList);
-        
+
         ArrayList<NominalPower> nominalPowerList = new ArrayList<NominalPower>();
         nominalPowerList.add(new NominalPower(0.9));
         studyDesign.setNominalPowerList(nominalPowerList);
 
-        // add a test 
+        // add a test
         ArrayList<StatisticalTest> testList = new ArrayList<StatisticalTest>();
         testList.add(new StatisticalTest(StatisticalTestTypeEnum.HLT));
         studyDesign.setStatisticalTestList(testList);
@@ -212,7 +212,7 @@ public class TestPowerResource extends TestCase
         ArrayList<SigmaScale> sigmaScaleList = new ArrayList<SigmaScale>();
         sigmaScaleList.add(new SigmaScale(1));
         studyDesign.setSigmaScaleList(sigmaScaleList);
-        
+
         // build the hypotheses
         Hypothesis hypothesis = new Hypothesis();
 //        hypothesis.setType(HypothesisTypeEnum.MAIN_EFFECT);
@@ -225,7 +225,7 @@ public class TestPowerResource extends TestCase
         thetaNull.setRows(1);
         thetaNull.setColumns(1);
         studyDesign.setNamedMatrix(thetaNull);
-        
+
         // build beta matrix
         double [][] betaData = {{2}};
         NamedMatrix beta = new NamedMatrix(PowerConstants.MATRIX_BETA);
@@ -238,7 +238,7 @@ public class TestPowerResource extends TestCase
         ArrayList<ResponseNode> responseList = new ArrayList<ResponseNode>();
         responseList.add(new ResponseNode("outcome"));
         studyDesign.setResponseList(responseList);
-        
+
         // build covariance
         Covariance covar = new Covariance();
         covar.setType(CovarianceTypeEnum.UNSTRUCTURED_CORRELATION);

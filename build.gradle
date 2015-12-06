@@ -1,5 +1,7 @@
+apply from: 'build-common.gradle'
 
 apply plugin: 'war'
+version = '2.0.3.0'
 
 repositories {
     maven {
@@ -11,27 +13,11 @@ repositories {
 dependencies {
     compile project(':WebServiceCommon')
     compile project(':JavaStatistics')
-    compile 'org.restlet.jee:org.restlet:2.0.10',
-            'org.restlet.jee:org.restlet.ext.xml:2.0.10',
-            'org.restlet.jee:org.restlet.ext.json:2.0.10',
-            'org.restlet.jee:org.restlet.ext.servlet:2.0.10',
-            'org.restlet.jee:org.restlet.ext.jackson:2.0.10'
-    // latest is 2.1, 1.2.15 has transitive dependency  on jms, which isn't
-    // available on standard maven repositories
-    compile('log4j:log4j:1.2.15') {
-        exclude group: 'javax.jms'
-        exclude group: 'com.sun.jdmk'
-        exclude group: 'com.sun.jmx'
-    }
-    testCompile 'junit:junit:4.7'
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-    }
+task release(type:Exec) {
+    description 'Build the release version.  JavaStatistics and WebServiceCommon need to be built separately on release branch.'
+    commandLine 'gradle', '-b', 'build-release.gradle', '-c', 'settings-release.gradle', 'clean', 'build'
 }
 
 war {

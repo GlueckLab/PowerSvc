@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,7 +50,7 @@ public class CovarianceHelper {
      * with the covariance object
      * @return covariance as a RealMatrix
      */
-    public static RealMatrix covarianceToRealMatrix(Covariance covariance, 
+    public static RealMatrix covarianceToRealMatrix(Covariance covariance,
             RepeatedMeasuresNode rmNode) {
         if (covariance.getColumns() != covariance.getRows()) {
             throw new IllegalArgumentException("Non-square covariance matrix");
@@ -73,7 +73,7 @@ public class CovarianceHelper {
         if (covariance.getType() != null) {
             switch (covariance.getType()) {
             case LEAR_CORRELATION:
-                /* LEAR correlation model.  Should have a standard deviation, 
+                /* LEAR correlation model.  Should have a standard deviation,
                  * rho, and delta specified */
                 covarianceData = buildLearCovariance(covariance, intSpacingList);
                 break;
@@ -100,7 +100,7 @@ public class CovarianceHelper {
      * @param responsesList the response variables
      * @return covariance matrix
      */
-    public static RealMatrix covarianceToRealMatrix(Covariance covariance, 
+    public static RealMatrix covarianceToRealMatrix(Covariance covariance,
             List<ResponseNode> responsesList) {
         if (covariance == null) {
             throw new IllegalArgumentException("Missing covariance for response variables");
@@ -123,7 +123,7 @@ public class CovarianceHelper {
         if (covariance.getType() != null) {
             switch (covariance.getType()) {
             case LEAR_CORRELATION:
-                /* LEAR correlation model.  Should have a standard deviation, 
+                /* LEAR correlation model.  Should have a standard deviation,
                  * rho, and delta specified */
                 covarianceData = buildLearCovariance(covariance, intSpacingList);
                 break;
@@ -146,7 +146,7 @@ public class CovarianceHelper {
     /**
      * Convert a correlation into a covariance matrix
      * @param covariance
-     * @return
+     * @return covariance matrix
      */
     private static RealMatrix buildCovarianceFromCorrelation(Covariance covariance) {
         RealMatrix covarianceData = null;
@@ -158,7 +158,7 @@ public class CovarianceHelper {
                 covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
                 /* For each diagonal cell, square the standard deviation
                  * For each off-diagonal cell, use formula
-                 * covariance = correlation * sqrt (var1 * var2) 
+                 * covariance = correlation * sqrt (var1 * var2)
                  */
                 for(int row = 0; row < covariance.getRows(); row++) {
                     for(int col = 0; col < covariance.getColumns(); col++) {
@@ -169,9 +169,9 @@ public class CovarianceHelper {
                         } else {
                             double stddevRow = stddevList.get(row).getValue();
                             double stddevCol = stddevList.get(col).getValue();
-                            covarianceData.setEntry(row, col, 
+                            covarianceData.setEntry(row, col,
                                     value * Math.sqrt(stddevRow*stddevRow*stddevCol*stddevCol));
-                        } 
+                        }
                     }
                 }
             }

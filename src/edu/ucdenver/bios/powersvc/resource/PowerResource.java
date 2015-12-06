@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,11 +35,19 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  */
 public interface PowerResource {
     /**
-     * Calculate power for the specified study design.
+     * Calculate power for the specified study design JSON.
+     *
+     * @param jsonStudyDesign study design JSON
+     * @return List of power objects for the study design
+     */
+    @Post
+    PowerResultList getPower(String jsonStudyDesign);
+
+    /**
+     * Calculate power for the specified study design object.
      *
      * @param studyDesign study design object
      * @return List of power objects for the study design
      */
-    @Post
     PowerResultList getPower(StudyDesign studyDesign);
 }

@@ -1,0 +1,2 @@
+// Empty file keeps from pulling in latest source in sub-project directories
+// and uses local maven repository to resolve dependent artifacts.
