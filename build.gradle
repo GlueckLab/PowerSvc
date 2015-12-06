@@ -1,6 +1,14 @@
 apply from: 'build-common.gradle'
 
-version = '2.0.1-SNAPSHOT'
+apply plugin: 'war'
+version = '2.0.4-SNAPSHOT'
+
+repositories {
+    maven {
+        url 'http://maven.restlet.org'
+    }
+    mavenCentral()
+}
 
 dependencies {
     compile project(':WebServiceCommon')
@@ -10,4 +18,11 @@ dependencies {
 task release(type:Exec) {
     description 'Build the release version.  JavaStatistics and WebServiceCommon need to be built separately on release branch.'
     commandLine 'gradle', '-b', 'build-release.gradle', '-c', 'settings-release.gradle', 'clean', 'build'
+}
+
+war {
+    archiveName 'power.war'
+    webInf {
+        from 'WebContent/WEB-INF'
+    }
 }
