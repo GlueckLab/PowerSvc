@@ -26,6 +26,7 @@ dependencies {
         exclude group: 'com.sun.jdmk'
         exclude group: 'com.sun.jmx'
     }
+    compile files('../thirdparty/jsc/1.0/lib/jsc.jar')
     testCompile 'junit:junit:4.7'
 }
 
