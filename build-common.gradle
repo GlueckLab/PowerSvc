@@ -4,6 +4,8 @@ apply plugin: 'war'
 group = 'org.samplesizeshop'
 archivesBaseName = 'power'
 
+buildDir = 'target'
+
 repositories {
     maven {
         url 'http://maven.restlet.org'
@@ -17,7 +19,8 @@ dependencies {
             'org.restlet.jee:org.restlet.ext.xml:2.0.10',
             'org.restlet.jee:org.restlet.ext.json:2.0.10',
             'org.restlet.jee:org.restlet.ext.servlet:2.0.10',
-            'org.restlet.jee:org.restlet.ext.jackson:2.0.10'
+            'org.restlet.jee:org.restlet.ext.jackson:2.0.10',
+            'org.restlet.jee:org.restlet.ext.crypto:2.0.10'
     // TODO: look in to Logback or latest log4j
     // latest log4j is 2.1, 1.2.15 has transitive dependency  on jms, which isn't
     // available on standard maven repositories
@@ -26,6 +29,7 @@ dependencies {
         exclude group: 'com.sun.jdmk'
         exclude group: 'com.sun.jmx'
     }
+    compile files('../thirdparty/jsc/1.0/lib/jsc.jar')
     testCompile 'junit:junit:4.7'
 }
 
@@ -40,7 +44,22 @@ sourceSets {
 war {
     archiveName 'power.war'
     classpath fileTree('config')
-    webInf {
-        from 'WebContent/WEB-INF'
-    }
+}
+
+ext.webapps = project.hasProperty('webappsDir') ? project.getProperty('webappsDir') : 'webapps'
+
+task deployToTomcat(
+        type: Copy,
+        dependsOn: war,
+        description: 'deploy WAR file to Tomcat, override deploy directory with -PwebappsDir=myWebapps'
+) {
+    from war.archivePath
+    into "$System.env.CATALINA_HOME/$webapps"
+}
+
+task undeployFromTomcat(
+        type: Delete,
+        description: 'undeploy WAR file from Tomcat, override deploy directory with -PwebappsDir=myWebapps'
+) {
+    delete "$System.env.CATALINA_HOME/$webapps/power", "$System.env.CATALINA_HOME/$webapps/power.war"
 }
