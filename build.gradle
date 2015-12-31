@@ -22,7 +22,4 @@ task release(type:Exec) {
 
 war {
     archiveName 'power.war'
-    webInf {
-        from 'WebContent/WEB-INF'
-    }
 }
