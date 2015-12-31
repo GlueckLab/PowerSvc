@@ -1,7 +1,7 @@
 apply from: 'build-common.gradle'
 
 apply plugin: 'war'
-version = '2.0.4.0'
+version = '2.0.4.1'
 
 repositories {
     maven {
@@ -22,7 +22,4 @@ task release(type:Exec) {
 
 war {
     archiveName 'power.war'
-    webInf {
-        from 'WebContent/WEB-INF'
-    }
 }

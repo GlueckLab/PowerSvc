@@ -44,6 +44,9 @@ sourceSets {
 war {
     archiveName 'power.war'
     classpath fileTree('config')
+    webInf {
+        from 'WebContent/WEB-INF'
+    }
 }
 
 ext.webapps = project.hasProperty('webappsDir') ? project.getProperty('webappsDir') : 'webapps'
