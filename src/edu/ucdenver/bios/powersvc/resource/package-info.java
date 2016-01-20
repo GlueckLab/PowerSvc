@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,9 +24,9 @@
 * Restlet resources which process incoming requests based on the incoming
 * URI structure.  The URI mappings are defined in the edu.cudenver.bios.powersvc.application.PowerApplication
 * class.
-* 
+*
 * <h2>Package Specification</h2>
-* 
+*
 * Dependencies:
 * <ul>
 * <li>JRE 1.6.0 or higher</li>
@@ -36,9 +36,9 @@
 * <li>Apache Commons Math 2.1 or higher</li>
 * <li><a href="http://www.jsc.nildram.co.uk/">JSC Statistics Package</a></li>
 * </ul>
-* 
+*
 * <h2>Related Documentation</h2>
-* 
+*
 * This package is part of the Power web service component for the Glimmpse software system, please see
 * the following for more information:
 * <ul>
@@ -47,5 +47,5 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
- 
+
 
