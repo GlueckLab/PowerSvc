@@ -47,21 +47,20 @@ public class ContrastHelper {
     /* TODO: this should be moved to the JavaStats library eventually */
 
     /**
-     * Create a main effect contrast for between participant factors.
+     * Create a main effect contrast for between-participant factors.
      * @param factorOfInterest factor being tested
-     * @param factorList list of all between participant effects
-     * @return main effect contrast matrix
+     * @param factorList list of all between-participant factors
+     * @return main effect between-participant contrast matrix (C)
      */
     public static RealMatrix mainEffectBetween(BetweenParticipantFactor factorOfInterest,
             List<BetweenParticipantFactor> factorList) {
-
         if (factorOfInterest == null || factorOfInterest.getCategoryList() == null) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute between participant contrast - invalid factor of interest");
+            "Cannot compute between-participant contrast - invalid factor of interest");
         }
         if (factorList == null || factorList.size() <= 0) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute between participant contrast - invalid factor list");
+            "Cannot compute between-participant contrast - invalid factor list");
         }
         // build contrast component for the effect of interest
         int levels = factorOfInterest.getCategoryList().size();
@@ -98,21 +97,22 @@ public class ContrastHelper {
     }
 
     /**
-     * Create a main effect contrast for within participant factors.
+     * Create a main effect contrast for within-participant factors.
      * @param factorOfInterest factor being tested
-     * @param factorList additional within participant effects
-     * @return within participant contrast (U matrix)
+     * @param factorList list of all within-participant factors
+     * @param responseList list of response variables
+     * @return main effect within-participant contrast matrix (U)
      */
     public static RealMatrix mainEffectWithin(RepeatedMeasuresNode factorOfInterest,
             List<RepeatedMeasuresNode> factorList,
             List<ResponseNode> responseList) {
         if (factorOfInterest == null || factorOfInterest.getNumberOfMeasurements() == null) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute within participant contrast - invalid factor of interest");
+            "Cannot compute within-participant contrast - invalid factor of interest");
         }
         if (factorList == null || factorList.size() <= 0) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute within participant contrast - invalid factor list");
+            "Cannot compute within-participant contrast - invalid factor list");
         }
 
         // build contrast component for the effect of interest
@@ -150,17 +150,17 @@ public class ContrastHelper {
     }
 
     /**
-     * Create an interaction contrast for between participant effects
-     * @param betweenMap list of all between participant effects being tested
-     * @param factorList list of all between participant effects
-     * @return between participant interaction contrast (C matrix)
+     * Create an interaction contrast for between-participant factors.
+     * @param betweenMap list of all between-participant factors being tested
+     * @param factorList list of all between-participant factors
+     * @return interaction between-participant contrast matrix (C)
      */
     public static RealMatrix interactionBetween(List<HypothesisBetweenParticipantMapping> betweenMap,
             List<BetweenParticipantFactor> factorList) {
         if (betweenMap == null || betweenMap.size() <= 0 ||
                 factorList == null || factorList.size() <= 0) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute interaction contrast - invalid list of between participant factors");
+            "Cannot compute interaction contrast - invalid list of between-participant factors");
         }
 
         RealMatrix contrast =
@@ -189,11 +189,11 @@ public class ContrastHelper {
     }
 
     /**
-     * Create an interaction contrast for within participant effects
-     * @param withinMap list of all within participant effects being tested
-     * @param factorList list of all within participant effects
+     * Create an interaction contrast for within-participant factors.
+     * @param withinMap list of all within-participant factors being tested
+     * @param factorList list of all within-participant factors
      * @param responseList list of response variables
-     * @return between participant interaction contrast (C matrix)
+     * @return interaction within-participant contrast matrix (U)
      */
     public static RealMatrix interactionWithin(List<HypothesisRepeatedMeasuresMapping> withinMap,
             List<RepeatedMeasuresNode> factorList,
@@ -201,13 +201,12 @@ public class ContrastHelper {
         if (withinMap == null || withinMap.size() <= 0 ||
                 factorList == null || factorList.size() <= 0) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute interaction contrast - invalid list of within participant factors");
+            "Cannot compute interaction contrast - invalid list of within-participant factors");
         }
 
         RealMatrix contrast =
             org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(RepeatedMeasuresNode factor: factorList) {
-
             HypothesisRepeatedMeasuresMapping factorMapping =
                 withinFactorInTestList(factor, withinMap);
             if (factorMapping != null) {
@@ -239,14 +238,13 @@ public class ContrastHelper {
     }
 
     /**
-     * Create a trend test fpr the specified factor of interest
+     * Create a trend contrast for the specified between-participant factor of interest.
      * @param factorOfInterestMap factor of interest plus trend type information
-     * @param factorList list of all between participant factors
-     * @return trend contrast
+     * @param factorList list of all between-participant factors
+     * @return trend between-participant contrast matrix (C)
      */
     public static RealMatrix trendBetween(HypothesisBetweenParticipantMapping factorOfInterestMap,
             List<BetweenParticipantFactor> factorList) {
-
         // build contrast component for the effect of interest
         BetweenParticipantFactor factorOfInterest = factorOfInterestMap.getBetweenParticipantFactor();
         HypothesisTrendTypeEnum trendType = factorOfInterestMap.getType();
@@ -280,15 +278,15 @@ public class ContrastHelper {
     }
 
     /**
-     * Create a trend test fpr the specified within participant of interest
+     * Create a trend contrast for the specified within-participant factor of interest.
      * @param factorOfInterestMap factor of interest plus trend type information
-     * @param factorList list of all within participant factors
-     * @return trend contrast
+     * @param factorList list of all within-participant factors
+     * @param responseList list of response variables
+     * @return trend within-participant contrast matrix (U)
      */
     public static RealMatrix trendWithin(HypothesisRepeatedMeasuresMapping factorOfInterestMap,
             List<RepeatedMeasuresNode> factorList,
             List<ResponseNode> responseList) {
-
         // build contrast component for the effect of interest
         RepeatedMeasuresNode factorOfInterest = factorOfInterestMap.getRepeatedMeasuresNode();
         HypothesisTrendTypeEnum trendType = factorOfInterestMap.getType();
@@ -348,9 +346,9 @@ public class ContrastHelper {
     }
 
     /**
-     * Create grand mean contrast for between participant effects
-     * @param factorList list of all between participant effects
-     * @return grand mean contrast
+     * Create a grand mean contrast for between-participant factors.
+     * @param factorList list of all between-participant factors
+     * @return grand mean between-participant contrast matrix (C)
      */
     public static RealMatrix grandMeanBetween(List<BetweenParticipantFactor> factorList) {
         // computes the grand mean across the factors
@@ -367,18 +365,18 @@ public class ContrastHelper {
     }
 
     /**
-     * Create grand mean contrast for within  participant effects
-     * @param rmList list of all within participant effects
+     * Create a grand mean contrast for within-participant factors.
+     * @param factorList list of all within-participant factors
      * @param responseList list of all response variables
-     * @return grand mean contrast
+     * @return grand mean within-participant contrast matrix (U)
      */
-    public static RealMatrix grandMeanWithin(List<RepeatedMeasuresNode> rmList,
+    public static RealMatrix grandMeanWithin(List<RepeatedMeasuresNode> factorList,
             List<ResponseNode> responseList) {
         // computes the grand mean across the factors
         int dimension = 1;
-        if (rmList != null) {
-            for(RepeatedMeasuresNode rmNode: rmList) {
-                int size = rmNode.getNumberOfMeasurements();
+        if (factorList != null) {
+            for(RepeatedMeasuresNode factor: factorList) {
+                int size = factor.getNumberOfMeasurements();
                 if (size > 0) {
                     dimension *= size;
                 }
@@ -475,5 +473,4 @@ public class ContrastHelper {
         }
         return null;
     }
-
 }
