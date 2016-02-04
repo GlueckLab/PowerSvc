@@ -2,8 +2,8 @@
  * Power Service for the GLIMMPSE Software System.  Processes
  * incoming HTTP requests for power, sample size, and detectable
  * difference
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,7 +33,7 @@
 * <li>Apache Commons Math 2.1 or higher</li>
 * <li><a href="http://www.jsc.nildram.co.uk/">JSC Statistics Package</a></li>
 * </ul>
-* 
+*
 * <h2>Related Documentation</h2>
 *
 * This package is part of the Power web service component for the Glimmpse software system, please see
@@ -44,5 +44,5 @@
  */
 package edu.ucdenver.bios.powersvc.application;
 
- 
+
 
