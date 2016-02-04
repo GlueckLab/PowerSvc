@@ -1,29 +1,29 @@
  Power Web Service for the GLIMMPSE Software System.  Processes
  incoming HTTP requests for power, sample size, and detectable
  difference
-  
- Copyright (C) 2010 Regents of the University of Colorado.  
- 
+
+ Copyright (C) 2010 Regents of the University of Colorado.
+
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
  as published by the Free Software Foundation; either version 2
  of the License, or (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- 
+
 ------------------------------
 1. INTRODUCTION
 ------------------------------
 
 Th Power web service calculates power, sample size, or detectable difference for
-the Glimmpse Web user interface.  It is a component of the Glimmpse software system 
+the Glimmpse Web user interface.  It is a component of the Glimmpse software system
 (http://glimmpse.samplesizeshop.com/)
 
 The power calculations are based on the work of Professor Keith E. Muller
@@ -85,7 +85,7 @@ ${POWER_SERVICE_HOME}/build/artifacts/power.war
 
 The build script assumes that the a directory called thirdparty is
 installed at the same directory level as ${POWER_SERVICE_HOME}.
-A thirdparty distribution in the appropriate format is available from 
+A thirdparty distribution in the appropriate format is available from
 
 http://samplesizeshop.com/software-downloads/glimmpse-software-downloads/
 

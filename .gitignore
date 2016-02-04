@@ -5,8 +5,6 @@ local/
 .project
 .settings
 build/artifacts/
-build/classes/
-build/libs/
 build/tmp/
 text/results/
 target/
