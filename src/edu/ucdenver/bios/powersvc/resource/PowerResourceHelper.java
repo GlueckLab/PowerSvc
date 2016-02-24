@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2016 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -423,7 +423,6 @@ public final class PowerResourceHelper {
             new FixedRandomMatrix((cFixed != null ? cFixed.getData().getData() : null),
                     (cRandom != null ? cRandom.getData().getData() : null),
                     true);
-
         } else {
             // Guided design
             Set<Hypothesis> hypothesisSet = studyDesign.getHypothesis();
