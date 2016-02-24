@@ -439,7 +439,7 @@ public class ContrastHelper {
     }
 
     /**
-     * Determine if the list of within-participant factors being tested contains the specified factor.
+     * Determine if the list of between-participant factors being tested contains the specified factor.
      * @param factor
      * @param testFactorList
      * @return the specified factor if so, else null
@@ -455,7 +455,7 @@ public class ContrastHelper {
     }
 
     /**
-     * Determine if the list of between-participant factors being tested contains the specified factor.
+     * Determine if the list of within-participant factors being tested contains the specified factor.
      * @param factor
      * @param testFactorList
      * @return the specified factor if so, else null
