@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2016 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -166,7 +166,6 @@ public class ContrastHelper {
         RealMatrix contrast =
             org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1);
         for(BetweenParticipantFactor factor: factorList) {
-
             HypothesisBetweenParticipantMapping factorMapping =
                 betweenFactorInTestList(factor, betweenMap);
             if (factorMapping != null) {
@@ -221,8 +220,7 @@ public class ContrastHelper {
                     for(int i = 0; i < size; i++) { spacingArray[i] = i; }
                 }
                 contrast = MatrixUtils.getKroneckerProduct(contrast,
-                        getTrendContrast(spacingArray,
-                                factorMapping.getType(), false));
+                        getTrendContrast(spacingArray, factorMapping.getType(), false));
             } else {
                 int size = factor.getNumberOfMeasurements();
                 contrast = MatrixUtils.getKroneckerProduct(contrast,
@@ -238,7 +236,7 @@ public class ContrastHelper {
     }
 
     /**
-     * Create a trend contrast for the specified between-participant factor of interest.
+     * Create a trend contrast for between-participant factors.
      * @param factorOfInterestMap factor of interest plus trend type information
      * @param factorList list of all between-participant factors
      * @return trend between-participant contrast matrix (C)
@@ -258,7 +256,6 @@ public class ContrastHelper {
             // Kronecker product the trend contrast with average contrasts for remaining
             // factors
             RealMatrix contrast = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 1);
-            int df = trendContrast.getRowDimension();
             for(BetweenParticipantFactor factor: factorList) {
                 if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
                     contrast = MatrixUtils.getKroneckerProduct(contrast, trendContrast);
@@ -278,7 +275,7 @@ public class ContrastHelper {
     }
 
     /**
-     * Create a trend contrast for the specified within-participant factor of interest.
+     * Create a trend contrast for within-participant factors.
      * @param factorOfInterestMap factor of interest plus trend type information
      * @param factorList list of all within-participant factors
      * @param responseList list of response variables
@@ -307,7 +304,6 @@ public class ContrastHelper {
             // horizontal direct product the trend contrast with average contrasts for remaining
             // factors
             RealMatrix contrast = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 1);
-            int df = trendContrast.getRowDimension();
             for(RepeatedMeasuresNode factor: factorList) {
                 if (factor.getDimension().equals(factorOfInterest.getDimension())) {
                     contrast = MatrixUtils.getKroneckerProduct(contrast, trendContrast);
@@ -332,7 +328,7 @@ public class ContrastHelper {
 
 
     /**
-     * Calculate the grand mean contrast
+     * Calculate the grand mean contrast.
      * @param dimension size of contrast
      * @param transpose if true, return the transpose
      * @return grand mean contrast
@@ -443,7 +439,7 @@ public class ContrastHelper {
     }
 
     /**
-     * Determine if the list of factors being tested contains the specified factor
+     * Determine if the list of within-participant factors being tested contains the specified factor.
      * @param factor
      * @param testFactorList
      * @return the specified factor if so, else null
@@ -459,7 +455,7 @@ public class ContrastHelper {
     }
 
     /**
-     * Determine if the list of factors being tested contains the specified factor
+     * Determine if the list of between-participant factors being tested contains the specified factor.
      * @param factor
      * @param testFactorList
      * @return the specified factor if so, else null
