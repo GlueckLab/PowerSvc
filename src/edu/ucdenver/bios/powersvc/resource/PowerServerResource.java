@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2016 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -93,8 +93,8 @@ implements PowerResource {
             throw badRequestException("Invalid study design");
         }
 
-        JsonLogger.logObject("PowerServerResource.getPower(): " + getRequest().getRootRef().toString() +
-                getRequest().getRootRef().toString() + ": studyDesign = ", studyDesign);
+        JsonLogger.logObject("PowerServerResource.getPower(): " + getRequest().getRootRef()
+                                + ": studyDesign = ", studyDesign);
         logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
                 "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
@@ -106,14 +106,13 @@ implements PowerResource {
         try {
             // TODO: make the timeout configurable
             PowerResultList results = future.get(300, TimeUnit.SECONDS);
-            logger.info("getPower(): "
-                            + "executed in " + Long.toString(System.currentTimeMillis() - start) + " milliseconds");
+            logger.info("getPower(): " + "executed in " + (System.currentTimeMillis() - start) + " milliseconds");
             return results;
         } catch (InterruptedException e) {
-            logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef().toString(), e);
+            logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef(), e);
             throw badRequestException("Computation interrupted");
         } catch (ExecutionException e) {
-            logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef().toString(), e);
+            logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef(), e);
             Throwable cause = e.getCause();
             if (cause instanceof PowerException) {
                 PowerException pe = (PowerException) cause;
@@ -128,7 +127,7 @@ implements PowerResource {
             }
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
         } catch (TimeoutException e) {
-            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef().toString());
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef());
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + JsonLogger.toJson(studyDesign));
             boolean canceled = future.cancel(true);
             logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
