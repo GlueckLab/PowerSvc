@@ -62,6 +62,7 @@ public class ContrastHelper {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
             "Cannot compute between-participant contrast - invalid factor list");
         }
+
         // build contrast component for the effect of interest
         int levels = factorOfInterest.getCategoryList().size();
         int df = levels-1;
@@ -157,10 +158,13 @@ public class ContrastHelper {
      */
     public static RealMatrix interactionBetween(List<HypothesisBetweenParticipantMapping> betweenMap,
             List<BetweenParticipantFactor> factorList) {
-        if (betweenMap == null || betweenMap.size() <= 0 ||
-                factorList == null || factorList.size() <= 0) {
+        if (betweenMap == null || betweenMap.size() <= 0) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute interaction contrast - invalid list of between-participant factors");
+            "Cannot compute between-participant contrast - invalid test list");
+        }
+        if (factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            "Cannot compute between-participant contrast - invalid factor list");
         }
 
         RealMatrix contrast =
@@ -197,10 +201,13 @@ public class ContrastHelper {
     public static RealMatrix interactionWithin(List<HypothesisRepeatedMeasuresMapping> withinMap,
             List<RepeatedMeasuresNode> factorList,
             List<ResponseNode> responseList) {
-        if (withinMap == null || withinMap.size() <= 0 ||
-                factorList == null || factorList.size() <= 0) {
+        if (withinMap == null || withinMap.size() <= 0) {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
-            "Cannot compute interaction contrast - invalid list of within-participant factors");
+            "Cannot compute within-participant contrast - invalid test list");
+        }
+        if (factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            "Cannot compute within-participant contrast - invalid factor list");
         }
 
         RealMatrix contrast =
@@ -385,7 +392,66 @@ public class ContrastHelper {
     }
 
     /**
-     * Create a trend contrast of the specified type
+     * Create a MANOVA contrast for between-participant factors.
+     * @param factorOfInterest factor being tested
+     * @param factorList list of all between-participant factors
+     * @return MANOVA between-participant contrast matrix (C)
+     */
+    public static RealMatrix manovaBetween(BetweenParticipantFactor factorOfInterest,
+            List<BetweenParticipantFactor> factorList) {
+        if (factorOfInterest == null || factorOfInterest.getCategoryList() == null) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            "Cannot compute between-participant contrast - invalid factor of interest");
+        }
+        if (factorList == null || factorList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            "Cannot compute between-participant contrast - invalid factor list");
+        }
+
+        // build contrast component for the effect of interest
+        int levels = factorOfInterest.getCategoryList().size();
+        if (levels > 1) {
+            // create even spacing
+            double[] spacing = new double[levels];
+            for(int i = 0; i < levels; i++) { spacing[i] = i; }
+            RealMatrix trendContrast = getTrendContrast(spacing, HypothesisTrendTypeEnum.ALL_NONCONSTANT_POLYNOMIAL, true);
+
+            // Kronecker product the trend contrast with average contrasts for remaining
+            // factors
+            RealMatrix contrast = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 1);
+            for(BetweenParticipantFactor factor: factorList) {
+                if (factor.getPredictorName().equals(factorOfInterest.getPredictorName())) {
+                    contrast = MatrixUtils.getKroneckerProduct(contrast, trendContrast);
+                } else {
+                    List<Category> categoryList = factor.getCategoryList();
+                    if (categoryList.size() > 0) {
+                        int dimension = categoryList.size();
+                        contrast = MatrixUtils.getKroneckerProduct(contrast,
+                                MatrixUtils.getRealMatrixWithFilledValue(1, dimension, 1/(double) dimension));
+                    }
+                }
+            }
+            return contrast;
+        } else {
+            return ContrastHelper.grandMeanBetween(factorList);
+        }
+    }
+
+    /**
+     * Create a MANOVA contrast for within-participant factors.
+     * @param responseList list of response variables
+     * @return MANOVA within-participant contrast matrix (U)
+     */
+    public static RealMatrix manovaWithin(List<ResponseNode> responseList) {
+        if (responseList == null || responseList.size() <= 0) {
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
+            "Cannot compute within-participant contrast - invalid response list");
+        }
+        return org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(responseList.size());
+    }
+
+    /**
+     * Create a trend contrast of the specified type.
      * @param spacing list of integer positions representing spacing of measurements
      * @param trendType type of trend contrast
      * @param transpose if true, return the transpose of the contrast
