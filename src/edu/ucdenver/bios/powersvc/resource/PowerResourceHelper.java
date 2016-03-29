@@ -189,9 +189,9 @@ public final class PowerResourceHelper {
     }
 
     /**
-     * Convert a domain layer PowerMethod to a GLMMPowerParameters.PowerMethod type.
-     * @param method domain layer PowerMethod object
-     * @return GLMM PowerMethod enum type
+     * Convert a domain layer PowerMethod to a GLMMPowerParameters.PowerMethod.
+     * @param method domain layer PowerMethod
+     * @return GLMMPowerParameters.PowerMethod
      * @throws IllegalArgumentException on unknown power methods
      */
     private static GLMMPowerParameters.PowerMethod toGLMMPowerMethod(PowerMethod method)
@@ -202,16 +202,16 @@ public final class PowerResourceHelper {
         case QUANTILE:
             return GLMMPowerParameters.PowerMethod.QUANTILE_POWER;
         case UNCONDITIONAL:
-            return GLMMPowerParameters.PowerMethod.CONDITIONAL_POWER;
+            return GLMMPowerParameters.PowerMethod.UNCONDITIONAL_POWER;
         default:
             throw new IllegalArgumentException("unknown power method");
         }
     }
 
     /**
-     * Convert a domain layer PowerMethod to a GLMMPowerParameters.PowerMethod type.
-     * @param method domain layer PowerMethod object
-     * @return GLMM PowerMethod enum type
+     * Convert a GLMMPowerParameters.PowerMethod to a domain layer PowerMethod.
+     * @param method GLMMPowerParameters.PowerMethod
+     * @return domain layer PowerMethod
      * @throws IllegalArgumentException on unknown power methods
      */
     private static PowerMethod toPowerMethod(GLMMPowerParameters.PowerMethod method)
@@ -222,7 +222,7 @@ public final class PowerResourceHelper {
         case QUANTILE_POWER:
             return new PowerMethod(PowerMethodEnum.QUANTILE);
         case UNCONDITIONAL_POWER:
-            return new PowerMethod(PowerMethodEnum.CONDITIONAL);
+            return new PowerMethod(PowerMethodEnum.UNCONDITIONAL);
         default:
             throw new IllegalArgumentException("unknown power method");
         }
