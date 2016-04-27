@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2016 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -65,6 +65,7 @@ import edu.ucdenver.bios.webservice.common.domain.SigmaScale;
 import edu.ucdenver.bios.webservice.common.domain.StatisticalTest;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.domain.TypeIError;
+import edu.ucdenver.bios.webservice.common.enums.HypothesisTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.PowerMethodEnum;
 import edu.ucdenver.bios.webservice.common.enums.StatisticalTestTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
@@ -423,7 +424,6 @@ public final class PowerResourceHelper {
             new FixedRandomMatrix((cFixed != null ? cFixed.getData().getData() : null),
                     (cRandom != null ? cRandom.getData().getData() : null),
                     true);
-
         } else {
             // Guided design
             Set<Hypothesis> hypothesisSet = studyDesign.getHypothesis();
@@ -449,13 +449,18 @@ public final class PowerResourceHelper {
                                     studyDesign.getBetweenParticipantFactorList());
                             break;
                         case TREND:
-                        case MANOVA:
-                            HypothesisBetweenParticipantMapping trendFactor = betweenMap.get(0);
-                            cFixed = ContrastHelper.trendBetween(trendFactor,
+                            cFixed = ContrastHelper.trendBetween(betweenMap.get(0),
                                     studyDesign.getBetweenParticipantFactorList());
+                            break;
+                        case MANOVA:
+                            // between subject factor of interest
+                            cFixed = ContrastHelper.manovaBetween(betweenMap.get(0).getBetweenParticipantFactor(),
+                                    studyDesign.getBetweenParticipantFactorList());
+                            break;
                         }
                     } else {
-                        cFixed = ContrastHelper.grandMeanBetween(studyDesign.getBetweenParticipantFactorList());
+                        cFixed = ContrastHelper.grandMeanBetween(
+                                studyDesign.getBetweenParticipantFactorList());
                     }
 
                     // build the random contrast if the design has a baseline covariate
@@ -496,35 +501,33 @@ public final class PowerResourceHelper {
                 Hypothesis hypothesis = hypothesisSet.iterator().next();
                 if (hypothesis != null) {
                     RealMatrix withinContrast = null;
-                    // get the factor of interest
-                    List<HypothesisRepeatedMeasuresMapping> withinMap =
-                        hypothesis.getRepeatedMeasuresMapTree();
-                    if (withinMap != null && withinMap.size() > 0) {
-                        // build the fixed part of the contrast based on the hypothesis of interest
-                        switch (hypothesis.getType()) {
-                        case MAIN_EFFECT:
-                            // between subject factor of interest
-                            withinContrast =
-                                ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(),
-                                    studyDesign.getRepeatedMeasuresTree(),
-                                    studyDesign.getResponseList());
-                            break;
-                        case INTERACTION:
-                            withinContrast = ContrastHelper.interactionWithin(withinMap,
-                                    studyDesign.getRepeatedMeasuresTree(),
-                                    studyDesign.getResponseList());
-                            break;
-                        case TREND:
-                        case MANOVA:
-                            HypothesisRepeatedMeasuresMapping trendFactor = withinMap.get(0);
-                            withinContrast = ContrastHelper.trendWithin(trendFactor,
-                                    studyDesign.getRepeatedMeasuresTree(),
-                                    studyDesign.getResponseList());
-                        }
+                    if (hypothesis.getType() == HypothesisTypeEnum.MANOVA) {
+                        withinContrast = ContrastHelper.manovaWithin(studyDesign.getResponseList());
                     } else {
-                        withinContrast =
-                                ContrastHelper.grandMeanWithin(studyDesign.getRepeatedMeasuresTree(),
-                                        studyDesign.getResponseList());
+                        // get the factor of interest
+                        List<HypothesisRepeatedMeasuresMapping> withinMap =
+                            hypothesis.getRepeatedMeasuresMapTree();
+                        if (withinMap != null && withinMap.size() > 0) {
+                            // build the fixed part of the contrast based on the hypothesis of interest
+                            switch (hypothesis.getType()) {
+                            case MAIN_EFFECT:
+                                // within subject factor of interest
+                                withinContrast = ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(),
+                                        studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
+                                break;
+                            case INTERACTION:
+                                withinContrast = ContrastHelper.interactionWithin(withinMap,
+                                        studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
+                                break;
+                            case TREND:
+                                withinContrast = ContrastHelper.trendWithin(withinMap.get(0),
+                                        studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
+                                break;
+                            }
+                        } else {
+                            withinContrast = ContrastHelper.grandMeanWithin(
+                                    studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
+                        }
                     }
 
                     // expand rows if clustering is present
