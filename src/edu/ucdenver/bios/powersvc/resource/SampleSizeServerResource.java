@@ -102,7 +102,7 @@ implements SampleSizeResource {
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
         long start = System.currentTimeMillis();
 
-        // Execute the calculation asynchronously and time out after 30 seconds.
+        // Execute the calculation asynchronously and time out after a certain period of time.
         SampleSizeCallable callable = new SampleSizeCallable(studyDesign);
         Future<PowerResultList> future = THREADS.submit(callable);
         try {
