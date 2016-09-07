@@ -16,5 +16,5 @@ dependencies {
 
 task release(type:Exec) {
     description 'Build the release version.  JavaStatistics and WebServiceCommon need to be built separately on release branch.'
-    commandLine 'gradle', '-b', 'build-release.gradle', '-c', 'settings-release.gradle', 'clean', 'build'
+    commandLine 'gradlew', '-b', 'build-release.gradle', '-c', 'settings-release.gradle', 'clean', 'build'
 }
