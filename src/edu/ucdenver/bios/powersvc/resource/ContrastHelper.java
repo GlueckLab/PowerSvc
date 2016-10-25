@@ -318,7 +318,7 @@ public class ContrastHelper {
                     int size = factor.getNumberOfMeasurements();
                     if (size > 0) {
                         contrast = MatrixUtils.getKroneckerProduct(contrast,
-                                MatrixUtils.getRealMatrixWithFilledValue(1, size, 1/(double) size));
+                                MatrixUtils.getRealMatrixWithFilledValue(size, 1, 1/(double) size));
                     }
                 }
             }
