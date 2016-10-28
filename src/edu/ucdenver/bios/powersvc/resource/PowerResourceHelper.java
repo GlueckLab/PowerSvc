@@ -70,6 +70,8 @@ import edu.ucdenver.bios.webservice.common.enums.PowerMethodEnum;
 import edu.ucdenver.bios.webservice.common.enums.StatisticalTestTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
+
 /**
  * Helper class for conversion to/from domain layer objects
  * @author Sarah Kreidler
@@ -167,7 +169,7 @@ public final class PowerResourceHelper {
                 }
             }
         } else {
-            params.setSigmaError(sigmaErrorMatrixFromStudyDesign(studyDesign));
+            params.setSigmaError(forceSymmetric(sigmaErrorMatrixFromStudyDesign(studyDesign)));
             params.addPowerMethod(GLMMPowerParameters.PowerMethod.CONDITIONAL_POWER);
 
             // add confidence intervals if specified
