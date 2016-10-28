@@ -306,16 +306,22 @@ implements PowerMatrixHTMLResource {
         // add covariance information for clustering
         boolean first = true;
         List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
-        if (clusterNodeList != null) {
-            for(ClusterNode clusterNode: clusterNodeList) {
-                if (!first) {
-                    buffer.append(KRONECKER_PRODUCT);
-                }
-                int size = clusterNode.getGroupSize();
-                double rho = clusterNode.getIntraClusterCorrelation();
-                buffer.append(getCompoundSymmetricTex(size, rho));
-                if (first) {
-                    first = false;
+        if (clusterNodeList != null && clusterNodeList.size() > 0) {
+            int clusterSize = 1;
+            for(ClusterNode node: clusterNodeList) {
+                clusterSize *= node.getGroupSize();
+            }
+            if (clusterSize > 1) {
+                for(ClusterNode clusterNode: clusterNodeList) {
+                    if (!first) {
+                        buffer.append(KRONECKER_PRODUCT);
+                    }
+                    int size = clusterNode.getGroupSize();
+                    double rho = clusterNode.getIntraClusterCorrelation();
+                    buffer.append(getCompoundSymmetricTex(size, rho));
+                    if (first) {
+                        first = false;
+                    }
                 }
             }
         }
