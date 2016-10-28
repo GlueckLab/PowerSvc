@@ -189,12 +189,12 @@ implements PowerMatrixHTMLResource {
 
                 // sigma for Gaussian covariate and outcomes
                 buffer.append(getBeginEquation());
+                buffer.append(DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN).append(" = ");
                 if (clusterSize > 1) {
                     buffer.append(getColumnOfOnesTex(clusterSize, false));
                     buffer.append(KRONECKER_PRODUCT);
                 }
-                buffer.append(realMatrixToTex(
-                        DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN,
+                buffer.append(realMatrixToTex(null,
                         sigmaYG, false));
                 buffer.append(getEndEquation());
 
