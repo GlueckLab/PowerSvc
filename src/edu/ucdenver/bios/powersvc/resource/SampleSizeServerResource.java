@@ -169,12 +169,6 @@ implements SampleSizeResource {
     }
 
     private static ResourceException badRequestException(String message) {
-        final int MAX_LENGTH = 75;
-        return new ResourceException(
-            Status.CLIENT_ERROR_BAD_REQUEST,
-            message.length() <= MAX_LENGTH
-                ? message
-                : message.substring(0, MAX_LENGTH) + " ... (more text deleted) ..."
-        );
+        return new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, message);
     }
 }

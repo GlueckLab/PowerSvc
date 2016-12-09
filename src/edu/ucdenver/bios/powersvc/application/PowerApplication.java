@@ -113,17 +113,18 @@ public class PowerApplication extends Application {
             sb.append("<body style=\"font-family: sans-serif;\">\n");
 
             sb.append("<p>");
-            sb.append("We're sorry, there seems to be an error in your request:");
-            sb.append("</p>\n");
-            sb.append("<p style=\"font-style: italic\">");
-            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
-            sb.append(status.getDescription() != null ? status.getDescription() : "Unknown error");
+            sb.append("We're sorry, we are unable to process your request.");
             sb.append("</p>\n");
 
             sb.append("<p>");
-            sb.append("If you believe you have received this message in error, please contact <a href=\"");
+            sb.append("If you need help interpreting the message below, please contact <a href=\"");
             sb.append(obfuscation(MAILTO_URL));
             sb.append("\">technical support</a>.");
+            sb.append("</p>\n");
+
+            sb.append("<p style=\"font-style: italic\">");
+            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append(status.getDescription() != null ? status.getDescription() : "Unknown error");
             sb.append("</p>\n");
 
             sb.append("</body>\n");
