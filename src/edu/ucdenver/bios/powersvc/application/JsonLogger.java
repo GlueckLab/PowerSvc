@@ -32,16 +32,6 @@ public class JsonLogger {
     private static ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * Log the preamble and JSON representation of the input object to an info level message.
-     *
-     * @param preamble string to precede the JSON object
-     * @param obj convert this object to JSON and log
-     */
-    public static void logObject(String preamble, Object obj) {
-        logger.info(preamble + " " + toJson(obj));
-    }
-
-    /**
      * Convert the input object to a JSON string and return it.  If the
      * input object cannot be converted then its toString() method is
      * called.  No exceptions are thrown.
