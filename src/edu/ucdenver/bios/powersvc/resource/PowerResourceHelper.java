@@ -674,10 +674,16 @@ public final class PowerResourceHelper {
                         sigmaG.getColumnDimension() <= 0) {
                     throw new IllegalArgumentException("Invalid covariance for Gaussian covariate");
                 }
-                if (sigmaY == null ||
-                        sigmaY.getRowDimension() < sigmaYG.getRowDimension() ||
-                        sigmaY.getColumnDimension() != sigmaY.getRowDimension()) {
-                    throw new IllegalArgumentException("Invalid covariance for outcome");
+                if (sigmaY == null) {
+                    throw new IllegalArgumentException("Invalid covariance for outcome: sigmaY is null");
+                }
+                if (sigmaY.getRowDimension() < sigmaYG.getRowDimension()
+                        || sigmaY.getColumnDimension() != sigmaY.getRowDimension()) {
+                    throw new IllegalArgumentException(
+                        "Invalid covariance for outcome: "
+                            + "sigmaY is " + sigmaY.getRowDimension() + " x " + sigmaY.getColumnDimension() + ", "
+                            + "sigmaYG is " + sigmaYG.getRowDimension() + " x " + sigmaYG.getColumnDimension()
+                    );
                 }
                 // assumes sigmaG is already updated to be a variance
                 double varG = sigmaG.getEntry(0, 0);
