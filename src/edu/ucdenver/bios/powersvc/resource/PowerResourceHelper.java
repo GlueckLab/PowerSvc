@@ -67,6 +67,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.domain.TypeIError;
 import edu.ucdenver.bios.webservice.common.enums.HypothesisTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.PowerMethodEnum;
+import edu.ucdenver.bios.webservice.common.enums.SolutionTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StatisticalTestTypeEnum;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 
@@ -81,6 +82,9 @@ public final class PowerResourceHelper {
 
     /** The logger. */
     private static Logger logger = PowerLogger.getInstance();
+
+    /** The maximum number of cases we consider reasonable. */
+    private static final int MAX_CASES = 72;
 
     /**
      * Convert a study design object into a power parameters object
@@ -967,6 +971,223 @@ public final class PowerResourceHelper {
                 names.add(name);
             }
         }
+
+        // The number of cases must be "reasonable".
+        validateNumberOfCases(studyDesign);
+    }
+
+    /**
+     * See if the number of cases included in the request defined by
+     * a study design is reasonable. "Reasonable" is subjective: it
+     * means no greater than the constant MAX_CASES.
+     *
+     * @param studyDesign The study design.
+     *
+     * @throws IllegalArgumentException if not.
+     */
+    private static void validateNumberOfCases(StudyDesign studyDesign) {
+        SolutionTypeEnum solutionType = studyDesign.getSolutionTypeEnum();
+        int nUnits;
+        switch (solutionType) {
+        case POWER:
+            nUnits = size(studyDesign.getSampleSizeList());
+            break;
+        case SAMPLE_SIZE:
+            nUnits = size(studyDesign.getNominalPowerList());
+            break;
+        default:
+            nUnits = 0;
+            break;
+        }
+
+        int nStatisticalTests = size(studyDesign.getStatisticalTestList());
+        int nAlphas           = size(studyDesign.getAlphaList());
+        int nBetaScales       = size(studyDesign.getBetaScaleList());
+        int nSigmaScales      = size(studyDesign.getSigmaScaleList());
+
+        List<PowerMethod> powerMethodList = studyDesign.getPowerMethodList();
+        int nPowerMethods =
+            (hasPowerMethod(powerMethodList, PowerMethodEnum.UNCONDITIONAL) ? 1 : 0)
+                + (hasPowerMethod(powerMethodList, PowerMethodEnum.QUANTILE) ? size(studyDesign.getQuantileList()) : 0);
+
+        // TODO: is integer overflow a serious consideration here?
+        int nCases =
+              weight(nUnits)
+            * weight(nStatisticalTests)
+            * weight(nAlphas)
+            * weight(nBetaScales)
+            * weight(nSigmaScales)
+            * weight(nPowerMethods)
+        ;
+
+        if (nCases > MAX_CASES) {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("To better manage the load on our server, we ask that you limit your request to no more than ")
+              .append(MAX_CASES)
+              .append(" cases.");
+            sb.append("<br>");
+            sb.append("Your request currently includes ")
+               .append(nCases)
+               .append(" cases (");
+            boolean first = true;
+            if (nUnits > 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u00d7 ");
+                }
+                sb.append(nUnits);
+            }
+            if (nStatisticalTests > 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u00d7 ");
+                }
+                sb.append(nStatisticalTests);
+            }
+            if (nAlphas > 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u00d7 ");
+                }
+                sb.append(nAlphas);
+            }
+            if (nBetaScales > 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u00d7 ");
+                }
+                sb.append(nBetaScales);
+            }
+            if (nSigmaScales > 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u00d7 ");
+                }
+                sb.append(nSigmaScales);
+            }
+            if (nPowerMethods > 0) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u00d7 ");
+                }
+                sb.append(nPowerMethods);
+            }
+            sb.append("):");
+
+            sb.append("<ul>");
+
+            if (nUnits > 0) {
+                sb.append("<li>")
+                  .append(
+                    solutionType == SolutionTypeEnum.POWER
+                        ? combination(nUnits, "Group Size", "Group Sizes")
+                        : combination(nUnits, "Desired Power", "Desired Powers")
+                   )
+                  .append("</li>");
+            }
+
+            if (nStatisticalTests > 0) {
+                sb.append("<li>")
+                  .append(combination(nStatisticalTests, "Statistical Test", "Statistical Tests"))
+                  .append("</li>");
+            }
+
+            if (nAlphas > 0) {
+                sb.append("<li>")
+                  .append(combination(nAlphas, "Type I Error Rate", "Type I Error Rates"))
+                  .append("</li>");
+            }
+
+            if (nBetaScales > 0) {
+                sb.append("<li>")
+                  .append(combination(nBetaScales, "Scale Factor For Means", "Scale Factors for Means"))
+                  .append("</li>");
+            }
+
+            if (nSigmaScales > 0) {
+                sb.append("<li>")
+                  .append(combination(nSigmaScales, "Scale Factor for Variability", "Scale Factors for Variability"))
+                  .append("</li>");
+            }
+
+            if (nPowerMethods > 0) {
+                sb.append("<li>")
+                  .append(combination(nPowerMethods, "Power Method", "Power Methods"))
+                  .append("</li>");
+            }
+
+            sb.append("</ul>");
+
+            throw new IllegalArgumentException(sb.toString());
+        }
+    }
+
+    /**
+     * Combine a number with a noun, to produce, for example,
+     * "1 apple" or "2 apples".
+     *
+     * @param n  The number.
+     * @param s1 The noun to use if the number is the number 1.
+     * @param s  The noun to use otherwise.
+     *
+     * @return The combination of the number and the noun.
+     */
+    private static String combination(int n, String s1, String s) {
+        return n == 1 ? "1 " + s1 : n + " " + s;
+    }
+
+    /**
+     * See if a power method list contains a particular power method.
+     *
+     * @param powerMethodList The power method list.
+     * @param powerMethodEnum The particular power method.
+     *
+     * @return True if it does, else false.
+     */
+    private static boolean hasPowerMethod(List<PowerMethod> powerMethodList, PowerMethodEnum powerMethodEnum) {
+        if (powerMethodList == null) {
+            return false;
+        }
+
+        for (PowerMethod powerMethod: powerMethodList) {
+            if (powerMethod.getPowerMethodEnum() == powerMethodEnum) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Return the size of a (possibly null) list.
+     *
+     * @param The list.
+     *
+     * @return The size of the list, or zero if null.
+     */
+    private static int size(List<?> list) {
+        return list != null ? list.size() : 0;
+    }
+
+    /**
+     * Return the multiplicative effect of a factor that may be absent.
+     * If the factor is present, its multiplicative effect is its value.
+     * If it is absent, its multiplicative effect is the number 1; that
+     * is, it has no effect.
+     *
+     * @param n The value of a factor, or zero if the factor is absent.
+     *
+     * @return The multiplicative effect of the factor.
+     */
+    private static int weight(int n) {
+        return n != 0 ? n : 1;
     }
 
 }
