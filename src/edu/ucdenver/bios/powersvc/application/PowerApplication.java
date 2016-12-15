@@ -122,6 +122,8 @@ public class PowerApplication extends Application {
             sb.append("\">technical support</a>.");
             sb.append("</p>\n");
 
+            sb.append("<hr>");
+
             sb.append("<div style=\"margin-left: 20px\">");
             sb.append(status.getDescription() != null ? status.getDescription() : "Unknown error");
             sb.append("</div>\n");
