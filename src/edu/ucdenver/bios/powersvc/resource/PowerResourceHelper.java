@@ -659,11 +659,13 @@ public final class PowerResourceHelper {
     public static RealMatrix sigmaOutcomesCovariateMatrixFromStudyDesign(
             StudyDesign studyDesign,
             RealMatrix sigmaG, RealMatrix sigmaY) {
+        RealMatrix sigmaYG;
+
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.MATRIX_MODE) {
-            return toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
+            sigmaYG = toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
         } else {
-            RealMatrix sigmaYG = toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
+            sigmaYG = toRealMatrix(studyDesign.getNamedMatrix(PowerConstants.
                     MATRIX_SIGMA_OUTCOME_GAUSSIAN));
             /*
              * In guided mode, sigmaYG is specified as correlation values.  We adjust
@@ -710,8 +712,9 @@ public final class PowerResourceHelper {
                     sigmaYG = MatrixUtils.getKroneckerProduct(oneMatrix, sigmaYG);
                 }
             }
-            return sigmaYG;
         }
+
+        return sigmaYG;
     }
 
     /**
@@ -987,6 +990,10 @@ public final class PowerResourceHelper {
      */
     private static void validateNumberOfCases(StudyDesign studyDesign) {
         SolutionTypeEnum solutionType = studyDesign.getSolutionTypeEnum();
+        if (solutionType == null) {
+            throw new IllegalArgumentException("Internal error 93.");
+        }
+
         int nUnits;
         switch (solutionType) {
         case POWER:
