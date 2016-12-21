@@ -37,7 +37,6 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.ucdenver.bios.powersvc.application.JsonLogger;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
@@ -49,7 +48,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  * @author Sarah Kreidler
  */
 public class SampleSizeServerResource extends ServerResource
-implements SampleSizeResource {
+        implements SampleSizeResource {
     private Logger logger = Logger.getLogger(getClass());
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -59,17 +58,20 @@ implements SampleSizeResource {
     private static final ExecutorService THREADS = Executors.newCachedThreadPool();
 
     /**
-     * Calculate the total sample size for the specified study design JSON.
+     * Calculate sample size for the specified study design JSON.
      *
      * @param jsonStudyDesign study design JSON
-     * @return List of power objects for the study design. These will contain
-     * the total sample size
+     *
+     * @return List of power objects for the study design
      */
     @Post
     public final PowerResultList getSampleSize(final String jsonStudyDesign) {
         if (jsonStudyDesign == null) {
             throw badRequestException("Invalid study design");
         }
+
+        logger.info("SampleSizeServerResource.getSampleSize(): " + getRequest().getRootRef() + ": "
+                        + "jsonStudyDesign = '" + jsonStudyDesign + "'");
 
         StudyDesign studyDesign;
 
@@ -80,23 +82,35 @@ implements SampleSizeResource {
             throw badRequestException(ioe.getMessage());
         }
 
-        return getSampleSize(studyDesign);
+        return getSampleSize(studyDesign, jsonStudyDesign);
     }
 
     /**
-     * Calculate the total sample size for the specified study design object.
+     * Calculate sample size for the specified study design object.
+     * This is only called by test code.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design. These will contain
-     * the total sample size
+     *
+     * @return List of power objects for the study design
      */
     public final PowerResultList getSampleSize(final StudyDesign studyDesign) {
+        return getSampleSize(studyDesign, "NOT SUPPLIED");
+    }
+
+    /**
+     * Calculate sample size for the specified study design object, and, possibly,
+     * the study design JSON from whence it came.
+     *
+     * @param studyDesign study design object
+     * @param jsonStudyDesign study design JSON, if available
+     *
+     * @return List of power objects for the study design
+     */
+    private final PowerResultList getSampleSize(final StudyDesign studyDesign, final String jsonStudyDesign) {
         if (studyDesign == null) {
             throw badRequestException("Invalid study design");
         }
 
-        JsonLogger.logObject("SampleSizeServerResource.getSampleSize(): " + getRequest().getRootRef()
-                                + ": studyDesign = ", studyDesign);
         logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
                 "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
@@ -130,7 +144,7 @@ implements SampleSizeResource {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
         } catch (TimeoutException e) {
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef());
-            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + JsonLogger.toJson(studyDesign));
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + jsonStudyDesign);
             boolean canceled = future.cancel(true);
             logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
             throw badRequestException("Request timed out during computation");
@@ -169,12 +183,6 @@ implements SampleSizeResource {
     }
 
     private static ResourceException badRequestException(String message) {
-        final int MAX_LENGTH = 75;
-        return new ResourceException(
-            Status.CLIENT_ERROR_BAD_REQUEST,
-            message.length() <= MAX_LENGTH
-                ? message
-                : message.substring(0, MAX_LENGTH) + " ... (more text deleted) ..."
-        );
+        return new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, message);
     }
 }

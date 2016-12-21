@@ -28,12 +28,14 @@ import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.ucdenver.bios.webservice.common.domain.Blob2DArray;
 import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
 import edu.ucdenver.bios.webservice.common.domain.ResponseNode;
 import edu.ucdenver.bios.webservice.common.domain.Spacing;
 import edu.ucdenver.bios.webservice.common.domain.StandardDeviation;
+import edu.ucdenver.bios.webservice.common.enums.CovarianceTypeEnum;
 
 /**
  * Routines for generating covariance matrices from domain layer
@@ -43,6 +45,12 @@ import edu.ucdenver.bios.webservice.common.domain.StandardDeviation;
  */
 public class CovarianceHelper {
 
+    private static final String COVARIANCE_NOT_POSITIVE_SEMIDEFINITE_MESSAGE =
+            "Unfortunately, there is no solution for this combination of input parameters. "
+        +   "The \"@@NAME@@\" covariance matrix does not describe a valid "
+        +   "covariance structure (that is, it is not positive semidefinite)."
+        ;
+
     /**
      * Convert a covariance object into a RealMatrix.
      * @param covariance Covariance domain object
@@ -50,97 +58,18 @@ public class CovarianceHelper {
      * with the covariance object
      * @return covariance as a RealMatrix
      */
-    public static RealMatrix covarianceToRealMatrix(Covariance covariance,
-            RepeatedMeasuresNode rmNode) {
-        if (covariance.getColumns() != covariance.getRows()) {
-            throw new IllegalArgumentException("Non-square covariance matrix");
-        }
-
-        // convert the spacing list to integers
-        ArrayList<Integer> intSpacingList = new ArrayList<Integer>();
-        if (rmNode.getSpacingList() != null) {
-            for(Spacing spacingValue: rmNode.getSpacingList()) {
-                intSpacingList.add(spacingValue.getValue());
-            }
-        } else {
-            for(int i = 0; i < rmNode.getNumberOfMeasurements(); i++) {
-                intSpacingList.add(i);
-            }
-        }
-
-        // create a covariance matrix based on the Covariance domain object
-        RealMatrix covarianceData = null;
-        if (covariance.getType() != null) {
-            switch (covariance.getType()) {
-            case LEAR_CORRELATION:
-                /* LEAR correlation model.  Should have a standard deviation,
-                 * rho, and delta specified */
-                covarianceData = buildLearCovariance(covariance, intSpacingList);
-                break;
-            case UNSTRUCTURED_CORRELATION:
-                // indicates structured correlation, so we convert to a covariance matrix
-                covarianceData = buildCovarianceFromCorrelation(covariance);
-                break;
-            case UNSTRUCTURED_COVARIANCE:
-                // unstructured covariance, so simply extract the data
-                Blob2DArray blob = covariance.getBlob();
-                if (blob != null) {
-                    covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
-                }
-                break;
-            }
-        }
-        return covarianceData;
-
+    public static RealMatrix covarianceToRealMatrix(Covariance covariance, RepeatedMeasuresNode rmNode) {
+        return realMatrix(covariance, learSpacing(covariance, rmNode), rmNode.getDimension());
     }
 
     /**
      * Create a covariance matrix for responses
      * @param covariance the covariance domain object
-     * @param responsesList the response variables
+     * @param responses the response variables
      * @return covariance matrix
      */
-    public static RealMatrix covarianceToRealMatrix(Covariance covariance,
-            List<ResponseNode> responsesList) {
-        if (covariance == null) {
-            throw new IllegalArgumentException("Missing covariance for response variables");
-        }
-        if (covariance.getColumns() != covariance.getRows()) {
-            throw new IllegalArgumentException("Non-square covariance matrix");
-        }
-        if (responsesList == null) {
-            throw new IllegalArgumentException("No response variables specified");
-        }
-
-        // create equal spacing across the responses
-        ArrayList<Integer> intSpacingList = new ArrayList<Integer>();
-        for(int i = 0; i < responsesList.size(); i++) {
-            intSpacingList.add(i);
-        }
-
-        // create a covariance matrix based on the Covariance domain object
-        RealMatrix covarianceData = null;
-        if (covariance.getType() != null) {
-            switch (covariance.getType()) {
-            case LEAR_CORRELATION:
-                /* LEAR correlation model.  Should have a standard deviation,
-                 * rho, and delta specified */
-                covarianceData = buildLearCovariance(covariance, intSpacingList);
-                break;
-            case UNSTRUCTURED_CORRELATION:
-                // indicates structured correlation, so we convert to a covariance matrix
-                covarianceData = buildCovarianceFromCorrelation(covariance);
-                break;
-            case UNSTRUCTURED_COVARIANCE:
-                // unstructured covariance, so simply extract the data
-                Blob2DArray blob = covariance.getBlob();
-                if (blob != null) {
-                    covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
-                }
-                break;
-            }
-        }
-        return covarianceData;
+    public static RealMatrix covarianceToRealMatrix(Covariance covariance, List<ResponseNode> responses) {
+        return realMatrix(covariance, learSpacing(covariance, responses), "responses");
     }
 
     /**
@@ -179,19 +108,13 @@ public class CovarianceHelper {
         return covarianceData;
     }
 
-
     /**
      * Create a Lear covariance matrix
      * @param covariance Covariance domain object
-     * @param columns column dimension
-     * @param stddev standard deviation
-     * @param rho correlation for observations 1 unit apart
-     * @param delta rate of correlation decay
-     * @param spacingList spacing list
+     * @param learSpacing spacing list
      * @return RealMatrix containing the Lear covariance
      */
-    private static RealMatrix buildLearCovariance(Covariance covariance,
-            List<Integer> intSpacingList) {
+    private static RealMatrix buildLearCovariance(Covariance covariance, List<Integer> learSpacing) {
         RealMatrix covarianceData = null;
         int rows = covariance.getRows();
         int columns = covariance.getColumns();
@@ -202,7 +125,7 @@ public class CovarianceHelper {
                 covariance.getDelta() != Double.NaN &&
                 covariance.getDelta() >= 0) {
 
-            LearCorrelation lear = new LearCorrelation(intSpacingList);
+            LearCorrelation lear = new LearCorrelation(learSpacing);
             StandardDeviation stddev = stddevList.get(0);
 
             double[][] data = new double[rows][columns];
@@ -225,5 +148,127 @@ public class CovarianceHelper {
         return covarianceData;
     }
 
+    /**
+     * Create a covariance matrix, for either the repeated measures case
+     * or the response variables case.
+     *
+     * @param covariance  The covariance domain object.
+     * @param learSpacing The LEAR spacing, or null if the covariance type
+     *                    is not LEAR.
+     * @param name        In the repeated measures case, the 'dimension'
+     *                    of the repeated measure; in the response
+     *                    variables case, the literal string "responses".
+     *
+     * @return The covariance matrix, or null if some input data was not
+     *         as expected.
+     */
+    private static RealMatrix realMatrix(Covariance covariance, List<Integer> learSpacing, String name) {
+        assert covariance != null;
+
+        if (covariance.getColumns() != covariance.getRows()) {
+            throw new IllegalArgumentException("Non-square covariance matrix.");
+        }
+
+        // create a covariance matrix based on the Covariance domain object
+        RealMatrix covarianceData = null;
+
+        if (covariance.getType() != null) {
+            switch (covariance.getType()) {
+            case LEAR_CORRELATION:
+                /* LEAR correlation model.  Should have a standard deviation,
+                 * rho, and delta specified */
+                covarianceData = buildLearCovariance(covariance, learSpacing);
+                break;
+            case UNSTRUCTURED_CORRELATION:
+                // indicates structured correlation, so we convert to a covariance matrix
+                covarianceData = buildCovarianceFromCorrelation(covariance);
+                break;
+            case UNSTRUCTURED_COVARIANCE:
+                // unstructured covariance, so simply extract the data
+                Blob2DArray blob = covariance.getBlob();
+                if (blob != null) {
+                    covarianceData = new Array2DRowRealMatrix(covariance.getBlob().getData());
+                }
+                break;
+            }
+        }
+
+        if (covarianceData != null) {
+            if (! MatrixUtils.isPositiveSemidefinite(covarianceData)) {
+                throw new IllegalArgumentException(COVARIANCE_NOT_POSITIVE_SEMIDEFINITE_MESSAGE.replace("@@NAME@@", name));
+            }
+        }
+
+        return covarianceData;
+    }
+
+    /**
+     * Compute the LEAR spacing for the repeated measures case.
+     *
+     * @param covariance The covariance domain object.
+     * @param responses  The repeated measures.
+     *
+     * @return The LEAR spacing, or null if the covariance type
+     *         is not LEAR.
+     */
+    private static List<Integer> learSpacing(Covariance covariance, RepeatedMeasuresNode rmNode) {
+        if (covariance == null) {
+            throw new IllegalArgumentException("No covariance matrix.");
+        }
+
+        if (covariance.getType() != CovarianceTypeEnum.LEAR_CORRELATION) {
+            return null;
+        }
+
+        if (rmNode == null) {
+            throw new IllegalArgumentException("No repeated measures.");
+        }
+
+        List<Integer> result = new ArrayList<Integer>();
+
+        if (rmNode.getSpacingList() != null) {
+            for (Spacing spacingValue: rmNode.getSpacingList()) {
+                result.add(spacingValue.getValue());
+            }
+        } else {
+            for (int i = 0, n = rmNode.getNumberOfMeasurements(); i < n; ++ i) {
+                result.add(i);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Compute the LEAR spacing for the response variables case.
+     *
+     * @param covariance The covariance domain object.
+     * @param responses  The response variables.
+     *
+     * @return The LEAR spacing, or null if the covariance type
+     *         is not LEAR.
+     */
+    private static List<Integer> learSpacing(Covariance covariance, List<ResponseNode> responses) {
+        if (covariance == null) {
+            throw new IllegalArgumentException("No covariance matrix.");
+        }
+
+        if (covariance.getType() != CovarianceTypeEnum.LEAR_CORRELATION) {
+            return null;
+        }
+
+        if (responses == null) {
+            throw new IllegalArgumentException("No response variables.");
+        }
+
+        // create equal spacing across the responses
+        List<Integer> result = new ArrayList<Integer>();
+
+        for (int i = 0, n = responses.size(); i < n; ++ i) {
+            result.add(i);
+        }
+
+        return result;
+    }
 
 }
