@@ -189,12 +189,12 @@ implements PowerMatrixHTMLResource {
 
                 // sigma for Gaussian covariate and outcomes
                 buffer.append(getBeginEquation());
+                buffer.append(DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN).append(" = ");
                 if (clusterSize > 1) {
                     buffer.append(getColumnOfOnesTex(clusterSize, false));
                     buffer.append(KRONECKER_PRODUCT);
                 }
-                buffer.append(realMatrixToTex(
-                        DISPLAY_MATRIX_SIGMA_OUTCOME_GAUSSIAN,
+                buffer.append(realMatrixToTex(null,
                         sigmaYG, false));
                 buffer.append(getEndEquation());
 
@@ -306,16 +306,22 @@ implements PowerMatrixHTMLResource {
         // add covariance information for clustering
         boolean first = true;
         List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
-        if (clusterNodeList != null) {
-            for(ClusterNode clusterNode: clusterNodeList) {
-                if (!first) {
-                    buffer.append(KRONECKER_PRODUCT);
-                }
-                int size = clusterNode.getGroupSize();
-                double rho = clusterNode.getIntraClusterCorrelation();
-                buffer.append(getCompoundSymmetricTex(size, rho));
-                if (first) {
-                    first = false;
+        if (clusterNodeList != null && clusterNodeList.size() > 0) {
+            int clusterSize = 1;
+            for(ClusterNode node: clusterNodeList) {
+                clusterSize *= node.getGroupSize();
+            }
+            if (clusterSize > 1) {
+                for(ClusterNode clusterNode: clusterNodeList) {
+                    if (!first) {
+                        buffer.append(KRONECKER_PRODUCT);
+                    }
+                    int size = clusterNode.getGroupSize();
+                    double rho = clusterNode.getIntraClusterCorrelation();
+                    buffer.append(getCompoundSymmetricTex(size, rho));
+                    if (first) {
+                        first = false;
+                    }
                 }
             }
         }

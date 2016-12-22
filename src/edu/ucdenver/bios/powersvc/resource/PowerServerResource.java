@@ -37,19 +37,18 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.ucdenver.bios.powersvc.application.JsonLogger;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
  * Implementation of the PowerResource interface for calculating
- * power, sample size, and detectable difference.
+ * power.
  *
  * @author Sarah Kreidler
  */
 public class PowerServerResource extends ServerResource
-implements PowerResource {
+        implements PowerResource {
     private Logger logger = Logger.getLogger(getClass());
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -62,6 +61,7 @@ implements PowerResource {
      * Calculate power for the specified study design JSON.
      *
      * @param jsonStudyDesign study design JSON
+     *
      * @return List of power objects for the study design
      */
     @Post
@@ -69,6 +69,9 @@ implements PowerResource {
         if (jsonStudyDesign == null) {
             throw badRequestException("Invalid study design");
         }
+
+        logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef() + ": "
+                        + "jsonStudyDesign = '" + jsonStudyDesign + "'");
 
         StudyDesign studyDesign;
 
@@ -79,22 +82,35 @@ implements PowerResource {
             throw badRequestException(ioe.getMessage());
         }
 
-        return getPower(studyDesign);
+        return getPower(studyDesign, jsonStudyDesign);
     }
 
     /**
      * Calculate power for the specified study design object.
+     * This is only called by test code.
      *
      * @param studyDesign study design object
+     *
      * @return List of power objects for the study design
      */
     public final PowerResultList getPower(final StudyDesign studyDesign) {
+        return getPower(studyDesign, "NOT SUPPLIED");
+    }
+
+    /**
+     * Calculate power for the specified study design object, and, possibly,
+     * the study design JSON from whence it came.
+     *
+     * @param studyDesign study design object
+     * @param jsonStudyDesign study design JSON, if available
+     *
+     * @return List of power objects for the study design
+     */
+    private final PowerResultList getPower(final StudyDesign studyDesign, final String jsonStudyDesign) {
         if (studyDesign == null) {
             throw badRequestException("Invalid study design");
         }
 
-        JsonLogger.logObject("PowerServerResource.getPower(): " + getRequest().getRootRef()
-                                + ": studyDesign = ", studyDesign);
         logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
                 "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
@@ -128,7 +144,7 @@ implements PowerResource {
             throw new ResourceException(Status.SERVER_ERROR_INTERNAL, "Exception during computation");
         } catch (TimeoutException e) {
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + getRequest().getRootRef());
-            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + JsonLogger.toJson(studyDesign));
+            logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + jsonStudyDesign);
             boolean canceled = future.cancel(true);
             logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
             throw badRequestException("Request timed out during computation");
@@ -167,12 +183,6 @@ implements PowerResource {
     }
 
     private static ResourceException badRequestException(String message) {
-        final int MAX_LENGTH = 75;
-        return new ResourceException(
-            Status.CLIENT_ERROR_BAD_REQUEST,
-            message.length() <= MAX_LENGTH
-                ? message
-                : message.substring(0, MAX_LENGTH) + " ... (more text deleted) ..."
-        );
+        return new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, message);
     }
 }
