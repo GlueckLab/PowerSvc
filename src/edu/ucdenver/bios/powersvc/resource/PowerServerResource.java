@@ -67,7 +67,7 @@ public class PowerServerResource extends ServerResource
     @Post
     public final PowerResultList getPower(final String jsonStudyDesign) {
         if (jsonStudyDesign == null) {
-            throw badRequestException("Invalid study design");
+            throw badRequestException("Invalid study design.");
         }
 
         logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef() + ": "
@@ -108,7 +108,7 @@ public class PowerServerResource extends ServerResource
      */
     private final PowerResultList getPower(final StudyDesign studyDesign, final String jsonStudyDesign) {
         if (studyDesign == null) {
-            throw badRequestException("Invalid study design");
+            throw badRequestException("Invalid study design.");
         }
 
         logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
@@ -126,7 +126,7 @@ public class PowerServerResource extends ServerResource
             return results;
         } catch (InterruptedException e) {
             logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef(), e);
-            throw badRequestException("Computation interrupted");
+            throw badRequestException("Computation interrupted.");
         } catch (ExecutionException e) {
             logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef(), e);
             Throwable cause = e.getCause();
@@ -147,7 +147,7 @@ public class PowerServerResource extends ServerResource
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + jsonStudyDesign);
             boolean canceled = future.cancel(true);
             logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
-            throw badRequestException("Request timed out during computation");
+            throw badRequestException("Request timed out during computation.");
         }
     }
 
@@ -177,7 +177,7 @@ public class PowerServerResource extends ServerResource
                 throw badRequestException(pe.getMessage());
             } catch (OutOfMemoryError oome) {
                 PowerLogger.getInstance().error(oome.getMessage(), oome);
-                throw badRequestException("Insufficient memory to process this study design");
+                throw badRequestException("Insufficient memory to process this study design.");
             }
         }
     }
