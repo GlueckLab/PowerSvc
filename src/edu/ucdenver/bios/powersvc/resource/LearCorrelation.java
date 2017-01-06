@@ -48,11 +48,11 @@ public class LearCorrelation
         spacingList = integerList;
 
         if (spacingList == null)
-            throw new IllegalArgumentException("Failed to create Lear Correlation: null repeated measures object");
+            throw new IllegalArgumentException("Failed to create Lear Correlation: null repeated measures object.");
 
 
         if (spacingList == null || spacingList.size() < 2)
-            throw new IllegalArgumentException("Failed to create Lear Correlation: invalid spacing");
+            throw new IllegalArgumentException("Failed to create Lear Correlation: invalid spacing.");
 
         // maximum spacing between any of the measurements, assuming the list is in
         // ascending order
@@ -113,11 +113,11 @@ public class LearCorrelation
     throws IllegalArgumentException
     {
         if (i < 0 || j < 0 || i > spacingList.size()-1 || j > spacingList.size()-1)
-            throw new IllegalArgumentException("Invalid measurement indices");
+            throw new IllegalArgumentException("Invalid measurement indices.");
         if (baseCorrelation < -1 || baseCorrelation > 1)
-            throw new IllegalArgumentException("Base correlation must be between -1 and 1");
+            throw new IllegalArgumentException("Base correlation must be between -1 and 1.");
         if (rateOfDecay < 0)
-            throw new IllegalArgumentException("Rate of decay must be positive");
+            throw new IllegalArgumentException("Rate of decay must be positive.");
 
         int measurementDistance = Math.abs(spacingList.get(i) - spacingList.get(j));
         double powerValue;
