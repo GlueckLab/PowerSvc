@@ -36,7 +36,7 @@
 *
 * <h2>Related Documentation</h2>
 *
-* This package is part of the Power web service component for the Glimmpse software system, please see
+* This package is part of the Power web service component for the GLIMMPSE software system, please see
 * the following for more information:
 * <ul>
 *  <li><a href="http://glimmpse.samplesizeshop.com/">http://glimmpse.samplesizeshop.com/</a>
