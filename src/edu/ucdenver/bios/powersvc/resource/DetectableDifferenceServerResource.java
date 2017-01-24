@@ -25,6 +25,7 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.util.List;
 
 import org.restlet.data.Status;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -51,6 +52,7 @@ implements DetectableDifferenceResource {
      * @param studyDesign study design object
      * @return List of power objects for the study design.  These will contain the detectable difference
      */
+    @Post
     public PowerResultList getDetectableDifference(StudyDesign studyDesign)
     {
         if (studyDesign == null)
