@@ -44,10 +44,11 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 
 /**
- * Resource which generates an HTML/MathJax representation of the matrices
- * used in a power calculation
- * @author Sarah Kreidler
+ * Implementation of the PowerMatrixHTMLResource interface
+ * for calculating an HTML/MathJax representation of the matrices
+ * used in a power calculation.
  *
+ * @author Sarah Kreidler
  */
 public class PowerMatrixHTMLServerResource extends ServerResource
 implements PowerMatrixHTMLResource {

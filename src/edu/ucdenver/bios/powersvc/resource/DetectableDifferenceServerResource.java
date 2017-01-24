@@ -37,10 +37,10 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the PowerResource interface for calculating
- * power, sample size, and detectable difference.
- * @author Sarah Kreidler
+ * Implementation of the DetectableDifferenceResource interface
+ * for calculating detectable difference.
  *
+ * @author Sarah Kreidler
  */
 public class DetectableDifferenceServerResource extends ServerResource
 implements DetectableDifferenceResource {

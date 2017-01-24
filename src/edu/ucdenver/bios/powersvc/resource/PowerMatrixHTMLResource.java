@@ -29,9 +29,10 @@ import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Main interface for retrieving an html formatted display of matrices.
- * @author Sarah Kreidler
+ * Main interface for calculating an HTML/MathJax representation of the matrices
+ * used in a power calculation.
  *
+ * @author Sarah Kreidler
  */
 public interface PowerMatrixHTMLResource {
 
