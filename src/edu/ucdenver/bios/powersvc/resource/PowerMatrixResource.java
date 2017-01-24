@@ -34,7 +34,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  *
  */
 public interface PowerMatrixResource {
-    
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
      */

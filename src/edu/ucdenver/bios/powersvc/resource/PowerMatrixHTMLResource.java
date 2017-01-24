@@ -34,7 +34,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  *
  */
 public interface PowerMatrixHTMLResource {
-    
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
      * as an HTML formatted string.  This method uses the notation of
@@ -42,7 +42,7 @@ public interface PowerMatrixHTMLResource {
      */
     @Post("json:html")
     String getMatricesAsHTML(StudyDesign studyDesign);
-    
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
      * as an HTML formatted string.  This method required HTML form input
