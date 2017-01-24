@@ -29,8 +29,8 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
  * Main interface for calculating sample size.
- * @author Sarah Kreidler
  *
+ * @author Sarah Kreidler
  */
 public interface SampleSizeResource {
     /**

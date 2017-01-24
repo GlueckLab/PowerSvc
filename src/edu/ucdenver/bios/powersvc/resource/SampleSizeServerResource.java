@@ -42,8 +42,8 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the SampleSizeResource interface for calculating
- * sample size.
+ * Implementation of the SampleSizeResource interface
+ * for calculating sample size.
  *
  * @author Sarah Kreidler
  */

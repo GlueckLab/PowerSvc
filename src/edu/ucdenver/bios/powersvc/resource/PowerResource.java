@@ -28,10 +28,9 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Main interface for calculating power, sample size, and
- * detectable difference.
- * @author Sarah Kreidler
+ * Main interface for calculating power.
  *
+ * @author Sarah Kreidler
  */
 public interface PowerResource {
     /**

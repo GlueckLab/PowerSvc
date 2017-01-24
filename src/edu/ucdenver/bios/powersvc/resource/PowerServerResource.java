@@ -42,8 +42,8 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the PowerResource interface for calculating
- * power.
+ * Implementation of the PowerResource interface
+ * for calculating power.
  *
  * @author Sarah Kreidler
  */
