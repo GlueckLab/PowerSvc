@@ -34,21 +34,23 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  */
 public interface SampleSizeResource {
     /**
-     * Calculate the total sample size for the specified study design JSON.
+     * Calculate sample size for the specified study design JSON.
      *
      * @param jsonStudyDesign study design JSON
-     * @return List of power objects for the study design. These will contain
-     * the total sample size
+     *
+     * @return JSON representation of the list of power objects
+     *         for the study design
      */
     @Post
-    PowerResultList getSampleSize(String jsonStudyDesign);
+    String getSampleSize(String jsonStudyDesign);
 
     /**
-     * Calculate the total sample size for the specified study design object.
+     * Calculate sample size for the specified study design object.
+     * This is only called by test code.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design. These will contain
-     * the total sample size
+     *
+     * @return List of power objects for the study design
      */
     PowerResultList getSampleSize(StudyDesign studyDesign);
 }

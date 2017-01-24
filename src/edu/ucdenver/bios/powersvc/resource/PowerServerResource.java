@@ -62,10 +62,11 @@ public class PowerServerResource extends ServerResource
      *
      * @param jsonStudyDesign study design JSON
      *
-     * @return List of power objects for the study design
+     * @return JSON representation of the list of power objects
+     *         for the study design
      */
     @Post
-    public final PowerResultList getPower(final String jsonStudyDesign) {
+    public final String getPower(final String jsonStudyDesign) {
         if (jsonStudyDesign == null) {
             throw badRequestException("Invalid study design.");
         }
@@ -82,7 +83,22 @@ public class PowerServerResource extends ServerResource
             throw badRequestException(ioe.getMessage());
         }
 
-        return getPower(studyDesign, jsonStudyDesign);
+        PowerResultList powerResultList = getPower(studyDesign, jsonStudyDesign);
+
+        String result;
+
+        try {
+            result = MAPPER.writeValueAsString(powerResultList);
+        } catch (IOException ioe) {
+            PowerLogger.getInstance().error(ioe.getMessage(), ioe);
+            throw badRequestException(ioe.getMessage());
+        }
+
+        logger.info("INPUT = '" + jsonStudyDesign + "'");
+        logger.info("OUTPUT = '" + result + "'");
+
+
+        return result;
     }
 
     /**

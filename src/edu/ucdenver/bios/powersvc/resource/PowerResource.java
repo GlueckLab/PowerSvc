@@ -37,15 +37,19 @@ public interface PowerResource {
      * Calculate power for the specified study design JSON.
      *
      * @param jsonStudyDesign study design JSON
-     * @return List of power objects for the study design
+     *
+     * @return JSON representation of the list of power objects
+     *         for the study design
      */
     @Post
-    PowerResultList getPower(String jsonStudyDesign);
+    String getPower(String jsonStudyDesign);
 
     /**
      * Calculate power for the specified study design object.
+     * This is only called by test code.
      *
      * @param studyDesign study design object
+     *
      * @return List of power objects for the study design
      */
     PowerResultList getPower(StudyDesign studyDesign);
