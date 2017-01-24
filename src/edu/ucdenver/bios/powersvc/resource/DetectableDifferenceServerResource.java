@@ -45,26 +45,26 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 public class DetectableDifferenceServerResource extends ServerResource
 implements DetectableDifferenceResource {
 
-	/**
-	 * Calculate the detectable difference for the specified study design.
-	 * 
-	 * @param studyDesign study design object
-	 * @return List of power objects for the study design.  These will contain the detectable difference
-	 */
-	public PowerResultList getDetectableDifference(StudyDesign studyDesign)
-	{
-        if (studyDesign == null) 
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+    /**
+     * Calculate the detectable difference for the specified study design.
+     *
+     * @param studyDesign study design object
+     * @return List of power objects for the study design.  These will contain the detectable difference
+     */
+    public PowerResultList getDetectableDifference(StudyDesign studyDesign)
+    {
+        if (studyDesign == null)
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                     "Invalid study design");
-        
+
         try {
-            GLMMPowerParameters params = 
+            GLMMPowerParameters params =
                 PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // calculate the power results
             List<Power> calcResults = calculator.getDetectableDifference(params);
-            // convert to concrete classes            
+            // convert to concrete classes
             return PowerResourceHelper.toPowerResultList(calcResults);
         } catch (IllegalArgumentException iae) {
             PowerLogger.getInstance().error(iae.getMessage());
@@ -74,6 +74,6 @@ implements DetectableDifferenceResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                     pe.getMessage());
         }
-	}
+    }
 
 }

@@ -36,7 +36,7 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
  */
 public class PowerMatrixServerResource extends ServerResource
 implements PowerMatrixResource {
-	
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
      * @param studyDesign the Study Design object
