@@ -72,21 +72,20 @@ public class PowerApplication extends Application {
      */
     @Override
     public final Restlet createInboundRoot() {
-        // Create a router Restlet that routes each call to a new instance
-        // of Resource.
+        // Create a router Restlet that routes each call to a new instance of Resource.
         Router router = new Router(getContext());
+
         // Defines only one default route, self-identifies server
         router.attachDefault(DefaultResource.class);
 
-        /* attributes of power resources */
-        // Power, sample size, and detectable difference  calculation resource
-        router.attach("/power", PowerServerResource.class);
-        router.attach("/samplesize", SampleSizeServerResource.class);
-        router.attach("/difference", DetectableDifferenceServerResource.class);
-        router.attach("/matrix", PowerMatrixServerResource.class);
-        router.attach("/matrix/html", PowerMatrixHTMLServerResource.class);
-        // unit test resource - easier to collaborate with remote testers
-        //this way
+        // Power, sample size, detectable difference, and matrix calculation resources
+        router.attach("/power",       PowerServerResource.class);                // used by GLIMMPSE
+        router.attach("/samplesize",  SampleSizeServerResource.class);           // used by GLIMMPSE
+        router.attach("/difference",  DetectableDifferenceServerResource.class);
+        router.attach("/matrix",      PowerMatrixServerResource.class);
+        router.attach("/matrix/html", PowerMatrixHTMLServerResource.class);      // used by GLIMMPSE
+
+        // unit test resource - easier to collaborate with remote testers this way
         router.attach("/testf", FTestResource.class);
 
         return router;
