@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,7 +41,7 @@ public interface PowerResource {
      * @return JSON representation of the list of power objects
      *         for the study design
      */
-    @Post
+    @Post("json:json")
     String getPower(String jsonStudyDesign);
 
     /**

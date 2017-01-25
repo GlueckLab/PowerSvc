@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2016 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -65,13 +65,13 @@ public class SampleSizeServerResource extends ServerResource
      * @return JSON representation of the list of power objects
      *         for the study design
      */
-    @Post
+    @Post("json:json")
     public final String getSampleSize(final String jsonStudyDesign) {
         if (jsonStudyDesign == null) {
             throw badRequestException("Invalid study design.");
         }
 
-        logger.info("SampleSizeServerResource.getSampleSize(): " + getRequest().getRootRef() + ": "
+        logger.info("getSampleSize(): " + getRequest().getRootRef() + ": "
                         + "jsonStudyDesign = '" + jsonStudyDesign + "'");
 
         StudyDesign studyDesign;
@@ -96,7 +96,6 @@ public class SampleSizeServerResource extends ServerResource
 
         logger.info("INPUT = '" + jsonStudyDesign + "'");
         logger.info("OUTPUT = '" + result + "'");
-
 
         return result;
     }
