@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2016 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,15 +29,16 @@ import java.util.Set;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.log4j.Logger;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.utils.Logger;
 import edu.ucdenver.bios.powersvc.application.PowerConstants;
 import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.BetaScale;
@@ -81,7 +82,7 @@ import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 public final class PowerResourceHelper {
 
     /** The logger. */
-    private static Logger logger = PowerLogger.getInstance();
+    private static final Logger LOGGER = Logger.getLogger(PowerLogger.getInstance());
 
     /** The maximum number of cases we consider reasonable. */
     private static final int MAX_CASES = 72;
@@ -138,18 +139,25 @@ public final class PowerResourceHelper {
         }
 
         /** Generate and add matrices **/
+
         // build design matrix
         params.setDesignEssence(designMatrixFromStudyDesign(studyDesign));
+
         // build beta matrix
         params.setBeta(betaMatrixFromStudyDesign(studyDesign));
+        debug("beta set to:", params.getBeta().getCombinedMatrix());
+
         // build the between subject contrast
         params.setBetweenSubjectContrast(betweenParticipantContrastFromStudyDesign(studyDesign));
+
         // build the within subject contrast
         params.setWithinSubjectContrast(withinParticipantContrastFromStudyDesign(studyDesign));
+
         // build theta null matrix
         params.setTheta(thetaNullMatrixFromStudyDesign(studyDesign,
                 params.getBetweenSubjectContrast(),
                 params.getWithinSubjectContrast()));
+
         // add matrices for either GLMM(F) or GLMM(F,g) designs
         if (studyDesign.isGaussianCovariate()) {
             RealMatrix sigmaY = sigmaOutcomesMatrixFromStudyDesign(studyDesign);
@@ -520,14 +528,30 @@ public final class PowerResourceHelper {
                                 // within subject factor of interest
                                 withinContrast = ContrastHelper.mainEffectWithin(withinMap.get(0).getRepeatedMeasuresNode(),
                                         studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
+                                debug(
+                                    "withinContrast after calling mainEffectWithin("
+                                        + withinMap.get(0).getRepeatedMeasuresNode() + ", "
+                                        + studyDesign.getRepeatedMeasuresTree() + ", "
+                                        + studyDesign.getResponseList() + ")",
+                                    withinContrast
+                                );
                                 break;
+
                             case INTERACTION:
                                 withinContrast = ContrastHelper.interactionWithin(withinMap,
                                         studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
                                 break;
+
                             case TREND:
                                 withinContrast = ContrastHelper.trendWithin(withinMap.get(0),
                                         studyDesign.getRepeatedMeasuresTree(), studyDesign.getResponseList());
+                                debug(
+                                    "withinContrast after calling trendWithin("
+                                        + withinMap.get(0) + ", "
+                                        + studyDesign.getRepeatedMeasuresTree() + ", "
+                                        + studyDesign.getResponseList() + ")",
+                                    withinContrast
+                                );
                                 break;
                             }
                         } else {
@@ -544,6 +568,7 @@ public final class PowerResourceHelper {
                             for(ClusterNode node: clusterNodeList) {
                                 totalRows *= node.getGroupSize();
                             }
+                            debug("totalRows is " + totalRows);
 
                             // direct product the U matrix with a matrix of ones to
                             // generate the proper dimensions for a cluster sample
@@ -683,6 +708,9 @@ public final class PowerResourceHelper {
                 if (sigmaY == null) {
                     throw new IllegalArgumentException("Invalid covariance for outcome: sigmaY is null");
                 }
+                debug("sigmaY from JSON", sigmaY);
+                debug("sigmaYG from JSON", sigmaYG);
+
                 if (sigmaY.getRowDimension() < sigmaYG.getRowDimension()
                         || sigmaY.getColumnDimension() != sigmaY.getRowDimension()) {
                     throw new IllegalArgumentException(
@@ -691,13 +719,23 @@ public final class PowerResourceHelper {
                             + "sigmaYG is " + sigmaYG.getRowDimension() + " x " + sigmaYG.getColumnDimension()
                     );
                 }
+
                 // assumes sigmaG is already updated to be a variance
                 double varG = sigmaG.getEntry(0, 0);
-                for(int row = 0; row < sigmaYG.getRowDimension(); row++) {
+
+                for (int row = 0; row < sigmaYG.getRowDimension(); row++) {
                     double corrYG = sigmaYG.getEntry(row, 0);
                     double varY = sigmaY.getEntry(row, row);
                     sigmaYG.setEntry(row, 0, corrYG * Math.sqrt(varG * varY));
+                    debug(
+                        "== multiplying sigmaYG[" + (row + 1) + ", " + 1 + "] "
+                            + "by sqrt(varG * varY) = sqrt(" + varG + " * " + varY + "): "
+                            + "result is " + sigmaYG.getEntry(row, 0)
+                    );
                 }
+
+                debug("sigmaYG prior to accounting for clustering", sigmaYG);
+
                 // calculate cluster size
                 List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
                 if (clusterNodeList != null && clusterNodeList.size() > 0) {
@@ -708,8 +746,13 @@ public final class PowerResourceHelper {
 
                     // kronecker product the sigmaYG matrix with a matrix of ones to
                     // generate the proper dimensions for a cluster sample
+                    debug("== account for clustering by Kroneckering with matrix of ones:");
+
                     RealMatrix oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(totalRows, 1, 1);
+                    debug("matrix of ones", oneMatrix);
+
                     sigmaYG = MatrixUtils.getKroneckerProduct(oneMatrix, sigmaYG);
+                    debug("final sigmaYG", sigmaYG);
                 }
             }
         }
@@ -870,7 +913,7 @@ public final class PowerResourceHelper {
      */
     public static NamedMatrix toNamedMatrix(final RealMatrix matrix, final String name) {
         if (matrix == null || name == null || name.isEmpty()) {
-            logger.error("failed to create NamedMatrix object name=[" + (name != null ? name : "NULL")+ "]");
+            LOGGER.error("failed to create NamedMatrix object name=[" + (name != null ? name : "NULL")+ "]");
             return null;
         }
         NamedMatrix namedMatrix = new NamedMatrix();
@@ -1197,4 +1240,23 @@ public final class PowerResourceHelper {
         return n != 0 ? n : 1;
     }
 
+    /**
+     * A convenience method for DEBUG logging of a message.
+     *
+     * @param message The message.
+     */
+    private static void debug(Object message) {
+        LOGGER.debug(message);
+    }
+
+    /**
+     * A convenience method for DEBUG logging of a matrix
+     * with a label.
+     *
+     * @param label      The label.
+     * @param realMatrix The matrix.
+     */
+    private static void debug(String label, RealMatrix realMatrix) {
+        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
+    }
 }
