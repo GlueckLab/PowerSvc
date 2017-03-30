@@ -126,6 +126,7 @@ public class SampleSizeServerResource extends ServerResource
             throw badRequestException("Invalid study design.");
         }
 
+        // NOTE: we currently run with "-Xms6g -Xmx6g", so we expect total == max
         logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
                 "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
