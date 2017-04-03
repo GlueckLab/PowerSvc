@@ -273,6 +273,7 @@ public class PowerMatrixHTMLServerResource extends ServerResource
 
             }
 
+            buffer.append("<p/>(For ease of display, some scaling factors may have been omitted.)");
             buffer.append("<p/>For notation details, please see<p/>");
             buffer.append(createCitations());
             buffer.append(createBrowserNotes());
