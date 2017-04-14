@@ -1,6 +1,6 @@
 apply from: 'build-common.gradle'
 
-version = '2.0.11'
+version = '2.0.12'
 
 dependencies {
     compile 'org.samplesizeshop:webservicecommon:1.1.5.0'
