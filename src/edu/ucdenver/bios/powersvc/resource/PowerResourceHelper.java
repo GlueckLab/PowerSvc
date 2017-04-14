@@ -84,6 +84,9 @@ public final class PowerResourceHelper {
     /** The logger. */
     private static final Logger LOGGER = Logger.getLogger(PowerLogger.getInstance());
 
+    /** The maximum number of groups we consider reasonable. */
+    private static final int MAX_GROUPS = 100;
+
     /** The maximum number of cases we consider reasonable. */
     private static final int MAX_CASES = 72;
 
@@ -1018,8 +1021,74 @@ public final class PowerResourceHelper {
             }
         }
 
+        // The number of groups must be "reasonable".
+        validateNumberOfGroups(studyDesign);
+
         // The number of cases must be "reasonable".
         validateNumberOfCases(studyDesign);
+    }
+
+    /**
+     * See if the number of groups included in the request defined by
+     * a study design is reasonable. "Reasonable" is subjective: it
+     * means no greater than the constant MAX_GROUPS.
+     *
+     * @param studyDesign The study design.
+     *
+     * @throws IllegalArgumentException if not.
+     */
+    private static void validateNumberOfGroups(StudyDesign studyDesign) {
+        int nGroups = 1;
+
+        List<BetweenParticipantFactor> factorList = studyDesign.getBetweenParticipantFactorList();
+        if (factorList != null) {
+            for (BetweenParticipantFactor factor: factorList) {
+                List<Category> categoryList = factor.getCategoryList();
+                if (categoryList != null) {
+                    nGroups *= categoryList.size();
+                }
+            }
+        }
+
+        if (nGroups > MAX_GROUPS) {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("To better manage the load on our server, we ask that you limit your request to no more than ")
+              .append(MAX_GROUPS)
+              .append(" groups.");
+            sb.append("<br>");
+            sb.append("Your request currently includes ")
+               .append(pretty(nGroups))
+               .append(" groups (");
+            boolean first = true;
+            for (BetweenParticipantFactor factor: factorList) {
+                List<Category> categoryList = factor.getCategoryList();
+                if (categoryList != null) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(" \u00d7 ");
+                    }
+                    sb.append(categoryList.size());
+                }
+            }
+            sb.append("):");
+
+            sb.append("<ul>");
+
+            for (BetweenParticipantFactor factor: factorList) {
+                List<Category> categoryList = factor.getCategoryList();
+                if (categoryList != null) {
+                    sb.append("<li>")
+                      .append("predictor '" + factor.getPredictorName() + "' has " + categoryList.size() + " values")
+                      .append("</li>");
+                }
+            }
+
+            sb.append("</ul>");
+
+            throw new IllegalArgumentException(sb.toString());
+        }
     }
 
     /**
@@ -1078,7 +1147,7 @@ public final class PowerResourceHelper {
               .append(" cases.");
             sb.append("<br>");
             sb.append("Your request currently includes ")
-               .append(nCases)
+               .append(pretty(nCases))
                .append(" cases (");
             boolean first = true;
             if (nUnits > 0) {
@@ -1258,5 +1327,17 @@ public final class PowerResourceHelper {
      */
     private static void debug(String label, RealMatrix realMatrix) {
         LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
+    }
+
+    /**
+     * Compute a string representation of an integer, with commas.
+     * (This method belongs in a utility class somewhere.)
+     *
+     * @param n The integer.
+     *
+     * @return The string representation.
+     */
+    private static String pretty(int n) {
+        return java.text.NumberFormat.getIntegerInstance(java.util.Locale.US).format(n);
     }
 }
