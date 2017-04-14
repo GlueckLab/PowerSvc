@@ -3,8 +3,8 @@ apply from: 'build-common.gradle'
 version = '2.0.12'
 
 dependencies {
-    compile 'org.samplesizeshop:webservicecommon:1.1.5.0'
-    compile('org.samplesizeshop:javastatistics:1.2.11.0') {
+    compile 'org.samplesizeshop:webservicecommon:1.1.6.0'
+    compile('org.samplesizeshop:javastatistics:1.2.12.0') {
         exclude group: 'javax.jms'
         exclude group: 'com.sun.jdmk'
         exclude group: 'com.sun.jmx'
