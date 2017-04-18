@@ -25,6 +25,7 @@ package edu.ucdenver.bios.powersvc.resource;
 import java.util.List;
 
 import org.restlet.data.Status;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -37,34 +38,35 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the PowerResource interface for calculating
- * power, sample size, and detectable difference.
- * @author Sarah Kreidler
+ * Implementation of the DetectableDifferenceResource interface
+ * for calculating detectable difference.
  *
+ * @author Sarah Kreidler
  */
 public class DetectableDifferenceServerResource extends ServerResource
 implements DetectableDifferenceResource {
 
-	/**
-	 * Calculate the detectable difference for the specified study design.
-	 * 
-	 * @param studyDesign study design object
-	 * @return List of power objects for the study design.  These will contain the detectable difference
-	 */
-	public PowerResultList getDetectableDifference(StudyDesign studyDesign)
-	{
-        if (studyDesign == null) 
-            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, 
+    /**
+     * Calculate the detectable difference for the specified study design.
+     *
+     * @param studyDesign study design object
+     * @return List of power objects for the study design.  These will contain the detectable difference
+     */
+    @Post
+    public PowerResultList getDetectableDifference(StudyDesign studyDesign)
+    {
+        if (studyDesign == null)
+            throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                     "Invalid study design");
-        
+
         try {
-            GLMMPowerParameters params = 
+            GLMMPowerParameters params =
                 PowerResourceHelper.studyDesignToPowerParameters(studyDesign);
             // create the appropriate power calculator for this model
             GLMMPowerCalculator calculator = new GLMMPowerCalculator();
             // calculate the power results
             List<Power> calcResults = calculator.getDetectableDifference(params);
-            // convert to concrete classes            
+            // convert to concrete classes
             return PowerResourceHelper.toPowerResultList(calcResults);
         } catch (IllegalArgumentException iae) {
             PowerLogger.getInstance().error(iae.getMessage());
@@ -74,6 +76,6 @@ implements DetectableDifferenceResource {
             throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST,
                     pe.getMessage());
         }
-	}
+    }
 
 }

@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2016 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,8 +42,8 @@ import edu.ucdenver.bios.webservice.common.domain.PowerResultList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the PowerResource interface for calculating
- * power.
+ * Implementation of the PowerResource interface
+ * for calculating power.
  *
  * @author Sarah Kreidler
  */
@@ -62,15 +62,16 @@ public class PowerServerResource extends ServerResource
      *
      * @param jsonStudyDesign study design JSON
      *
-     * @return List of power objects for the study design
+     * @return JSON representation of the list of power objects
+     *         for the study design
      */
-    @Post
-    public final PowerResultList getPower(final String jsonStudyDesign) {
+    @Post("json:json")
+    public final String getPower(final String jsonStudyDesign) {
         if (jsonStudyDesign == null) {
-            throw badRequestException("Invalid study design");
+            throw badRequestException("Invalid study design.");
         }
 
-        logger.info("PowerServerResource.getPower(): " + getRequest().getRootRef() + ": "
+        logger.info("getPower(): " + getRequest().getRootRef() + ": "
                         + "jsonStudyDesign = '" + jsonStudyDesign + "'");
 
         StudyDesign studyDesign;
@@ -82,7 +83,21 @@ public class PowerServerResource extends ServerResource
             throw badRequestException(ioe.getMessage());
         }
 
-        return getPower(studyDesign, jsonStudyDesign);
+        PowerResultList powerResultList = getPower(studyDesign, jsonStudyDesign);
+
+        String result;
+
+        try {
+            result = MAPPER.writeValueAsString(powerResultList);
+        } catch (IOException ioe) {
+            PowerLogger.getInstance().error(ioe.getMessage(), ioe);
+            throw badRequestException(ioe.getMessage());
+        }
+
+        logger.info("INPUT = '" + jsonStudyDesign + "'");
+        logger.info("OUTPUT = '" + result + "'");
+
+        return result;
     }
 
     /**
@@ -108,9 +123,10 @@ public class PowerServerResource extends ServerResource
      */
     private final PowerResultList getPower(final StudyDesign studyDesign, final String jsonStudyDesign) {
         if (studyDesign == null) {
-            throw badRequestException("Invalid study design");
+            throw badRequestException("Invalid study design.");
         }
 
+        // NOTE: we currently run with "-Xms6g -Xmx6g", so we expect total == max
         logger.info("Memory stats: free: " + Runtime.getRuntime().freeMemory() / BYTES_PER_MEG +
                 "M, total: " + Runtime.getRuntime().totalMemory() / BYTES_PER_MEG +
                 "M, max: " + Runtime.getRuntime().maxMemory() / BYTES_PER_MEG + "M");
@@ -126,7 +142,7 @@ public class PowerServerResource extends ServerResource
             return results;
         } catch (InterruptedException e) {
             logger.warn(getClass().getSimpleName() + ": InterruptedException(): " + getRequest().getRootRef(), e);
-            throw badRequestException("Computation interrupted");
+            throw badRequestException("Computation interrupted.");
         } catch (ExecutionException e) {
             logger.warn(getClass().getSimpleName() + ": ExecutionException(): " + getRequest().getRootRef(), e);
             Throwable cause = e.getCause();
@@ -147,7 +163,7 @@ public class PowerServerResource extends ServerResource
             logger.warn(getClass().getSimpleName() + ": TimeoutException(): " + jsonStudyDesign);
             boolean canceled = future.cancel(true);
             logger.info(getClass().getSimpleName() + ": canceled: " + canceled);
-            throw badRequestException("Request timed out during computation");
+            throw badRequestException("Request timed out during computation.");
         }
     }
 
@@ -177,7 +193,7 @@ public class PowerServerResource extends ServerResource
                 throw badRequestException(pe.getMessage());
             } catch (OutOfMemoryError oome) {
                 PowerLogger.getInstance().error(oome.getMessage(), oome);
-                throw badRequestException("Insufficient memory to process this study design");
+                throw badRequestException("Insufficient memory to process this study design.");
             }
         }
     }

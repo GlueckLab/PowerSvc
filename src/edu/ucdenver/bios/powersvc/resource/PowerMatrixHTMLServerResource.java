@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,11 +27,12 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.restlet.data.Form;
+import org.restlet.data.Status;
 import org.restlet.resource.Post;
+import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -44,13 +45,15 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 import edu.ucdenver.bios.webservice.common.enums.StudyDesignViewTypeEnum;
 
 /**
- * Resource which generates an HTML/MathJax representation of the matrices
- * used in a power calculation
- * @author Sarah Kreidler
+ * Implementation of the PowerMatrixHTMLResource interface
+ * for calculating an HTML/MathJax representation of the matrices
+ * used in a power calculation.
  *
+ * @author Sarah Kreidler
  */
 public class PowerMatrixHTMLServerResource extends ServerResource
-implements PowerMatrixHTMLResource {
+        implements PowerMatrixHTMLResource {
+    private Logger logger = Logger.getLogger(getClass());
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -75,13 +78,70 @@ implements PowerMatrixHTMLResource {
 
     /**
      * Get matrices used in the power calculation for a "guided" study design
-     * as an HTML formatted string.  This method uses the notation of
-     * Muller & Stewart 2007
-     * @param studyDesign the StudyDesign object
+     * as an HTML formatted string.
+     * <p>
+     * This method uses the notation of Muller & Stewart 2007.
+     *
+     * @param jsonStudyDesign study design JSON
+     *
      * @return html string with representation of matrices
      */
     @Post("json:html")
+    public String getMatricesAsHTML(String jsonStudyDesign) {
+        if (jsonStudyDesign == null) {
+            throw badRequestException("Invalid study design.");
+        }
+
+        logger.info("getMatricesAsHTML(): " + getRequest().getRootRef() + ": "
+                        + "jsonStudyDesign = '" + jsonStudyDesign + "'");
+
+        StudyDesign studyDesign;
+
+        try {
+            studyDesign = MAPPER.readValue(jsonStudyDesign, StudyDesign.class);
+        } catch (IOException ioe) {
+            PowerLogger.getInstance().error(ioe.getMessage(), ioe);
+            throw badRequestException(ioe.getMessage());
+        }
+
+        String result = privateGetMatricesAsHTML(studyDesign);
+
+        logger.info("INPUT = '" + jsonStudyDesign + "'");
+        logger.info("OUTPUT = '" + result + "'");
+
+        return result;
+    }
+
+    /**
+     * Get matrices used in the power calculation for a "guided" study design
+     * as an HTML formatted string.
+     * This is only called by test code.
+     * <p>
+     * This method uses the notation of Muller & Stewart 2007.
+     *
+     * @param studyDesign study design object
+     *
+     * @return html string with representation of matrices
+     */
     public String getMatricesAsHTML(StudyDesign studyDesign) {
+        return privateGetMatricesAsHTML(studyDesign);
+    }
+
+    /**
+     * Get matrices used in the power calculation for a "guided" study design
+     * as an HTML formatted string.
+     * <p>
+     * This method uses the notation of Muller & Stewart 2007.
+     *
+     * @param studyDesign study design object
+     *
+     * @return html string with representation of matrices
+     */
+    private String privateGetMatricesAsHTML(StudyDesign studyDesign) {
+        if (studyDesign == null) {
+            throw badRequestException("Invalid study design.");
+        }
+
         StringBuilder buffer = new StringBuilder();
 
         buffer.append("<html><head><script type=\"text/javascript\" ")
@@ -213,6 +273,7 @@ implements PowerMatrixHTMLResource {
 
             }
 
+            buffer.append("<p/>(For ease of display, some scaling factors may have been omitted.)");
             buffer.append("<p/>For notation details, please see<p/>");
             buffer.append(createCitations());
             buffer.append(createBrowserNotes());
@@ -222,35 +283,6 @@ implements PowerMatrixHTMLResource {
 
         buffer.append("</body></html>");
         return buffer.toString();
-    }
-
-    /**
-     * Get matrices used in the power calculation for a "guided" study design
-     * as an HTML formatted string.  This method required HTML form input
-     * with the study design json in the 'studydesign' field. This method uses the notation of
-     * Muller & Stewart 2007.
-     */
-    @Post("form:html")
-    public String getMatricesAsHTML(Form studyDesignForm) {
-        StudyDesign studyDesign = getStudyDesignFromForm(studyDesignForm);
-        if (studyDesign != null) {
-            return getMatricesAsHTML(studyDesign);
-        } else {
-            return "No study design specified";
-        }
-    }
-
-    private StudyDesign getStudyDesignFromForm(Form studyDesignForm) {
-        String jsonStudyDesign = studyDesignForm.getFirstValue("studydesign");
-        if (jsonStudyDesign != null) {
-            try {
-                StudyDesign design = MAPPER.readValue(jsonStudyDesign, StudyDesign.class);
-                return design;
-            } catch (IOException ioe) {
-                PowerLogger.getInstance().error("Invalid study design: " + ioe.getMessage());
-            }
-        }
-        return null;
     }
 
     private String getBeginEquation() {
@@ -515,5 +547,9 @@ implements PowerMatrixHTMLResource {
     private static String format(double d) {
         String s = formatter.format(d);
         return s.equals("-0.0000") ? "0.0000" : s;
+    }
+
+    private static ResourceException badRequestException(String message) {
+        return new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, message);
     }
 }

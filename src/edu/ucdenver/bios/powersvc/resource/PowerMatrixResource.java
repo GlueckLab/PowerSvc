@@ -28,13 +28,12 @@ import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Main interface for calculating power, sample size, and
- * detectable difference.
- * @author Sarah Kreidler
+ * Main interface for calculating the matrices used in a power calculation.
  *
+ * @author Sarah Kreidler
  */
 public interface PowerMatrixResource {
-    
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
      */
