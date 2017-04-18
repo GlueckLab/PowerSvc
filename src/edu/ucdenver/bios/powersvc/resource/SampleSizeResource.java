@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,26 +29,28 @@ import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
  * Main interface for calculating sample size.
- * @author Sarah Kreidler
  *
+ * @author Sarah Kreidler
  */
 public interface SampleSizeResource {
     /**
-     * Calculate the total sample size for the specified study design JSON.
+     * Calculate sample size for the specified study design JSON.
      *
      * @param jsonStudyDesign study design JSON
-     * @return List of power objects for the study design. These will contain
-     * the total sample size
+     *
+     * @return JSON representation of the list of power objects
+     *         for the study design
      */
-    @Post
-    PowerResultList getSampleSize(String jsonStudyDesign);
+    @Post("json:json")
+    String getSampleSize(String jsonStudyDesign);
 
     /**
-     * Calculate the total sample size for the specified study design object.
+     * Calculate sample size for the specified study design object.
+     * This is only called by test code.
      *
      * @param studyDesign study design object
-     * @return List of power objects for the study design. These will contain
-     * the total sample size
+     *
+     * @return List of power objects for the study design
      */
     PowerResultList getSampleSize(StudyDesign studyDesign);
 }

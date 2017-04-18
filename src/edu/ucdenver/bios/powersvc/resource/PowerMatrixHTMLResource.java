@@ -3,7 +3,7 @@
  * incoming HTTP requests for power, sample size, and detectable
  * difference
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,33 +22,40 @@
  */
 package edu.ucdenver.bios.powersvc.resource;
 
-import org.restlet.data.Form;
 import org.restlet.resource.Post;
 
-import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Main interface for retrieving an html formatted display of matrices.
- * @author Sarah Kreidler
+ * Main interface for calculating an HTML/MathJax representation of the matrices
+ * used in a power calculation.
  *
+ * @author Sarah Kreidler
  */
 public interface PowerMatrixHTMLResource {
-    
     /**
      * Get matrices used in the power calculation for a "guided" study design
-     * as an HTML formatted string.  This method uses the notation of
-     * Muller & Stewart 2007
+     * as an HTML formatted string.
+     * <p>
+     * This method uses the notation of Muller & Stewart 2007.
+     *
+     * @param jsonStudyDesign study design JSON
+     *
+     * @return html string with representation of matrices
      */
     @Post("json:html")
-    String getMatricesAsHTML(StudyDesign studyDesign);
-    
+    String getMatricesAsHTML(String jsonStudyDesign);
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
-     * as an HTML formatted string.  This method required HTML form input
-     * with the study design json in the 'studydesign' field. This method uses the notation of
-     * Muller & Stewart 2007.
+     * as an HTML formatted string.
+     * This is only called by test code.
+     * <p>
+     * This method uses the notation of Muller & Stewart 2007.
+     *
+     * @param studyDesign study design object
+     *
+     * @return html string with representation of matrices
      */
-    @Post("form:html")
-    String getMatricesAsHTML(Form studyDesignForm);
+    String getMatricesAsHTML(StudyDesign studyDesign);
 }

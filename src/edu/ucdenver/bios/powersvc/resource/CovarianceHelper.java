@@ -28,7 +28,10 @@ import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.matrix.MatrixUtils;
+import edu.cudenver.bios.utils.Logger;
+import edu.ucdenver.bios.powersvc.application.PowerLogger;
 import edu.ucdenver.bios.webservice.common.domain.Blob2DArray;
 import edu.ucdenver.bios.webservice.common.domain.Covariance;
 import edu.ucdenver.bios.webservice.common.domain.RepeatedMeasuresNode;
@@ -44,6 +47,9 @@ import edu.ucdenver.bios.webservice.common.enums.CovarianceTypeEnum;
  *
  */
 public class CovarianceHelper {
+
+    /** The logger. */
+    private static final Logger LOGGER = Logger.getLogger(PowerLogger.getInstance());
 
     private static final String COVARIANCE_NOT_POSITIVE_SEMIDEFINITE_MESSAGE =
             "Unfortunately, there is no solution for this combination of input parameters. "
@@ -121,8 +127,8 @@ public class CovarianceHelper {
         List<StandardDeviation> stddevList = covariance.getStandardDeviationList();
         // make sure everything is valid
         if (stddevList != null && stddevList.size() > 0 &&
-                covariance.getRho() != Double.NaN &&
-                covariance.getDelta() != Double.NaN &&
+                !Double.isNaN(covariance.getRho()) &&
+                !Double.isNaN(covariance.getDelta()) &&
                 covariance.getDelta() >= 0) {
 
             LearCorrelation lear = new LearCorrelation(learSpacing);
@@ -145,6 +151,11 @@ public class CovarianceHelper {
 
             covarianceData =  new Array2DRowRealMatrix(data);
         }
+        debug(
+            "Server-side LEAR covariance matrix for '" + covariance.getName() + "' "
+                + "(client-side LEAR correlation matrix is ignored):",
+            covarianceData
+        );
         return covarianceData;
     }
 
@@ -271,4 +282,14 @@ public class CovarianceHelper {
         return result;
     }
 
+    /**
+     * A convenience method for DEBUG logging of a matrix
+     * with a label.
+     *
+     * @param label      The label.
+     * @param realMatrix The matrix.
+     */
+    private static void debug(String label, RealMatrix realMatrix) {
+        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
+    }
 }

@@ -29,14 +29,14 @@ import edu.ucdenver.bios.webservice.common.domain.NamedMatrixList;
 import edu.ucdenver.bios.webservice.common.domain.StudyDesign;
 
 /**
- * Implementation of the PowerResource interface for calculating
- * power, sample size, and detectable difference.
- * @author Sarah Kreidler
+ * Implementation of the PowerMatrixResource interface
+ * for calculating the matrices used in a power calculation.
  *
+ * @author Sarah Kreidler
  */
 public class PowerMatrixServerResource extends ServerResource
 implements PowerMatrixResource {
-	
+
     /**
      * Get matrices used in the power calculation for a "guided" study design
      * @param studyDesign the Study Design object
