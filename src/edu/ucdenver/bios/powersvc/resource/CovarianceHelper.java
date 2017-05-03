@@ -75,7 +75,7 @@ public class CovarianceHelper {
      * @return covariance matrix
      */
     public static RealMatrix covarianceToRealMatrix(Covariance covariance, List<ResponseNode> responses) {
-        return realMatrix(covariance, learSpacing(covariance, responses), "responses");
+        return realMatrix(covariance, learSpacing(covariance, responses), "Responses");
     }
 
     /**
@@ -168,7 +168,7 @@ public class CovarianceHelper {
      *                    is not LEAR.
      * @param name        In the repeated measures case, the 'dimension'
      *                    of the repeated measure; in the response
-     *                    variables case, the literal string "responses".
+     *                    variables case, the literal string "Responses".
      *
      * @return The covariance matrix, or null if some input data was not
      *         as expected.
