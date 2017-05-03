@@ -242,7 +242,7 @@ public class CovarianceHelper {
                 result.add(spacingValue.getValue());
             }
         } else {
-            for (int i = 0, n = rmNode.getNumberOfMeasurements(); i < n; ++ i) {
+            for (int i = 1, n = rmNode.getNumberOfMeasurements(); i <= n; ++ i) {
                 result.add(i);
             }
         }
@@ -275,7 +275,7 @@ public class CovarianceHelper {
         // create equal spacing across the responses
         List<Integer> result = new ArrayList<Integer>();
 
-        for (int i = 0, n = responses.size(); i < n; ++ i) {
+        for (int i = 1, n = responses.size(); i <= n; ++ i) {
             result.add(i);
         }
 
