@@ -145,7 +145,7 @@ public class PowerMatrixHTMLServerResource extends ServerResource
         StringBuilder buffer = new StringBuilder();
 
         buffer.append("<html><head><script type=\"text/javascript\" ")
-              .append("src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?")
+              .append("src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?")
               .append("config=TeX-AMS-MML_HTMLorMML\"></script></head><body>")
               .append("<script>MathJax.Hub.Queue([\"Typeset\",MathJax.Hub]);</script>");
         if (studyDesign != null) {
@@ -503,7 +503,6 @@ public class PowerMatrixHTMLServerResource extends ServerResource
 
         return buffer.toString();
     }
-
 
     /**
      * Output the notation citations
