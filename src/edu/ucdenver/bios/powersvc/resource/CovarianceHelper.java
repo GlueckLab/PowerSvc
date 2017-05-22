@@ -75,7 +75,7 @@ public class CovarianceHelper {
      * @return covariance matrix
      */
     public static RealMatrix covarianceToRealMatrix(Covariance covariance, List<ResponseNode> responses) {
-        return realMatrix(covariance, learSpacing(covariance, responses), "responses");
+        return realMatrix(covariance, learSpacing(covariance, responses), "Responses");
     }
 
     /**
@@ -168,7 +168,7 @@ public class CovarianceHelper {
      *                    is not LEAR.
      * @param name        In the repeated measures case, the 'dimension'
      *                    of the repeated measure; in the response
-     *                    variables case, the literal string "responses".
+     *                    variables case, the literal string "Responses".
      *
      * @return The covariance matrix, or null if some input data was not
      *         as expected.
@@ -242,7 +242,7 @@ public class CovarianceHelper {
                 result.add(spacingValue.getValue());
             }
         } else {
-            for (int i = 0, n = rmNode.getNumberOfMeasurements(); i < n; ++ i) {
+            for (int i = 1, n = rmNode.getNumberOfMeasurements(); i <= n; ++ i) {
                 result.add(i);
             }
         }
@@ -275,7 +275,7 @@ public class CovarianceHelper {
         // create equal spacing across the responses
         List<Integer> result = new ArrayList<Integer>();
 
-        for (int i = 0, n = responses.size(); i < n; ++ i) {
+        for (int i = 1, n = responses.size(); i <= n; ++ i) {
             result.add(i);
         }
 
