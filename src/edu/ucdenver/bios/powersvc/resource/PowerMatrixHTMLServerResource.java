@@ -176,6 +176,19 @@ public class PowerMatrixHTMLServerResource extends ServerResource
             RealMatrix thetaObserved = C.getCombinedMatrix().multiply(
                     B.getCombinedMatrix().multiply(U));
 
+            if (studyDesign.isGaussianCovariate()) {
+                RealMatrix sigmaY =
+                    PowerResourceHelper.sigmaOutcomesMatrixFromStudyDesign(studyDesign);
+                RealMatrix sigmaG =
+                    PowerResourceHelper.sigmaCovariateMatrixFromStudyDesign(studyDesign);
+                RealMatrix sigmaYG =
+                        PowerResourceHelper.sigmaOutcomesCovariateMatrixFromStudyDesign(
+                                studyDesign, sigmaG, sigmaY);
+                RealMatrix sigmaGY = sigmaYG.transpose();
+                RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
+                B.updateRandomMatrix(sigmaGInverse.multiply(sigmaGY));
+            }
+
             // add MathJax code for the matrices
             // design matrix
             buffer.append(getBeginEquation());
@@ -240,6 +253,7 @@ public class PowerMatrixHTMLServerResource extends ServerResource
                 RealMatrix sigmaGY = sigmaYG.transpose();
                 RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
                 RealMatrix sigmaE = sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY)));
+                // TODO: display sigmaE, or quit computing it here!
 
                 // sigma for Gaussian covariate
                 buffer.append(getBeginEquation());
@@ -263,14 +277,12 @@ public class PowerMatrixHTMLServerResource extends ServerResource
                 buffer.append(getBeginEquation());
                 buffer.append(getSigmaOutcomeMatrixTex(studyDesign));
                 buffer.append(getEndEquation());
-
             } else {
                 // sigma error
                 studyDesign.setClusteringTree(clusterNodeList);
                 buffer.append(getBeginEquation());
                 buffer.append(getSigmaErrorMatrixTex(studyDesign));
                 buffer.append(getEndEquation());
-
             }
 
             buffer.append("<p/>(For ease of display, some scaling factors may have been omitted.)");
