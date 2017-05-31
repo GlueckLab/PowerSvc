@@ -158,23 +158,22 @@ public class PowerMatrixHTMLServerResource extends ServerResource
                 }
             }
 
+            FixedRandomMatrix B = PowerResourceHelper.betaMatrixFromStudyDesign(studyDesign);
+            FixedRandomMatrix C = PowerResourceHelper.betweenParticipantContrastFromStudyDesign(studyDesign);
+            RealMatrix U = PowerResourceHelper.withinParticipantContrastFromStudyDesign(studyDesign);
+            RealMatrix thetaObserved = C.getCombinedMatrix().multiply(B.getCombinedMatrix().multiply(U));
+
             /*
              * We are clearing and resetting the clustering information
              * here for the sake of reusing the functions in PowerResourceHelper.
-             * We need to get the beta, C, U, and theta null matrices WITHOUT
-             * the clustering adjustment for the purposes of display.
+             * We need to get several matrices WITHOUT the clustering adjustment
+             * for the purposes of display.
              */
             studyDesign.setClusteringTree(null);
-            FixedRandomMatrix B =
-                    PowerResourceHelper.betaMatrixFromStudyDesign(studyDesign);
-            FixedRandomMatrix C =
-                    PowerResourceHelper.betweenParticipantContrastFromStudyDesign(studyDesign);
-            RealMatrix U =
-                    PowerResourceHelper.withinParticipantContrastFromStudyDesign(studyDesign);
-            RealMatrix thetaNull =
-                    PowerResourceHelper.thetaNullMatrixFromStudyDesign(studyDesign, C, U);
-            RealMatrix thetaObserved = C.getCombinedMatrix().multiply(
-                    B.getCombinedMatrix().multiply(U));
+            B = PowerResourceHelper.betaMatrixFromStudyDesign(studyDesign);
+            C = PowerResourceHelper.betweenParticipantContrastFromStudyDesign(studyDesign);
+            U = PowerResourceHelper.withinParticipantContrastFromStudyDesign(studyDesign);
+            RealMatrix thetaNull = PowerResourceHelper.thetaNullMatrixFromStudyDesign(studyDesign, C, U);
 
             if (studyDesign.isGaussianCovariate()) {
                 RealMatrix sigmaY =
