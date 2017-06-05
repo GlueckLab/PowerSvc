@@ -383,6 +383,7 @@ public final class PowerResourceHelper {
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA);
         NamedMatrix betaRandom =
             studyDesign.getNamedMatrix(PowerConstants.MATRIX_BETA_RANDOM);
+
         // get the beta information from the study design matrices
         if (betaFixed != null) {
             betaFixedData = betaFixed.getData().getData();
@@ -390,6 +391,7 @@ public final class PowerResourceHelper {
         if (betaRandom != null) {
             betaRandomData = betaRandom.getData().getData();
         }
+
         // for guided mode designs, we need to adjust for clustering
         if (studyDesign.getViewTypeEnum() == StudyDesignViewTypeEnum.GUIDED_MODE) {
             List<ClusterNode> clusterNodeList = studyDesign.getClusteringTree();
@@ -402,6 +404,7 @@ public final class PowerResourceHelper {
                 // direct product the beta matrix with a matrix of ones to
                 // generate the proper dimensions for a cluster sample
                 RealMatrix oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(1, totalColumns, 1);
+
                 RealMatrix betaFixedMatrix = new Array2DRowRealMatrix(betaFixedData);
                 betaFixedMatrix = MatrixUtils.getKroneckerProduct(oneMatrix, betaFixedMatrix);
                 // reset the data
@@ -409,7 +412,6 @@ public final class PowerResourceHelper {
 
                 // now repeat for the beta random matrix
                 if (betaRandom != null) {
-                    oneMatrix = MatrixUtils.getRealMatrixWithFilledValue(1, totalColumns, 1);
                     RealMatrix betaRandomMatrix = new Array2DRowRealMatrix(betaRandomData);
                     betaRandomMatrix = MatrixUtils.getKroneckerProduct(oneMatrix, betaRandomMatrix);
                     // reset the data

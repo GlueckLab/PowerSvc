@@ -158,23 +158,35 @@ public class PowerMatrixHTMLServerResource extends ServerResource
                 }
             }
 
+            FixedRandomMatrix B = PowerResourceHelper.betaMatrixFromStudyDesign(studyDesign);
+            FixedRandomMatrix C = PowerResourceHelper.betweenParticipantContrastFromStudyDesign(studyDesign);
+            RealMatrix U = PowerResourceHelper.withinParticipantContrastFromStudyDesign(studyDesign);
+            RealMatrix thetaObserved = C.getCombinedMatrix().multiply(B.getCombinedMatrix().multiply(U));
+
             /*
              * We are clearing and resetting the clustering information
              * here for the sake of reusing the functions in PowerResourceHelper.
-             * We need to get the beta, C, U, and theta null matrices WITHOUT
-             * the clustering adjustment for the purposes of display.
+             * We need to get several matrices WITHOUT the clustering adjustment
+             * for the purposes of display.
              */
             studyDesign.setClusteringTree(null);
-            FixedRandomMatrix B =
-                    PowerResourceHelper.betaMatrixFromStudyDesign(studyDesign);
-            FixedRandomMatrix C =
-                    PowerResourceHelper.betweenParticipantContrastFromStudyDesign(studyDesign);
-            RealMatrix U =
-                    PowerResourceHelper.withinParticipantContrastFromStudyDesign(studyDesign);
-            RealMatrix thetaNull =
-                    PowerResourceHelper.thetaNullMatrixFromStudyDesign(studyDesign, C, U);
-            RealMatrix thetaObserved = C.getCombinedMatrix().multiply(
-                    B.getCombinedMatrix().multiply(U));
+            B = PowerResourceHelper.betaMatrixFromStudyDesign(studyDesign);
+            C = PowerResourceHelper.betweenParticipantContrastFromStudyDesign(studyDesign);
+            U = PowerResourceHelper.withinParticipantContrastFromStudyDesign(studyDesign);
+            RealMatrix thetaNull = PowerResourceHelper.thetaNullMatrixFromStudyDesign(studyDesign, C, U);
+
+            if (studyDesign.isGaussianCovariate()) {
+                RealMatrix sigmaY =
+                    PowerResourceHelper.sigmaOutcomesMatrixFromStudyDesign(studyDesign);
+                RealMatrix sigmaG =
+                    PowerResourceHelper.sigmaCovariateMatrixFromStudyDesign(studyDesign);
+                RealMatrix sigmaYG =
+                        PowerResourceHelper.sigmaOutcomesCovariateMatrixFromStudyDesign(
+                                studyDesign, sigmaG, sigmaY);
+                RealMatrix sigmaGY = sigmaYG.transpose();
+                RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
+                B.updateRandomMatrix(sigmaGInverse.multiply(sigmaGY));
+            }
 
             // add MathJax code for the matrices
             // design matrix
@@ -240,6 +252,7 @@ public class PowerMatrixHTMLServerResource extends ServerResource
                 RealMatrix sigmaGY = sigmaYG.transpose();
                 RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
                 RealMatrix sigmaE = sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY)));
+                // TODO: display sigmaE, or quit computing it here!
 
                 // sigma for Gaussian covariate
                 buffer.append(getBeginEquation());
@@ -263,14 +276,12 @@ public class PowerMatrixHTMLServerResource extends ServerResource
                 buffer.append(getBeginEquation());
                 buffer.append(getSigmaOutcomeMatrixTex(studyDesign));
                 buffer.append(getEndEquation());
-
             } else {
                 // sigma error
                 studyDesign.setClusteringTree(clusterNodeList);
                 buffer.append(getBeginEquation());
                 buffer.append(getSigmaErrorMatrixTex(studyDesign));
                 buffer.append(getEndEquation());
-
             }
 
             buffer.append("<p/>(For ease of display, some scaling factors may have been omitted.)");
