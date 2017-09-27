@@ -43,7 +43,10 @@ sourceSets {
 
 war {
     archiveName 'power.war'
-    classpath fileTree('config')
+    from('config') {
+        include 'log4j.properties'
+        into 'WEB-INF/classes'
+    }
     webInf {
         from 'WebContent/WEB-INF'
     }
