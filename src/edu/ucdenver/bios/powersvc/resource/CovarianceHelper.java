@@ -141,7 +141,7 @@ public class CovarianceHelper {
                     if (row == col) {
                         data[row][col] = stddev.getValue() * stddev.getValue();
                     } else {
-                        double value = (lear.getRho(row, col, covariance.getRho(), covariance.getDelta()) *
+                        double value = (lear.getRho(row, col, covariance.getRho(), covariance.getDelta(), covariance.getScale()) *
                                 stddev.getValue() * stddev.getValue());
                         data[row][col] = value;
                         data[col][row] = value;

@@ -108,8 +108,9 @@ public class LearCorrelation
      * @param j index of the comparison measurement
      * @param baseCorrelation correlation between elements that are 1 unit apart
      * @param rateOfDecay rate at which the correlation decays.
+     * @param whether or not to scale spacing values
      */
-    public double getRho(int i, int j, double baseCorrelation, double rateOfDecay)
+    public double getRho(int i, int j, double baseCorrelation, double rateOfDecay, boolean scale)
     throws IllegalArgumentException
     {
         if (i < 0 || j < 0 || i > spacingList.size()-1 || j > spacingList.size()-1)
@@ -120,8 +121,7 @@ public class LearCorrelation
             throw new IllegalArgumentException("Rate of decay must be positive.");
 
         int measurementDistance = Math.abs(spacingList.get(i) - spacingList.get(j));
-        double powerValue;
-        powerValue = minDistance+(rateOfDecay*(measurementDistance-minDistance)/(maxMinDiff));
+        double powerValue = (scale ? 1 : minDistance) + rateOfDecay * (measurementDistance - minDistance)/maxMinDiff;
         return Math.pow(baseCorrelation, powerValue);
     }
 }
